@@ -1,9 +1,8 @@
 {
   "name": "quickchat-backend",
   "version": "1.0.0",
-  "main": "index.js",
   "scripts": {
-    "start": "nodemon index.ts"
+    "start": "nodemon server.ts"
   },
   "keywords": [],
   "author": "",

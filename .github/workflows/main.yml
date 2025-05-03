@@ -1,0 +1,29 @@
+name: QuickChat-backend
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  QuickChat-backend:
+    name: Testing and Building app
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '23'
+
+      - name: Install dependencies
+        run: npm install
+        
+      - name: Test the app
+        run: npm test
+        
+      - name: Build app
+        run : tsc

@@ -1,51 +1,48 @@
+import dotenv from "dotenv";
+dotenv.config({ path: ".env.test" });
+
 import { SequelizeConnection } from "./dbconnection";
 import { Sequelize } from "sequelize";
 
-jest.mock("sequelize", () => ({
-  Sequelize: jest.fn().mockImplementation((config) => ({
-    config: {
-      ...config,
-      database: "postgres",
-      host: "localhost",
-      username: "postgres_user",
-      password: "postgres_password",
-    },
-    authenticate: jest.fn().mockResolvedValue(true),
-  })),
-}));
-
-describe("SequlizeConnection", () => {
+describe("Sequelize Connection (Controlled)", () => {
+  let testInstance: Sequelize;
   const originalEnv = process.env;
-  const originalConsoleError = console.error;
 
   beforeEach(() => {
     process.env = { ...originalEnv };
-    console.error = jest.fn();
   });
 
   afterEach(() => {
     process.env = originalEnv;
-    console.error = originalConsoleError;
   });
 
-  it("should connect to the database successfully", async () => {
-    const sequelizeInstance = await SequelizeConnection();
-    expect(Sequelize).toHaveBeenCalled();
-    expect(sequelizeInstance).toBeTruthy();
-    expect(sequelizeInstance).not.toBeUndefined()
-    expect(sequelizeInstance!.config.host).toBe("localhost");
-    expect(sequelizeInstance!.config.database).toBe("postgres");
-    expect(sequelizeInstance!.config.username).toBe("postgres_user");
-    expect(sequelizeInstance!.config.password).toBe("postgres_password");
+  beforeAll(() => {
+    testInstance = SequelizeConnection()!;
   });
 
-  it("should console error if environment variables are missing", async () => {
+  it("should create a Sequelize instance", () => {
+    expect(testInstance).not.toBeNull();
+    expect(typeof testInstance.authenticate).toBe("function");
+    expect(testInstance.getDialect()).toBe(process.env.DB_DIALECT);
+  });
+
+  it("should successfully authenticate the connection", async () => {
+    await expect(testInstance.authenticate()).resolves.not.toThrow();
+  });
+
+  it("should throw error if environment variables are not present", async () => {
     delete process.env.DB_DIALECT;
     delete process.env.DATABASE_URL;
     delete process.env.DB_HOST;
-    const result = SequelizeConnection();
-
-    expect(console.error).toHaveBeenCalledWith("Environment Variables missing!");
-    expect(result).toBeUndefined();
+    try{
+      const result = await SequelizeConnection();
+      expect(result).toBe(null)
+    }
+    catch(error:any){
+      expect(error.message).toBe("Environment Variables are missing!")
+    }
+  });
+  afterAll(async () => {
+    await testInstance?.close();
   });
 });

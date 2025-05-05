@@ -2,8 +2,8 @@
   "name": "quickchat-backend",
   "version": "1.0.0",
   "scripts": {
-    "start": "nodemon server.ts",
-    "test": "jest --coverage"
+    "start": "NODE_ENV=development nodemon server.ts",
+    "test": "NODE_ENV=test jest --coverage"
   },
   "keywords": [],
   "author": "",

@@ -13,8 +13,8 @@ export class Chat extends Model<
   InferCreationAttributes<Chat>
 > {
   declare id: CreationOptional<string>;
-  declare user1Id: string;
-  declare user2Id: string;
+  declare userAId: string;
+  declare userBId: string;
 }
 
 Chat.init(
@@ -26,9 +26,9 @@ Chat.init(
       unique: true,
       allowNull: false,
     },
-    user1Id: {
+    userAId: {
       type: DataTypes.STRING,
-      unique: true,
+
       allowNull: false,
       references: {
         model: User,
@@ -36,7 +36,7 @@ Chat.init(
       },
       field: "user1_id",
     },
-    user2Id: {
+    userBId: {
       type: DataTypes.STRING,
       allowNull: false,
       references: {

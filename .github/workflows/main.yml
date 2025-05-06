@@ -31,6 +31,9 @@ jobs:
         
       - name: Test the app
         run: npm test
+
+      - name: Install Typescript
+        run: npm install -g typescript
         
       - name: Build app
         run : tsc

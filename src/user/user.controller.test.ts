@@ -102,7 +102,7 @@ describe("User controller Registration", () => {
   test("should return secret_key missing error when the secret_key is missing", async () => {
     delete process.env.JSON_WEB_SECRET;
     const newResource2 = {
-      phoneNumber: "2345678934",
+      phoneNumber: "2345678974",
       firstName: "Test Resource3",
       lastName: "A test resource3",
       password: "Anu@12345",
@@ -120,7 +120,7 @@ describe("User controller Registration", () => {
       password: "Anu@1234",
       email: "anushauppu@gmail.com",
     };
-    const response = await validateEmail(newResource.email);
+    const response = validateEmail(newResource.email);
     expect(response).toBe(true);
   }, 5000);
   test("should return the error when the error occurs", async () => {

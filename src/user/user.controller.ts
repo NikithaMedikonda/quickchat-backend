@@ -21,8 +21,8 @@ export async function createUser(user: user) {
     password: hashPassword,
     isDeleted: false,
   };
-  const createdUser = await User.create(newUser);
-  return createUser;
+  const createdUser:DbUser = await User.create(newUser);
+  return createdUser;
 }
 
 export async function register(
@@ -42,7 +42,7 @@ export async function register(
         .status(409)
         .json({ message: "User already exists with this phone number" });
     }
-    const newUser = await createUser(request.body);
+    const newUser:DbUser = await createUser(request.body);
     const token = jwt.sign(
       { phoneNumber: request.body.phoneNumber },
       secret_key.toString(),
@@ -54,9 +54,17 @@ export async function register(
       request.body.phoneNumber,
       secret_key.toString()
     );
+    const user={
+      firstName:newUser.firstName,
+      lastName:newUser.lastName,
+      profilePicture:newUser.profilePicture,
+      email:newUser.email,
+      phoneNumber:newUser.phoneNumber,
+      isDeleted:newUser.isDeleted
+    };
     return response
       .status(200)
-      .json({ accessToken: token, refreshToken: refreshToken, user: newUser });
+      .json({ accessToken: token, refreshToken: refreshToken, user: user });
   } catch (e: any) {
     return response.status(500).send(e.message);
   }

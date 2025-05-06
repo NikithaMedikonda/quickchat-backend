@@ -2,6 +2,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import { sequelizeInstance } from "./src/connection/dbconnection";
+import { syncAssociations } from "./src/associations/associations";
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` });
 export const app = express();
@@ -17,6 +18,8 @@ const startServer = async () => {
     }
     await sequelizeInstance.authenticate();
     console.log("Database connected successfully!");
+    syncAssociations();
+    console.log("Associations synced succesfully.")
     app.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
     });

@@ -31,18 +31,16 @@ User.init(
       allowNull: false,
     },
     phoneNumber: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING,
       unique: true,
       allowNull: false,
     },
     firstName: {
       type: DataTypes.STRING,
-      unique: true,
       allowNull: false,
     },
     lastName: {
       type: DataTypes.STRING,
-      unique: true,
       allowNull: false,
     },
     profilePicture: {

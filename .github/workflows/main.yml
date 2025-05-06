@@ -9,6 +9,13 @@ jobs:
   QuickChat-backend:
     name: Testing and Building app
     runs-on: macos-latest
+    env:
+      NODE_ENV: test
+      DB_HOST: localhost
+      DB_DIALECT: postgres
+      JSON_WEB_SECRET: 'quick_chat_secret'
+      DATABASE_URL: postgresql://postgres.bnmgjmxrqvqupbvkqcdw:QuickChat@testDb@aws-0-ap-south-1.pooler.supabase.com:5432/postgres
+
 
     steps:
       - name: Checkout code

@@ -12,11 +12,11 @@ export class User extends Model<
   InferCreationAttributes<User>
 > {
   declare id: CreationOptional<string>;
-  declare phoneNumber: number;
+  declare phoneNumber: string;
   declare firstName: string;
   declare lastName: string;
-  declare profilePicture: string;
-  declare email: string;
+  declare profilePicture: string | undefined;
+  declare email: string | undefined;
   declare password: string;
   declare isDeleted: boolean;
 }
@@ -31,23 +31,22 @@ User.init(
       allowNull: false,
     },
     phoneNumber: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING,
       unique: true,
       allowNull: false,
     },
     firstName: {
       type: DataTypes.STRING,
-      unique: true,
+      unique: false,
       allowNull: false,
     },
     lastName: {
       type: DataTypes.STRING,
-      unique: true,
+      unique: false,
       allowNull: false,
     },
     profilePicture: {
       type: DataTypes.STRING,
-      unique: true,
       allowNull: true,
     },
     email: {

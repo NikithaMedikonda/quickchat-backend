@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import express from "express";
+import express, { response } from "express";
 dotenv.config({ path: ".env.test" });
 
 import { SequelizeConnection } from "../connection/dbconnection";
@@ -136,5 +136,101 @@ describe("User controller Registration", () => {
       .send(newResource)
       .expect(500);
     expect(response2.error).toBeTruthy();
+  });
+});
+
+describe("User controller Login", () => {
+  let testInstance: Sequelize;
+  const originalEnv = process.env;
+  beforeEach(() => {
+    process.env = { ...originalEnv };
+  });
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+  beforeAll(() => {
+    testInstance = SequelizeConnection()!;
+  });
+  afterAll(async () => {
+    await User.truncate();
+    await testInstance?.close();
+  });
+  test("Should return error message when the required fields are missing in while user login", async () => {
+    const existingResource = {
+      phoneNumber: "1431431432",
+    };
+    const response = await request(app)
+      .post("/api/user")
+      .send(existingResource)
+      .expect(400);
+  });
+  test("Should return error message when the phone number is not with 10 digits", async () => {
+    const existingResource = {
+      phoneNumber: "143143143",
+      password: "testuser@1234",
+    };
+    const response = await request(app)
+      .post("/api/user")
+      .send(existingResource)
+      .expect(401);
+  });
+  test("should return un authorised message whenever the phone number is invalid in login", async () => {
+    const resource = {
+      phoneNumber: "2345678930",
+      password: "testuser@1234",
+    };
+    const response = await request(app)
+      .post("/api/user")
+      .send(resource)
+      .expect(404);
+  });
+  test("should return the access token and refresh token when the user is created successfully", async () => {
+    const newResource = {
+      phoneNumber: "2345678934",
+      firstName: "Test Resource2",
+      lastName: "A test resource2",
+      password: "Anu@1234",
+      email: "anusha@gmail.com",
+    };
+    const response = await request(app)
+      .post("/api/users")
+      .send(newResource)
+      .expect(200);
+    expect(response.body.accessToken).toBeTruthy();
+    expect(response.body.refreshToken).toBeTruthy();
+  });
+  test("should return the access token and refresh token when the user is fetched successfully", async () => {
+    const resource = {
+      phoneNumber: "2345678934",
+      password: "Anu@1234",
+    };
+    const response = await request(app)
+      .post("/api/user")
+      .send(resource)
+      .expect(200);
+    expect(response.body.accessToken).toBeTruthy();
+    expect(response.body.refreshToken).toBeTruthy();
+  });
+  test("Should return error, when password doesn't match", async () => {
+    const resource = {
+      phoneNumber: "2345678934",
+      password: "Anu@123",
+    };
+    const response = await request(app)
+      .post("/api/user")
+      .send(resource)
+      .expect(401);
+  });
+
+  test("should return secret_key missing error when the secret_key is missing", async () => {
+    delete process.env.JSON_WEB_SECRET;
+    const resource = {
+      phoneNumber: "2345678934",
+      password: "Anu@1234",
+    };
+    const response = await request(app)
+      .post("/api/user")
+      .send(resource)
+      .expect(412);
   });
 });

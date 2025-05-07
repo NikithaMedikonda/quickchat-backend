@@ -63,12 +63,62 @@ export async function register(
           phoneNumber: newUser.phoneNumber,
           isDeleted: newUser.isDeleted,
         };
-         response
+        response
           .status(200)
           .json({ accessToken: token, refreshToken: refreshToken, user: user });
       }
     }
   } catch (e: any) {
-     response.status(500).send(e.message);
+    response.status(500).send(e.message);
+  }
+}
+
+export async function login(
+  request: Request,
+  response: Response
+): Promise<void> {
+  try {
+    const { phoneNumber, password } = request.body;
+    const existingUser = await User.findOne({
+      where: { phoneNumber },
+    });
+    if (!existingUser) {
+      response
+        .status(404)
+        .json({ message: "User doesn't exists with this phone number" });
+      return;
+    }
+    const validPassword = await bcrypt.compare(password, existingUser.password);
+    if (!validPassword) {
+      response.status(401).json({ message: "Password is invalid" });
+      return;
+    }
+    const secret_key = process.env.JSON_WEB_SECRET;
+    if (!secret_key) {
+      response.status(412).json({ message: "Missing JWT secret key" });
+      return;
+    }
+    const accessToken = jwt.sign(
+      { phoneNumber: existingUser.phoneNumber },
+      secret_key,
+      { expiresIn: "7d" }
+    );
+    const refreshToken = jwt.sign(existingUser.phoneNumber, secret_key);
+    const user = {
+      id: existingUser.id,
+      firstName: existingUser.firstName,
+      lastName: existingUser.lastName,
+      profilePicture: existingUser.profilePicture,
+      email: existingUser.email,
+      phoneNumber: existingUser.phoneNumber,
+      isDeleted: existingUser.isDeleted,
+    };
+    response.status(200).json({
+      accessToken,
+      refreshToken,
+      user,
+    });
+  } catch (e: any) {
+    response.status(500).send(e.message);
   }
 }

@@ -3,14 +3,15 @@ import dotenv from "dotenv";
 import express from "express";
 import { sequelizeInstance } from "./src/connection/dbconnection";
 import { syncAssociations } from "./src/associations/associations";
+import userRoutes from "./src/user/user.route";
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` });
 export const app = express();
 const PORT = process.env.PORT;
-
+import { User } from "./src/user/user.model";
 app.use(express.json());
 app.use(cors());
-
+app.use(userRoutes);
 const startServer = async () => {
   try {
     if (!sequelizeInstance) {

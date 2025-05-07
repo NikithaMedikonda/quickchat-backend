@@ -13,7 +13,7 @@ export function validateEmail(inputEmail: string) {
   }
 }
 
-export  function validatePassword(inputPassword: string) {
+export function validatePassword(inputPassword: string) {
   var schema = new passwordValidator();
   schema
     .is()
@@ -28,7 +28,7 @@ export  function validatePassword(inputPassword: string) {
     .digits(1)
     .has()
     .not()
-    .spaces()
+    .spaces();
   return schema.validate(inputPassword);
 }
 
@@ -44,16 +44,13 @@ export async function validateInputFields(
       !request.body.lastName ||
       !request.body.password
     ) {
-       response.sendStatus(400);
+      response.sendStatus(400);
     } else if (request.body.phoneNumber.length !== 10) {
-       response.sendStatus(401);
-    } else if (
-      request.body.email &&
-      !(validateEmail(request.body.email))
-    ) {
-       response.sendStatus(400);
-    } else if (!(validatePassword(request.body.password))) {
-       response.sendStatus(406);
+      response.sendStatus(401);
+    } else if (request.body.email && !validateEmail(request.body.email)) {
+      response.sendStatus(400);
+    } else if (!validatePassword(request.body.password)) {
+      response.sendStatus(406);
     } else {
       next();
     }
@@ -61,3 +58,18 @@ export async function validateInputFields(
     next(error);
   }
 }
+
+export async function validateLoginInputFields(
+  request: Request,
+  response: Response,
+  next: NextFunction
+): Promise<void> {
+    if (!request.body.phoneNumber || !request.body.password) {
+      response.sendStatus(400);
+    } else if (request.body.phoneNumber.length!== 10) {
+      response.sendStatus(401);
+    }
+    else {    
+      next();
+    }
+  } 

@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - users-registration
+      - user-login
 
 jobs:
   QuickChat-backend:

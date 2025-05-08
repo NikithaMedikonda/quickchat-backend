@@ -1,5 +1,5 @@
-import { NextFunction, Request, Response } from "express";
 import * as dotenv from "dotenv";
+import { NextFunction, Request, Response } from "express";
 import passwordValidator from "password-validator";
 
 dotenv.config();
@@ -37,25 +37,21 @@ export async function validateInputFields(
   response: Response,
   next: NextFunction
 ): Promise<void> {
-  try {
-    if (
-      !request.body.phoneNumber ||
-      !request.body.firstName ||
-      !request.body.lastName ||
-      !request.body.password
-    ) {
-      response.sendStatus(400);
-    } else if (request.body.phoneNumber.length !== 10) {
-      response.sendStatus(401);
-    } else if (request.body.email && !validateEmail(request.body.email)) {
-      response.sendStatus(400);
-    } else if (!validatePassword(request.body.password)) {
-      response.sendStatus(406);
-    } else {
-      next();
-    }
-  } catch (error) {
-    next(error);
+  if (
+    !request.body.phoneNumber ||
+    !request.body.firstName ||
+    !request.body.lastName ||
+    !request.body.password
+  ) {
+    response.sendStatus(400);
+  } else if (request.body.phoneNumber.length !== 10) {
+    response.sendStatus(401);
+  } else if (request.body.email && !validateEmail(request.body.email)) {
+    response.sendStatus(400);
+  } else if (!validatePassword(request.body.password)) {
+    response.sendStatus(406);
+  } else {
+    next();
   }
 }
 
@@ -64,12 +60,11 @@ export async function validateLoginInputFields(
   response: Response,
   next: NextFunction
 ): Promise<void> {
-    if (!request.body.phoneNumber || !request.body.password) {
-      response.sendStatus(400);
-    } else if (request.body.phoneNumber.length!== 10) {
-      response.sendStatus(401);
-    }
-    else {    
-      next();
-    }
-  } 
+  if (!request.body.phoneNumber || !request.body.password) {
+    response.sendStatus(400);
+  } else if (request.body.phoneNumber.length !== 10) {
+    response.sendStatus(401);
+  } else {
+    next();
+  }
+}

@@ -4,8 +4,7 @@ on:
   push:
     branches:
       - main
-      - users-registration
-      - user-login
+      - feature/profile-picture-upload
 
 jobs:
   QuickChat-backend:

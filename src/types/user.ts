@@ -12,7 +12,7 @@ export type DbUser = {
   phoneNumber: string;
   firstName: string;
   lastName: string;
-  profilePicture?: string ;
+  profilePicture: string | null ;
   email?: string ;
   password: string;
   isDeleted: boolean;

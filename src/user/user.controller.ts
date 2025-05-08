@@ -10,7 +10,6 @@ import { User } from "./user.model";
 dotenv.config();
 
 export async function createUser(user: user) {
-  console.log("In create function");
   const salt = await bcrypt.genSalt();
   const hashPassword = await bcrypt.hash(user.password, salt);
   const newUser: DbUser = {

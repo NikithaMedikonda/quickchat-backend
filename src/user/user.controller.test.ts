@@ -1,13 +1,12 @@
 import dotenv from "dotenv";
-import express, { response } from "express";
 dotenv.config({ path: ".env.test" });
 
-import { SequelizeConnection } from "../connection/dbconnection";
 import { Sequelize } from "sequelize";
-import { app } from "../../server";
 import request from "supertest";
-import { User } from "./user.model";
+import { app } from "../../server";
+import { SequelizeConnection } from "../connection/dbconnection";
 import { validateEmail } from "./user.middleware";
+import { User } from "./user.model";
 describe("User controller Registration", () => {
   let testInstance: Sequelize;
   const originalEnv = process.env;
@@ -34,6 +33,19 @@ describe("User controller Registration", () => {
       .post("/api/users")
       .send(newResource)
       .expect(400);
+  });
+  test("should return the error when the profile picture data is invalid", async () => {
+    const newResource = {
+      firstName: "Test Resource",
+      lastName: "A test resource",
+      password: "Anu@1234",
+      profilePicture: "somePicture",
+      phoneNumber: "8522041688",
+    };
+    const response = await request(app)
+      .post("/api/users")
+      .send(newResource)
+      .expect(500);
   });
   test("Should return the error message when the password is not in the valid form", async () => {
     const newResource = {

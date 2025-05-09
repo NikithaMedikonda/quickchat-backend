@@ -1,11 +1,11 @@
+import bcrypt from "bcrypt";
+import * as dotenv from "dotenv";
 import { Request, Response } from "express";
+import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import { DbUser, user } from "../types/user";
+import { getProfileImageLink } from "../utils/uploadImage";
 import { User } from "./user.model";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import * as dotenv from "dotenv";
-import { VoidExpression } from "typescript";
 
 dotenv.config();
 
@@ -17,7 +17,7 @@ export async function createUser(user: user) {
     phoneNumber: user.phoneNumber,
     firstName: user.firstName,
     lastName: user.lastName,
-    profilePicture: user.profilePicture,
+    profilePicture: user.profilePicture ? user.profilePicture : null,
     email: user.email,
     password: hashPassword,
     isDeleted: false,
@@ -43,7 +43,20 @@ export async function register(
       if (!secret_key) {
         response.status(412).json({ message: "No secret key" });
       } else {
-        const newUser: DbUser = await createUser(request.body);
+        let profileUrl = undefined;
+        if (request.body.profilePicture) {
+          profileUrl = await getProfileImageLink(request.body.profilePicture);
+        }
+        const userBody: user = {
+          phoneNumber: request.body.phoneNumber,
+          firstName: request.body.firstName,
+          lastName: request.body.lastName,
+          email: request.body.email,
+          password: request.body.password,
+          isDeleted: false,
+          profilePicture: profileUrl,
+        };
+        const newUser: DbUser = await createUser(userBody);
         const token = jwt.sign(
           { phoneNumber: request.body.phoneNumber },
           secret_key.toString(),

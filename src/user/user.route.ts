@@ -1,9 +1,8 @@
 import express from "express";
-import { register, login } from "./user.controller";
-import { validateInputFields, validateLoginInputFields} from "./user.middleware";
+import { login, register } from "./user.controller";
+import { validateInputFields, validateLoginInputFields } from "./user.middleware";
 
-const router = express.Router();
+export const userRouter = express.Router();
 
-router.post("/api/users",validateInputFields,register);
-router.post("/api/user",validateLoginInputFields, login);
-export default router;
+userRouter.post("/api/users", validateInputFields, register);
+userRouter.post("/api/user", validateLoginInputFields, login);

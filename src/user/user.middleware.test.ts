@@ -1,13 +1,14 @@
+import dotenv from "dotenv";
 import { NextFunction, Request, Response } from "express";
 import { authenticateToken } from "./user.middleware";
-
+dotenv.config({ path: ".env.test" });
 describe("Authentication route", () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
   let mockSend: jest.Mock;
   let mockBody: jest.Mock;
   let mockNext: jest.Mock;
-
+  const originalEnv = process.env;
   beforeEach(() => {
     mockSend = jest.fn();
     (mockBody = jest.fn()),
@@ -18,9 +19,8 @@ describe("Authentication route", () => {
         json: mockBody.mockReturnThis(),
       });
     jest.clearAllMocks();
+    process.env = { ...originalEnv };
   });
-
-
 
   it("should call the next function", async () => {
     mockRequest = {
@@ -39,7 +39,7 @@ describe("Authentication route", () => {
     expect(mockNext).toHaveBeenCalledTimes(1);
   });
 
-  it("should return 401 ", async () => {
+  it("should return error message when the token is missing ", async () => {
     mockRequest = { headers: {}, body: {} };
     process.env.JSON_WEB_SECRET = "quick_chat_secret";
     await authenticateToken(
@@ -50,7 +50,7 @@ describe("Authentication route", () => {
     expect(mockResponse.sendStatus).toHaveBeenCalledWith(401);
   });
 
-  it("should return 403 ", async () => {
+  it("should return 403 when the token is expired ", async () => {
     mockRequest = {
       headers: {
         authorization:
@@ -66,7 +66,7 @@ describe("Authentication route", () => {
     );
     expect(mockResponse.sendStatus).toHaveBeenCalledWith(403);
   });
-  it("should return 412 ", async () => {
+  it("should return error 412 when the web_secret_not found ", async () => {
     delete process.env.JSON_WEB_SECRET;
     mockRequest = {
       headers: {

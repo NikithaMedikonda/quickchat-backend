@@ -26,12 +26,15 @@ export async function getProfileImageLink(base64String: string) {
       .upload(`images/${fileName}`, buffer, {
         contentType: contentType,
       });
+    if(error){
+      throw new Error(`${error}`)
+    }
     const { data: publicUrlData } = supabase.storage
       .from(process.env.BUCKET_NAME)
       .getPublicUrl(`images/${fileName}`);
     const profileUrl = publicUrlData.publicUrl;
     return profileUrl;
   } catch (error:any) {
-       throw new Error(`Error uploading the image to bucket: ${error.message}`);
+    throw new Error(`Error uploading the image to bucket: ${error.message}`);
   }
 }

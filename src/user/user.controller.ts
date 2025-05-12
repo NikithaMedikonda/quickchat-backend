@@ -81,8 +81,8 @@ export async function register(
           .json({ accessToken: token, refreshToken: refreshToken, user: user });
       }
     }
-  } catch (e: any) {
-    response.status(500).send(e.message);
+  } catch (error: any) {
+    response.status(500).send(error.message);
   }
 }
 
@@ -131,7 +131,38 @@ export async function login(
       refreshToken,
       user,
     });
-  } catch (e: any) {
-    response.status(500).send(e.message);
+  } catch (error: any) {
+    response.status(500).send(error.message);
+  }
+}
+
+export async function deleteAccount(
+  request: Request,
+  response: Response
+): Promise<void> {
+  try {
+    const { phoneNumber } = request.body;
+    const existingUser = await User.findOne({
+      where: { phoneNumber: request.body.phoneNumber, isDeleted: false },
+    });
+    if (!existingUser) {
+      response.status(404).json({ message: "Invalid phone number" });
+    } else {
+      await User.update(
+        {
+          firstName: "deleteFirstName",
+          lastName: "deleteLasttName",
+          profilePicture: "",
+          phoneNumber: `deletedPhoneNumber_${existingUser.id}`,
+          email:`deletedEmail_${existingUser.id}`,
+          password: "deletePhoneNumber",
+          isDeleted: true,
+        },
+        { where: { phoneNumber } }
+      );
+      response.status(200).json({ message: "Account deleted succesfully" });
+    }
+  } catch (error: any) {
+    response.status(500).send(error.message);
   }
 }

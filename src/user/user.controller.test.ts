@@ -1,12 +1,14 @@
 import dotenv from "dotenv";
-dotenv.config({ path: ".env.test" });
-import { SequelizeConnection } from "../connection/dbconnection";
-import { Sequelize } from "sequelize";
 import request from "supertest";
 import { app } from "../../server";
+import { base64 } from "../constants/example.base64";
+import { defaultProfileImage } from "../constants/example.defaultProfile";
 import { SequelizeConnection } from "../connection/dbconnection";
+import { Sequelize } from "sequelize";
+import { User } from "./user.model";
 import { validateEmail } from "./user.middleware";
-import { TEST_IMAGE_BASE64 } from "../constants/constants";
+
+dotenv.config({ path: ".env.test" })
 
 describe("User controller Registration", () => {
   let testInstance: Sequelize;
@@ -131,7 +133,7 @@ describe("User controller Registration", () => {
       firstName: "Anoosha",
       lastName: "A test resource2",
       password: "Anu@1234",
-      email: "anushauppu@gmail.com",
+      email: "anushaupp@gmail.com",
     };
     const response = validateEmail(newResource.email);
     expect(response).toBe(true);
@@ -300,7 +302,7 @@ describe("Tests for user controller for updating profile", () => {
     expect(response.body.refreshToken).toBeTruthy();
     const resource = {
       phoneNumber: "9876543210",
-      profilePicture: TEST_IMAGE_BASE64,
+      profilePicture: base64,
     };
     const newResponse = await request(app)
       .put("/api/user")
@@ -308,15 +310,30 @@ describe("Tests for user controller for updating profile", () => {
       .expect(200);
     expect(newResponse.body.user.profilePicture).toBeTruthy();
   });
-  it("Should respond with status code 500 if something goes wrong",async()=>{
-    process.env.BUCKET_NAME='unknown-bucket'
+  it("Should just assign the default profile pic if user removed the profile dp", async () => {
     const resource = {
       phoneNumber: "9876543210",
-      profilePicture: TEST_IMAGE_BASE64,
+      profilePicture: defaultProfileImage,
     };
-    const newResponse = await request(app)
+    const response = await request(app)
       .put("/api/user")
       .send(resource)
-      .expect(500);
-  })
+      .expect(200);
+    expect(response.body.user.profilePicture).toEqual(defaultProfileImage);
+  });
+  it("Should respond with status code 500 if something goes wrong", async () => {
+    process.env.SERVICE_KEY = "unknown-service_key";
+    const resource = {
+      phoneNumber: "9876543210",
+      profilePicture: base64,
+    };
+    try {
+      const newResponse = await request(app)
+        .put("/api/user")
+        .send(resource)
+        .expect(500);
+    } catch (error) {
+      expect(error).toBeDefined();
+    }
+  });
 });

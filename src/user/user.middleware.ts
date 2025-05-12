@@ -1,7 +1,7 @@
 import * as dotenv from "dotenv";
 import { NextFunction, Request, Response } from "express";
+import jwt from "jsonwebtoken";
 import passwordValidator from "password-validator";
-
 dotenv.config();
 
 export function validateEmail(inputEmail: string) {
@@ -66,5 +66,27 @@ export async function validateLoginInputFields(
     response.sendStatus(401);
   } else {
     next();
+  }
+}
+export async function authenticateToken(
+  request: Request,
+  response: Response,
+  next: NextFunction
+): Promise<void> {
+  const authHeader = request.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+  const secret_key = process.env.JSON_WEB_SECRET;
+  if (!secret_key) {
+    response.sendStatus(412);
+  } else if (token == null) {
+    response.sendStatus(401);
+  } else {
+    jwt.verify(token, secret_key, (error: any, user: any) => {
+      if (error) {
+        response.sendStatus(403);
+      } else {
+        next();
+      }
+    });
   }
 }

@@ -17,4 +17,3 @@ export type DbUser = {
   password: string;
   isDeleted: boolean;
 };
-export type partialUser = Partial<user>

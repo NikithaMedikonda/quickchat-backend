@@ -147,31 +147,31 @@ export async function update(
       response.status(400).json({
         message: "Phone Number is required to change the profile image.",
       });
-    } else {
-      const existingUser = await User.findOne({
-        where: { phoneNumber: user.phoneNumber },
+      return;
+    }
+    const existingUser = await User.findOne({
+      where: { phoneNumber: user.phoneNumber },
+    });
+    if (!existingUser) {
+      response.status(404).send({
+        message: "No user exists with the given phone number.",
       });
-      if (!existingUser) {
-        response.status(404).send({
-          message: "No user exists with the given phone number.",
-        });
+      return;
+    }
+    if (user.profilePicture) {
+      let profilePicture = null;
+      if (user.profilePicture === defaultProfileImage) {
+        profilePicture = user.profilePicture;
       } else {
-        if (user.profilePicture) {
-          let profilePicture = null;
-          if (user.profilePicture === defaultProfileImage) {
-            profilePicture = user.profilePicture;
-          } else {
-            profilePicture = await getProfileImageLink(user.profilePicture);
-            user.profilePicture = profilePicture;
-          }
-        }
-        await existingUser.update(user);
-        response.status(200).json({
-          message: "Profile updated successfully.",
-          user: existingUser,
-        });
+        profilePicture = await getProfileImageLink(user.profilePicture);
+        user.profilePicture = profilePicture;
       }
     }
+    await existingUser.update(user);
+    response.status(200).json({
+      message: "Profile updated successfully.",
+      user: existingUser,
+    });
   } catch (error) {
     response.status(500).json({ error: error });
   }

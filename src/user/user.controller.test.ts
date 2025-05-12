@@ -1,12 +1,13 @@
 import dotenv from "dotenv";
 dotenv.config({ path: ".env.test" });
-
+import { SequelizeConnection } from "../connection/dbconnection";
 import { Sequelize } from "sequelize";
 import request from "supertest";
 import { app } from "../../server";
 import { SequelizeConnection } from "../connection/dbconnection";
 import { validateEmail } from "./user.middleware";
-import { User } from "./user.model";
+import { TEST_IMAGE_BASE64 } from "../constants/constants";
+
 describe("User controller Registration", () => {
   let testInstance: Sequelize;
   const originalEnv = process.env;
@@ -245,4 +246,77 @@ describe("User controller Login", () => {
       .send(resource)
       .expect(412);
   });
+});
+
+describe("Tests for user controller for updating profile", () => {
+  let testInstance: Sequelize;
+  const originalEnv = process.env;
+  beforeEach(() => {
+    process.env = { ...originalEnv };
+  });
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+  beforeAll(() => {
+    testInstance = SequelizeConnection()!;
+  });
+  afterAll(async () => {
+    await User.truncate();
+    await testInstance?.close();
+  });
+  it("Should throw error if phone number is not sent in request body", async () => {
+    const resource = {
+      profilePicture: "base:image/jpg",
+    };
+    const response = await request(app)
+      .put("/api/user")
+      .send(resource)
+      .expect(400);
+  });
+  it("Should throw error if user is not present with the provided phone number", async () => {
+    const resource = {
+      phoneNumber: "1234567890",
+      profilePicture: "base:image/jpg",
+    };
+    const response = await request(app)
+      .put("/api/user")
+      .send(resource)
+      .expect(404);
+  });
+
+  it("Should update profile details properly", async () => {
+    const newResource = {
+      phoneNumber: "9876543210",
+      firstName: "testFirstName",
+      lastName: "testLastName",
+      password: "Test@1234",
+      email: "test@gmail.com",
+    };
+    const response = await request(app)
+      .post("/api/users")
+      .send(newResource)
+      .expect(200);
+    expect(response.body.accessToken).toBeTruthy();
+    expect(response.body.refreshToken).toBeTruthy();
+    const resource = {
+      phoneNumber: "9876543210",
+      profilePicture: TEST_IMAGE_BASE64,
+    };
+    const newResponse = await request(app)
+      .put("/api/user")
+      .send(resource)
+      .expect(200);
+    expect(newResponse.body.user.profilePicture).toBeTruthy();
+  });
+  it("Should respond with status code 500 if something goes wrong",async()=>{
+    process.env.BUCKET_NAME='unknown-bucket'
+    const resource = {
+      phoneNumber: "9876543210",
+      profilePicture: TEST_IMAGE_BASE64,
+    };
+    const newResponse = await request(app)
+      .put("/api/user")
+      .send(resource)
+      .expect(500);
+  })
 });

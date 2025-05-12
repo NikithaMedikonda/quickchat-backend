@@ -82,6 +82,7 @@ export async function register(
       }
     }
   } catch (e: any) {
+    console.log(e)
     response.status(500).send(e.message);
   }
 }
@@ -133,5 +134,42 @@ export async function login(
     });
   } catch (e: any) {
     response.status(500).send(e.message);
+  }
+}
+
+export async function update(
+  request: Request,
+  response: Response
+): Promise<void> {
+  try {
+    const user = request.body;
+    if (!user.phoneNumber) {
+      response.status(400).json({
+        message: "Phone Number is required to change the profile image.",
+      });
+    } else {
+      const existingUser = await User.findOne({
+        where: { phoneNumber: user.phoneNumber },
+      });
+      if (!existingUser) {
+        response.status(404).send({
+          message: "No user exists with the given phone number.",
+        });
+      } else {
+        if (user.profilePicture) {
+          const profilePicture = await getProfileImageLink(user.profilePicture);
+          user.profilePicture = profilePicture;
+        }
+        await existingUser.update(user);
+        response
+          .status(200)
+          .json({
+            message: "Profile updated successfully.",
+            user: existingUser,
+          });
+      }
+    }
+  } catch (error) {
+    response.status(500).json({ error: error });
   }
 }

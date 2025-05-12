@@ -1,8 +1,13 @@
 import express from "express";
-import { login, register } from "./user.controller";
-import { validateInputFields, validateLoginInputFields } from "./user.middleware";
+import { register, login, update } from "./user.controller";
+import {
+  validateInputFields,
+  validateLoginInputFields,
+} from "./user.middleware";
+import * as dotenv from "dotenv";
 
-export const userRouter = express.Router();
+export const router = express.Router();
 
-userRouter.post("/api/users", validateInputFields, register);
-userRouter.post("/api/user", validateLoginInputFields, login);
+router.post("/api/users", validateInputFields, register);
+router.post("/api/user", validateLoginInputFields, login);
+router.put("/api/user", update);

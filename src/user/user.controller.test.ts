@@ -283,6 +283,7 @@ describe("User Account Deletion", () => {
   test("should return 404 when user does not exist", async () => {
     const response = await request(app)
       .post("/api/deleteAccount")
+       .set("authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwaG9uZU51bWJlciI6Ijg1MjIwNDE2OTkiLCJpYXQiOjE3NDcwNDI1MzMsImV4cCI6MTc0NzY0NzMzM30.zfGO0o56jDmcPTEulBNiI_aPK15rWG-oKKXvL_64X3w")
       .send({ phoneNumber: "0000000000" })
       .expect(404);
 
@@ -300,19 +301,22 @@ describe("User Account Deletion", () => {
     await request(app).post("/api/users").send(newUser).expect(200);
     const deleteResponse = await request(app)
       .post("/api/deleteAccount")
+      .set("authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwaG9uZU51bWJlciI6Ijg1MjIwNDE2OTkiLCJpYXQiOjE3NDcwNDI1MzMsImV4cCI6MTc0NzY0NzMzM30.zfGO0o56jDmcPTEulBNiI_aPK15rWG-oKKXvL_64X3w")
       .send({ phoneNumber: newUser.phoneNumber })
       .expect(200);
 
     expect(deleteResponse.body.message).toBe("Account deleted succesfully");
 
     const userInDb = await User.findOne({
-      where: { phoneNumber: "" },
+      where: { firstName:'deleteFirstName' },
     });
     expect(userInDb?.isDeleted).toBe(true);
+    expect(userInDb?.phoneNumber).toBe(`deletedPhoneNumber_${userInDb?.id}`);
   });
   test('should test the catch error',async ()=>{
     const response = await request(app)
       .post("/api/deleteAccount")
+       .set("authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwaG9uZU51bWJlciI6Ijg1MjIwNDE2OTkiLCJpYXQiOjE3NDcwNDI1MzMsImV4cCI6MTc0NzY0NzMzM30.zfGO0o56jDmcPTEulBNiI_aPK15rWG-oKKXvL_64X3w")
       .send({ phoneNumber: {invalid:"Invalid password"} })
       .expect(500);
   })

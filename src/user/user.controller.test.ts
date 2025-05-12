@@ -236,6 +236,16 @@ describe("User controller Login", () => {
       .send(resource)
       .expect(401);
   });
+    test("Should return error, when password doesn't match", async () => {
+    const resource = {
+      phoneNumber: "2345678934",
+      password:{password:'Invalid password'},
+    };
+    const response = await request(app)
+      .post("/api/user")
+      .send(resource)
+      .expect(500);
+  });
 
   test("should return secret_key missing error when the secret_key is missing", async () => {
     delete process.env.JSON_WEB_SECRET;
@@ -267,6 +277,7 @@ describe("Tests for user controller for updating profile", () => {
     await User.truncate();
     await testInstance?.close();
   });
+
   it("should return the access token and refresh token when the user is created successfully", async () => {
     const newResource = {
       phoneNumber: "9876543210",
@@ -348,4 +359,67 @@ describe("Tests for user controller for updating profile", () => {
       expect(error).toBeDefined();
     }
   });
+});
+
+describe("User Account Deletion", () => {
+  let testInstance: Sequelize;
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    process.env = { ...originalEnv };
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
+  beforeAll(() => {
+    testInstance = SequelizeConnection()!;
+  });
+  
+  afterAll(async () => {
+    await User.truncate();
+    await testInstance?.close();
+  });
+  
+  test("should return 404 when user does not exist", async () => {
+    const response = await request(app)
+      .post("/api/deleteAccount")
+       .set("authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwaG9uZU51bWJlciI6Ijg1MjIwNDE2OTkiLCJpYXQiOjE3NDcwNDI1MzMsImV4cCI6MTc0NzY0NzMzM30.zfGO0o56jDmcPTEulBNiI_aPK15rWG-oKKXvL_64X3w")
+      .send({ phoneNumber: "0000000000" })
+      .expect(404);
+
+    expect(response.body.message).toBe("Invalid phone number");
+  });
+
+  test("should delete the user successfully and return 200", async () => {
+    const newUser = {
+      phoneNumber: "9876543210",
+      firstName: "Delete",
+      lastName: "User",
+      password: "Delete@1234",
+      email: "deleteuser@test.com",
+    };
+    await request(app).post("/api/users").send(newUser).expect(200);
+    const deleteResponse = await request(app)
+      .post("/api/deleteAccount")
+      .set("authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwaG9uZU51bWJlciI6Ijg1MjIwNDE2OTkiLCJpYXQiOjE3NDcwNDI1MzMsImV4cCI6MTc0NzY0NzMzM30.zfGO0o56jDmcPTEulBNiI_aPK15rWG-oKKXvL_64X3w")
+      .send({ phoneNumber: newUser.phoneNumber })
+      .expect(200);
+
+    expect(deleteResponse.body.message).toBe("Account deleted succesfully");
+
+    const userInDb = await User.findOne({
+      where: { firstName:'deleteFirstName' },
+    });
+    expect(userInDb?.isDeleted).toBe(true);
+    expect(userInDb?.phoneNumber).toBe(`deletedPhoneNumber_${userInDb?.id}`);
+  });
+  test('should test the catch error',async ()=>{
+    const response = await request(app)
+      .post("/api/deleteAccount")
+       .set("authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwaG9uZU51bWJlciI6Ijg1MjIwNDE2OTkiLCJpYXQiOjE3NDcwNDI1MzMsImV4cCI6MTc0NzY0NzMzM30.zfGO0o56jDmcPTEulBNiI_aPK15rWG-oKKXvL_64X3w")
+      .send({ phoneNumber: {invalid:"Invalid password"} })
+      .expect(500);
+  })
 });

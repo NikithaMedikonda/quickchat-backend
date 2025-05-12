@@ -20,22 +20,7 @@ describe("Authentication route", () => {
     jest.clearAllMocks();
   });
 
-  it("should return 412 ", async () => {
-    mockRequest = {
-      headers: {
-        authorization:
-          "Bearer eyJhbGciOiJIUzI1NiJ9.QW51c2hhX3VwcHU.ml4zVhE983COkKHbHmo0TpscL2RZcCGFknqHCkf2gQg",
-      },
-      body: {},
-    };
 
-    await authenticateToken(
-      mockRequest as Request,
-      mockResponse as Response,
-      mockNext as NextFunction
-    );
-    expect(mockResponse.sendStatus).toHaveBeenCalledWith(412);
-  });
 
   it("should call the next function", async () => {
     mockRequest = {
@@ -64,7 +49,7 @@ describe("Authentication route", () => {
     );
     expect(mockResponse.sendStatus).toHaveBeenCalledWith(401);
   });
-  
+
   it("should return 403 ", async () => {
     mockRequest = {
       headers: {
@@ -73,12 +58,29 @@ describe("Authentication route", () => {
       },
       body: {},
     };
-    process.env.SECRET_KEY = "quick_chat_secret";
+    process.env.JSON_WEB_SECRET = "quick_chat_secret";
     await authenticateToken(
       mockRequest as Request,
       mockResponse as Response,
       mockNext as NextFunction
     );
     expect(mockResponse.sendStatus).toHaveBeenCalledWith(403);
+  });
+  it("should return 412 ", async () => {
+    delete process.env.JSON_WEB_SECRET;
+    mockRequest = {
+      headers: {
+        authorization:
+          "Bearer eyJhbGciOiJIUzI1NiJ9.QW51c2hhX3VwcHU.ml4zVhE983COkKHbHmo0TpscL2RZcCGFknqHCkf2gQg",
+      },
+      body: {},
+    };
+
+    await authenticateToken(
+      mockRequest as Request,
+      mockResponse as Response,
+      mockNext as NextFunction
+    );
+    expect(mockResponse.sendStatus).toHaveBeenCalledWith(412);
   });
 });

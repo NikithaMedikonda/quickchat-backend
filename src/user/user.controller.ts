@@ -150,12 +150,12 @@ export async function deleteAccount(
     } else {
       await User.update(
         {
-          firstName: "",
-          lastName: "",
+          firstName: "deleteFirstName",
+          lastName: "deleteLasttName",
           profilePicture: "",
-          phoneNumber: "",
-          email: "",
-          password: "",
+          phoneNumber: `deletedPhoneNumber_${existingUser.id}`,
+          email:`deletedEmail_${existingUser.id}`,
+          password: "deletePhoneNumber",
           isDeleted: true,
         },
         { where: { phoneNumber } }

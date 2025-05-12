@@ -1,5 +1,5 @@
 import express from "express";
-import { login, register, update } from "./user.controller";
+import { deleteAccount, login, register, update } from "./user.controller";
 import {
   authenticateToken,
   validateInputFields,

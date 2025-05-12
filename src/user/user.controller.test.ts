@@ -7,7 +7,7 @@ import { SequelizeConnection } from "../connection/dbconnection";
 import { Sequelize } from "sequelize";
 import { User } from "./user.model";
 import { validateEmail } from "./user.middleware";
-import { User } from "./user.model";
+
 describe("User controller Registration", () => {
   let testInstance: Sequelize;
   const originalEnv = process.env;

@@ -1,8 +1,9 @@
 import bcrypt from "bcrypt";
 import * as dotenv from "dotenv";
-import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import { Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
+import { defaultProfileImage } from "../constants/example.defaultProfile";
 import { DbUser, user } from "../types/user";
 import { getProfileImageLink } from "../utils/uploadImage";
 import { User } from "./user.model";
@@ -82,7 +83,6 @@ export async function register(
       }
     }
   } catch (e: any) {
-    console.log(e)
     response.status(500).send(e.message);
   }
 }
@@ -157,16 +157,19 @@ export async function update(
         });
       } else {
         if (user.profilePicture) {
-          const profilePicture = await getProfileImageLink(user.profilePicture);
-          user.profilePicture = profilePicture;
+          let profilePicture = null;
+          if (user.profilePicture === defaultProfileImage) {
+            profilePicture = user.profilePicture;
+          } else {
+            profilePicture = await getProfileImageLink(user.profilePicture);
+            user.profilePicture = profilePicture;
+          }
         }
         await existingUser.update(user);
-        response
-          .status(200)
-          .json({
-            message: "Profile updated successfully.",
-            user: existingUser,
-          });
+        response.status(200).json({
+          message: "Profile updated successfully.",
+          user: existingUser,
+        });
       }
     }
   } catch (error) {

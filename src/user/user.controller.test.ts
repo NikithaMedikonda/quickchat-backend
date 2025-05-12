@@ -258,7 +258,106 @@ describe("User controller Login", () => {
   });
 });
 
+describe("Tests for user controller for updating profile", () => {
+  let testInstance: Sequelize;
+  const originalEnv = process.env;
+  let accessToken: string;
+  beforeEach(() => {
+    process.env = { ...originalEnv };
+  });
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+  beforeAll(() => {
+    testInstance = SequelizeConnection()!;
+  });
+  afterAll(async () => {
+    await User.truncate();
+    await testInstance?.close();
+  });
 
+  it("should return the access token and refresh token when the user is created successfully", async () => {
+    const newResource = {
+      phoneNumber: "9876543210",
+      firstName: "Test Resource2",
+      lastName: "A test resource2",
+      password: "tesT@1234",
+      email: "test@gmail.com",
+    };
+    const response = await request(app)
+      .post("/api/users")
+      .send(newResource)
+      .expect(200);
+    expect(response.body.accessToken).toBeTruthy();
+    accessToken = response.body.accessToken;
+    expect(response.body.refreshToken).toBeTruthy();
+  });
+  it("Should throw error if phone number is not sent in request body", async () => {
+    const resource = {
+      profilePicture: "base:image/jpg",
+    };
+    const response = await request(app)
+      .put("/api/user")
+      .set({ Authorization:  `Bearer ${accessToken}` })
+      .send(resource)
+      .expect(400);
+  });
+  it("Should throw error if user is not present with the provided phone number", async () => {
+    const resource = {
+      phoneNumber: "1234567890",
+      profilePicture: "base:image/jpg",
+    };
+    const response = await request(app)
+      .put("/api/user")
+      .set({ Authorization:  `Bearer ${accessToken}` })
+      .send(resource)
+      .expect(404); 
+  });
+
+  it("Should update profile details properly", async () => {
+    const resource = {
+      phoneNumber: "9876543210",
+      profilePicture: base64,
+    };
+    const newResponse = await request(app)
+      .put("/api/user")
+      .set({ Authorization:  `Bearer ${accessToken}` })
+      .send(resource)
+      .expect(200);
+    
+    expect(newResponse.body.user.profilePicture).toBeTruthy();
+  });
+
+  it("Should just assign the default profile pic if user removed the profile dp", async () => {
+    const resource = {
+      phoneNumber: "9876543210",
+      profilePicture: defaultProfileImage,
+    };
+    const response = await request(app)
+      .put("/api/user")
+      .set({ Authorization:  `Bearer ${accessToken}` })
+      .send(resource)
+      .expect(200);
+    expect(response.body.user.profilePicture).toEqual(defaultProfileImage);
+  });
+  
+  it("Should respond with status code 500 if something goes wrong", async () => {
+    process.env.SERVICE_KEY = "unknown-service_key";
+    const resource = {
+      phoneNumber: "9876543210",
+      profilePicture: base64,
+    };
+    try {
+      const newResponse = await request(app)
+        .put("/api/user")
+        .set({ Authorization:  `Bearer ${accessToken}` })
+        .send(resource)
+        .expect(500);
+    } catch (error) {
+      expect(error).toBeDefined();
+    }
+  });
+});
 
 describe("User Account Deletion", () => {
   let testInstance: Sequelize;

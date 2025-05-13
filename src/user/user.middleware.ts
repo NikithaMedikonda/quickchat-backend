@@ -37,6 +37,8 @@ export async function validateInputFields(
   response: Response,
   next: NextFunction
 ): Promise<void> {
+  var phonePattern =
+    /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/;
   if (
     !request.body.phoneNumber ||
     !request.body.firstName ||
@@ -44,7 +46,7 @@ export async function validateInputFields(
     !request.body.password
   ) {
     response.sendStatus(400);
-  } else if (request.body.phoneNumber.length !== 10) {
+  } else if (!request.body.phoneNumber.match(phonePattern)) {
     response.sendStatus(401);
   } else if (request.body.email && !validateEmail(request.body.email)) {
     response.sendStatus(400);
@@ -60,9 +62,11 @@ export async function validateLoginInputFields(
   response: Response,
   next: NextFunction
 ): Promise<void> {
+  var phonePattern =
+    /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/;
   if (!request.body.phoneNumber || !request.body.password) {
     response.sendStatus(400);
-  } else if (request.body.phoneNumber.length !== 10) {
+  } else if (!request.body.phoneNumber.match(phonePattern)) {
     response.sendStatus(401);
   } else {
     next();

@@ -7,6 +7,7 @@ import { defaultProfileImage } from "../constants/example.defaultProfile";
 import { DbUser, user } from "../types/user";
 import { getProfileImageLink } from "../utils/uploadImage";
 import { User } from "./user.model";
+import { Op } from "sequelize";
 
 dotenv.config();
 
@@ -33,12 +34,19 @@ export async function register(
 ): Promise<void> {
   try {
     const existingUser = await User.findOne({
-      where: { phoneNumber: request.body.phoneNumber },
+      where: {
+        [Op.or]: [
+          { phoneNumber: request.body.phoneNumber },
+          { email: request.body.email },
+        ],
+      },
     });
     if (existingUser) {
       response
         .status(409)
-        .json({ message: "User already exists with this phone number" });
+        .json({
+          message: "User already exists with this phone number or email",
+        });
     } else {
       const secret_key = process.env.JSON_WEB_SECRET;
       if (!secret_key) {
@@ -195,7 +203,7 @@ export async function deleteAccount(
           lastName: "deleteLasttName",
           profilePicture: "",
           phoneNumber: `deletedPhoneNumber_${existingUser.id}`,
-          email:`deletedEmail_${existingUser.id}`,
+          email: `deletedEmail_${existingUser.id}`,
           password: "deletePhoneNumber",
           isDeleted: true,
         },
@@ -243,8 +251,13 @@ export async function refreshOrValidateAuth(
     } catch (error: any) {
       if (error.name === "TokenExpiredError") {
         try {
-          const decodedRefresh = jwt.verify(refreshToken, secret_key) as string | jwt.JwtPayload;
-          const phoneNumber = typeof decodedRefresh === 'string' ? decodedRefresh : decodedRefresh.phoneNumber;
+          const decodedRefresh = jwt.verify(refreshToken, secret_key) as
+            | string
+            | jwt.JwtPayload;
+          const phoneNumber =
+            typeof decodedRefresh === "string"
+              ? decodedRefresh
+              : decodedRefresh.phoneNumber;
           const user = await User.findOne({ where: { phoneNumber } });
 
           if (!user) {
@@ -258,7 +271,10 @@ export async function refreshOrValidateAuth(
             { expiresIn: "7d" }
           );
 
-          const newRefreshToken = jwt.sign({ phoneNumber: user.phoneNumber }, secret_key);
+          const newRefreshToken = jwt.sign(
+            { phoneNumber: user.phoneNumber },
+            secret_key
+          );
 
           response.status(200).json({
             message: "New access token issued",

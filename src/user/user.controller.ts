@@ -137,7 +137,6 @@ export async function login(
   }
 }
 
-
 export async function update(
   request: Request,
   response: Response
@@ -209,7 +208,7 @@ export async function deleteAccount(
   }
 }
 
-export async function checkAuth(
+export async function refreshOrValidateAuth(
   request: Request,
   response: Response
 ): Promise<void> {

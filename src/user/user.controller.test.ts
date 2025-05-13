@@ -100,31 +100,20 @@ describe("User controller Registration", () => {
     expect(response.body.accessToken).toBeTruthy();
     expect(response.body.refreshToken).toBeTruthy();
   });
-  test("should return user already existed with this number when the phone number is already registered", async () => {
+    test("should return user already existed with this number when the phone number is already registered", async () => {
     const newResource2 = {
       phoneNumber: "9440058809",
       firstName: "Test Resource3",
       lastName: "A test resource3",
       password: "Anu@12345",
+      email: "anusha@gmail.com",
     };
     const response2 = await request(app)
       .post("/api/users")
       .send(newResource2)
       .expect(409);
   });
-  test("should return secret_key missing error when the secret_key is missing", async () => {
-    delete process.env.JSON_WEB_SECRET;
-    const newResource2 = {
-      phoneNumber: "6303522765",
-      firstName: "Test Resource3",
-      lastName: "A test resource3",
-      password: "Anu@12345",
-    };
-    const response2 = await request(app)
-      .post("/api/users")
-      .send(newResource2)
-      .expect(412);
-  });
+
   test("validate email should return the true when the email is valid", async () => {
     const newResource = {
       phoneNumber: "7893615283",
@@ -138,11 +127,11 @@ describe("User controller Registration", () => {
   }, 5000);
   test("should return the error when the error occurs", async () => {
     const newResource = {
-      phoneNumber: "9345678934",
+      phoneNumber: "9999988888",
       firstName: "Anoosha",
-      lastName: "A test resource2",
+      lastName: {invalid:'Uppu'},
       password: "Anu@1234",
-      email: "anusha@gmail.com",
+      email: "anusha123@gmail.com",
     };
     const response2 = await request(app)
       .post("/api/users")
@@ -150,6 +139,21 @@ describe("User controller Registration", () => {
       .expect(500);
     expect(response2.error).toBeTruthy();
   });
+    test("should return secret_key missing error when the secret_key is missing", async () => {
+    delete process.env.JSON_WEB_SECRET;
+    const newResource3 = {
+      phoneNumber: "6303522765",
+      firstName: "Test Resource3",
+      lastName: "A test resource3",
+      password: "Anu@12345",
+      email: "anusha1234@gmail.com",
+    };
+    const response2 = await request(app)
+      .post("/api/users")
+      .send(newResource3)
+      .expect(412);
+  });
+
 });
 
 describe("User controller Login", () => {

@@ -81,7 +81,7 @@ export async function authenticateToken(
   } else if (token == null) {
     response.sendStatus(401);
   } else {
-    jwt.verify(token, secret_key, (error: any, user: any) => {
+    jwt.verify(token, secret_key, (error: any) => {
       if (error) {
         response.sendStatus(403);
       } else {

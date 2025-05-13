@@ -8,6 +8,7 @@ import { userRouter } from "./src/user/user.route";
 dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` });
 export const app = express();
 const PORT = process.env.PORT;
+
 app.use(express.json());
 app.use(cors());
 app.use(userRouter);

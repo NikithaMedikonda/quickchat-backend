@@ -236,7 +236,7 @@ describe("User controller Login", () => {
   });
   test("Should return error, when password doesn't match", async () => {
     const resource = {
-      phoneNumber: "2345678934",
+      phoneNumber: "8522041688",
       password: { password: "Invalid password" },
     };
     const response = await request(app)
@@ -304,7 +304,7 @@ describe("Tests for user controller for updating profile", () => {
   });
   it("Should throw error if user is not present with the provided phone number", async () => {
     const resource = {
-      phoneNumber: "1234567890",
+      phoneNumber: "7330205168",
       profilePicture: "base:image/jpg",
     };
     const response = await request(app)
@@ -405,7 +405,7 @@ describe("User Account Deletion", () => {
 
   test("should delete the user successfully and return 200", async () => {
       const newUser = {
-      phoneNumber: "9999911111",
+      phoneNumber: "6303522765",
       firstName: "Delete",
       lastName: "User",
       password: "Delete@1234",
@@ -431,12 +431,12 @@ describe("User Account Deletion", () => {
   });
   test("should test the catch error", async () => {
         const newUser = {
-      phoneNumber: "9999922222",
-      firstName: "Delete",
-      lastName: "User",
-      password: "Delete@1234",
-      email: "deleteuser2@test.com",
-    };
+          phoneNumber: "6303522765",
+          firstName: "Delete",
+          lastName: "User",
+          password: "Delete@1234",
+          email: "deleteuser2@test.com",
+        };
     const user = await request(app)
       .post("/api/users")
       .send(newUser)

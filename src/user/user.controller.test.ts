@@ -6,7 +6,9 @@ import request from "supertest";
 import { app } from "../../server";
 import { SequelizeConnection } from "../connection/dbconnection";
 import { validateEmail } from "./user.middleware";
+import jwt from "jsonwebtoken";
 import { User } from "./user.model";
+
 describe("User controller Registration", () => {
   let testInstance: Sequelize;
   const originalEnv = process.env;
@@ -244,5 +246,181 @@ describe("User controller Login", () => {
       .post("/api/user")
       .send(resource)
       .expect(412);
+  });
+});
+
+describe("Check Authentication Test Suite", () => {
+  let testInstance: Sequelize;
+  const originalEnv = process.env;
+  const secret = "testsecret";
+
+  beforeEach(() => {
+    process.env = { ...originalEnv };
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
+  beforeAll(() => {
+    testInstance = SequelizeConnection()!;
+  });
+
+  afterAll(async () => {
+    await User.truncate();
+    await testInstance?.close();
+  });
+
+  test("should return 400 if tokens are missing", async () => {
+    const res = await request(app).post("/api/checkAuth");
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe("Missing tokens in headers");
+  });
+
+  test("should return 412 if JWT secret is missing", async () => {
+    process.env.JSON_WEB_SECRET = "";
+
+    const res = await request(app)
+      .post("/api/checkAuth")
+      .set("Authorization", "Bearer dummy")
+      .set("x-refresh-token", "dummy");
+
+    expect(res.status).toBe(412);
+    expect(res.body.message).toBe("Missing JWT secret key");
+  });
+
+  test("should return 404 if user not found with valid access token", async () => {
+    process.env.JSON_WEB_SECRET = secret;
+
+    const token = jwt.sign({ phoneNumber: "9999999999" }, secret, {
+      expiresIn: "1h",
+    });
+
+    const res = await request(app)
+      .post("/api/checkAuth")
+      .set("Authorization", `Bearer ${token}`)
+      .set("x-refresh-token", "dummy");
+
+    expect(res.status).toBe(404);
+    expect(res.body.message).toBe("User not found");
+  });
+
+  test("should return 200 if valid access token and user exist", async () => {
+    process.env.JSON_WEB_SECRET = secret;
+
+    const user = await User.create({
+      phoneNumber: "9999999999",
+      firstName: "Abc",
+      lastName: "Test",
+      password: "Test@123",
+      isDeleted: false,
+    });
+
+    const token = jwt.sign(
+      { phoneNumber: user.phoneNumber },
+      process.env.JSON_WEB_SECRET!,
+      { expiresIn: "1h" }
+    );
+    const res = await request(app)
+      .post("/api/checkAuth")
+      .set("Authorization", `Bearer ${token}`)
+      .set("x-refresh-token", "dummy");
+
+    expect(res.status).toBe(200);
+    expect(res.body.message).toBe("Access token valid");
+  });
+
+  test("should return 403 for invalid access token", async () => {
+    const res = await request(app)
+      .post("/api/checkAuth")
+      .set("Authorization", `Bearer invalid.token.here`)
+      .set("x-refresh-token", "dummy");
+
+    expect(res.status).toBe(403);
+    expect(res.body.message).toBe("Invalid access token");
+  });
+
+  test("should return 403 for invalid refresh token after expired access token", async () => {
+    process.env.JSON_WEB_SECRET = secret;
+
+    const expiredAccessToken = jwt.sign({ phoneNumber: "9999999999" }, secret, {
+      expiresIn: "1s",
+    });
+    await new Promise((res) => setTimeout(res, 1100));
+
+    const res = await request(app)
+      .post("/api/checkAuth")
+      .set("Authorization", `Bearer ${expiredAccessToken}`)
+      .set("x-refresh-token", "invalid.refresh.token");
+
+    expect(res.status).toBe(403);
+    expect(res.body.message).toBe("Invalid refresh token");
+  });
+
+  test("should return 404 if user not found with valid refresh token", async () => {
+    await User.destroy({ where: { phoneNumber: "9999999999" } });
+
+    process.env.JSON_WEB_SECRET = secret;
+
+    const expiredAccessToken = jwt.sign({ phoneNumber: "9999999999" }, secret, {
+      expiresIn: "1s",
+    });
+    await new Promise((res) => setTimeout(res, 1100));
+    const validRefreshToken = jwt.sign("9999999999", secret);
+
+    const res = await request(app)
+      .post("/api/checkAuth")
+      .set("Authorization", `Bearer ${expiredAccessToken}`)
+      .set("x-refresh-token", validRefreshToken);
+
+    expect(res.status).toBe(404);
+    expect(res.body.message).toBe("User not found");
+  });
+
+  test("should return new tokens if access is expired and refresh is valid", async () => {
+    process.env.JSON_WEB_SECRET = secret;
+
+    await User.destroy({ where: { phoneNumber: "9999999999" } });
+
+    const user = await User.create({
+      phoneNumber: "9999999999",
+      firstName: "Abc",
+      lastName: "Test",
+      password: "Test@123",
+      isDeleted: false,
+      email: "abc@gmail.com",
+    });
+
+    const expiredAccessToken = jwt.sign(
+      { phoneNumber: user.phoneNumber },
+      process.env.JSON_WEB_SECRET!,
+      { expiresIn: "-1h" }
+    );
+
+    const validRefreshToken = jwt.sign(
+      { phoneNumber: user.phoneNumber },
+      process.env.JSON_WEB_SECRET!,
+      { expiresIn: "1d" }
+    );
+
+    const res = await request(app)
+      .post("/api/checkAuth")
+      .set("Authorization", `Bearer ${expiredAccessToken}`)
+      .set("x-refresh-token", validRefreshToken);
+
+    expect(res.status).toBe(200);
+    expect(res.body.accessToken).toBeDefined();
+    expect(res.body.refreshToken).toBeDefined();
+    expect(res.body.message).toBe("New access token issued");
+  });
+
+  test("should return 403 when both tokens are invalid", async () => {
+    const response = await request(app)
+      .post("/api/checkAuth")
+      .set("Authorization", `Bearer invalidtoken`)
+      .set("x-refresh-token", `invalidtoken`)
+      .expect(403);
+
+    expect(response.body.message).toBe("Invalid access token");
   });
 });

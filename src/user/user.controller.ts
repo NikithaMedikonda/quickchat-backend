@@ -82,6 +82,7 @@ export async function register(
       }
     }
   } catch (e: any) {
+    console.log(e)
     response.status(500).send(e.message);
   }
 }
@@ -133,5 +134,74 @@ export async function login(
     });
   } catch (e: any) {
     response.status(500).send(e.message);
+  }
+}
+
+export async function checkAuth(
+  request: Request,
+  response: Response
+): Promise<void> {
+  try {
+    const authHeader = request.headers.authorization;
+    const refreshToken = request.headers["x-refresh-token"] as string;
+
+    if (!authHeader || !refreshToken) {
+      response.status(400).json({ message: "Missing tokens in headers" });
+      return;
+    }
+
+    const accessToken = authHeader.split(" ")[1];
+    const secret_key = process.env.JSON_WEB_SECRET;
+    if (!secret_key) {
+      response.status(412).json({ message: "Missing JWT secret key" });
+      return;
+    }
+
+    try {
+      const decoded = jwt.verify(accessToken, secret_key) as jwt.JwtPayload;
+      const user = await User.findOne({
+        where: { phoneNumber: decoded.phoneNumber },
+      });
+
+      if (!user) {
+        response.status(404).json({ message: "User not found" });
+        return;
+      }
+
+      response.status(200).json({ message: "Access token valid" });
+    } catch (error: any) {
+      if (error.name === "TokenExpiredError") {
+        try {
+          const decodedRefresh = jwt.verify(refreshToken, secret_key) as string | jwt.JwtPayload;
+          const phoneNumber = typeof decodedRefresh === 'string' ? decodedRefresh : decodedRefresh.phoneNumber;
+          const user = await User.findOne({ where: { phoneNumber } });
+
+          if (!user) {
+            response.status(404).json({ message: "User not found" });
+            return;
+          }
+
+          const newAccessToken = jwt.sign(
+            { phoneNumber: user.phoneNumber },
+            secret_key,
+            { expiresIn: "7d" }
+          );
+
+          const newRefreshToken = jwt.sign({ phoneNumber: user.phoneNumber }, secret_key);
+
+          response.status(200).json({
+            message: "New access token issued",
+            accessToken: newAccessToken,
+            refreshToken: newRefreshToken,
+          });
+        } catch {
+          response.status(403).json({ message: "Invalid refresh token" });
+        }
+      } else {
+        response.status(403).json({ message: "Invalid access token" });
+      }
+    }
+  } catch (error: any) {
+    response.status(500).send(error.message);
   }
 }

@@ -472,7 +472,7 @@ describe("Check Authentication Test Suite", () => {
   });
 
   test("should return 400 if tokens are missing", async () => {
-    const res = await request(app).post("/api/checkAuth");
+    const res = await request(app).post("/api/auth/validate");
     expect(res.status).toBe(400);
     expect(res.body.message).toBe("Missing tokens in headers");
   });
@@ -481,7 +481,7 @@ describe("Check Authentication Test Suite", () => {
     process.env.JSON_WEB_SECRET = "";
 
     const res = await request(app)
-      .post("/api/checkAuth")
+      .post("/api/auth/validate")
       .set("Authorization", "Bearer dummy")
       .set("x-refresh-token", "dummy");
 
@@ -497,7 +497,7 @@ describe("Check Authentication Test Suite", () => {
     });
 
     const res = await request(app)
-      .post("/api/checkAuth")
+      .post("/api/auth/validate")
       .set("Authorization", `Bearer ${token}`)
       .set("x-refresh-token", "dummy");
 
@@ -522,7 +522,7 @@ describe("Check Authentication Test Suite", () => {
       { expiresIn: "1h" }
     );
     const res = await request(app)
-      .post("/api/checkAuth")
+      .post("/api/auth/validate")
       .set("Authorization", `Bearer ${token}`)
       .set("x-refresh-token", "dummy");
 
@@ -532,7 +532,7 @@ describe("Check Authentication Test Suite", () => {
 
   test("should return 403 for invalid access token", async () => {
     const res = await request(app)
-      .post("/api/checkAuth")
+      .post("/api/auth/validate")
       .set("Authorization", `Bearer invalid.token.here`)
       .set("x-refresh-token", "dummy");
 
@@ -549,7 +549,7 @@ describe("Check Authentication Test Suite", () => {
     await new Promise((res) => setTimeout(res, 1100));
 
     const res = await request(app)
-      .post("/api/checkAuth")
+      .post("/api/auth/validate")
       .set("Authorization", `Bearer ${expiredAccessToken}`)
       .set("x-refresh-token", "invalid.refresh.token");
 
@@ -569,7 +569,7 @@ describe("Check Authentication Test Suite", () => {
     const validRefreshToken = jwt.sign("9999999999", secret);
 
     const res = await request(app)
-      .post("/api/checkAuth")
+      .post("/api/auth/validate")
       .set("Authorization", `Bearer ${expiredAccessToken}`)
       .set("x-refresh-token", validRefreshToken);
 
@@ -604,7 +604,7 @@ describe("Check Authentication Test Suite", () => {
     );
 
     const res = await request(app)
-      .post("/api/checkAuth")
+      .post("/api/auth/validate")
       .set("Authorization", `Bearer ${expiredAccessToken}`)
       .set("x-refresh-token", validRefreshToken);
 
@@ -616,7 +616,7 @@ describe("Check Authentication Test Suite", () => {
 
   test("should return 403 when both tokens are invalid", async () => {
     const response = await request(app)
-      .post("/api/checkAuth")
+      .post("/api/auth/validate")
       .set("Authorization", `Bearer invalidtoken`)
       .set("x-refresh-token", `invalidtoken`)
       .expect(403);

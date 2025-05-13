@@ -1,8 +1,9 @@
 import bcrypt from "bcrypt";
 import * as dotenv from "dotenv";
-import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import { Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
+import { defaultProfileImage } from "../constants/example.defaultProfile";
 import { DbUser, user } from "../types/user";
 import { getProfileImageLink } from "../utils/uploadImage";
 import { User } from "./user.model";
@@ -81,9 +82,8 @@ export async function register(
           .json({ accessToken: token, refreshToken: refreshToken, user: user });
       }
     }
-  } catch (e: any) {
-    console.log(e)
-    response.status(500).send(e.message);
+  } catch (error: any) {
+    response.status(500).send(error.message);
   }
 }
 
@@ -132,8 +132,80 @@ export async function login(
       refreshToken,
       user,
     });
-  } catch (e: any) {
-    response.status(500).send(e.message);
+  } catch (error: any) {
+    response.status(500).send(error.message);
+  }
+}
+
+
+export async function update(
+  request: Request,
+  response: Response
+): Promise<void> {
+  try {
+    const user = request.body;
+    if (!user.phoneNumber) {
+      response.status(400).json({
+        message: "Phone Number is required to change the profile image.",
+      });
+      return;
+    }
+    const existingUser = await User.findOne({
+      where: { phoneNumber: user.phoneNumber },
+    });
+    if (!existingUser) {
+      response.status(404).send({
+        message: "No user exists with the given phone number.",
+      });
+      return;
+    }
+    if (user.profilePicture) {
+      let profilePicture = null;
+      if (user.profilePicture === defaultProfileImage) {
+        profilePicture = user.profilePicture;
+      } else {
+        profilePicture = await getProfileImageLink(user.profilePicture);
+        user.profilePicture = profilePicture;
+      }
+    }
+    await existingUser.update(user);
+    response.status(200).json({
+      message: "Profile updated successfully.",
+      user: existingUser,
+    });
+  } catch (error) {
+    response.status(500).json({ error: error });
+  }
+}
+
+export async function deleteAccount(
+  request: Request,
+  response: Response
+): Promise<void> {
+  try {
+    const { phoneNumber } = request.body;
+    const existingUser = await User.findOne({
+      where: { phoneNumber: request.body.phoneNumber, isDeleted: false },
+    });
+    if (!existingUser) {
+      response.status(404).json({ message: "Invalid phone number" });
+    } else {
+      await User.update(
+        {
+          firstName: "deleteFirstName",
+          lastName: "deleteLasttName",
+          profilePicture: "",
+          phoneNumber: `deletedPhoneNumber_${existingUser.id}`,
+          email:`deletedEmail_${existingUser.id}`,
+          password: "deletePhoneNumber",
+          isDeleted: true,
+        },
+        { where: { phoneNumber } }
+      );
+      response.status(200).json({ message: "Account deleted succesfully" });
+    }
+  } catch (error: any) {
+    response.status(500).send(error.message);
   }
 }
 

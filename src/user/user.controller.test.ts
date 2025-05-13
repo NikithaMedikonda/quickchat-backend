@@ -257,6 +257,7 @@ describe("User controller Login", () => {
       .expect(412);
   });
 });
+
 describe("Tests for user controller for updating profile", () => {
   let testInstance: Sequelize;
   const originalEnv = process.env;
@@ -447,8 +448,6 @@ describe("User Account Deletion", () => {
       .expect(500);
   });
 });
-
-
 
 describe("Check Authentication Test Suite", () => {
   let testInstance: Sequelize;

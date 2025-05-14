@@ -293,3 +293,43 @@ export async function refreshOrValidateAuth(
     response.status(500).send(error.message);
   }
 }
+
+export async function contactDetails(
+  request: Request,
+  response: Response
+): Promise<void> {
+  try {
+    const phoneNumbersList: string[] = request.body;
+
+    const users = await User.findAll({
+      where: {
+        phoneNumber: {
+          [Op.in]: phoneNumbersList,
+        },
+      },
+      attributes: ["firstName", "lastName", "phoneNumber", "profilePicture"], 
+    });
+
+    const registeredUsers = users.map(user => ({
+      name: `${user.firstName} ${user.lastName}`,
+      phoneNumber: user.phoneNumber,
+      profilePicture: user.profilePicture,
+    }))
+
+    const registeredPhoneNumbers = users.map(user => user.phoneNumber);
+
+    const unRegisteredUsers = phoneNumbersList.filter(
+      phone => !registeredPhoneNumbers.includes(phone)
+    );
+
+    response.status(200).json({ 
+     data: {
+    registeredUsers: registeredUsers,
+    unRegisteredUsers: unRegisteredUsers
+  }
+     });
+
+  } catch (error: any) {
+    response.status(500).json({ message: error.message });
+  }
+}

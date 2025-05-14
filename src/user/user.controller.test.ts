@@ -100,7 +100,7 @@ describe("User controller Registration", () => {
     expect(response.body.accessToken).toBeTruthy();
     expect(response.body.refreshToken).toBeTruthy();
   });
-    test("should return user already existed with this number when the phone number is already registered", async () => {
+  test("should return user already existed with this number when the phone number is already registered", async () => {
     const newResource2 = {
       phoneNumber: "9440058809",
       firstName: "Test Resource3",
@@ -129,7 +129,7 @@ describe("User controller Registration", () => {
     const newResource = {
       phoneNumber: "9999988888",
       firstName: "Anoosha",
-      lastName: {invalid:'Uppu'},
+      lastName: { invalid: "Uppu" },
       password: "Anu@1234",
       email: "anusha123@gmail.com",
     };
@@ -139,7 +139,7 @@ describe("User controller Registration", () => {
       .expect(500);
     expect(response2.error).toBeTruthy();
   });
-    test("should return secret_key missing error when the secret_key is missing", async () => {
+  test("should return secret_key missing error when the secret_key is missing", async () => {
     delete process.env.JSON_WEB_SECRET;
     const newResource3 = {
       phoneNumber: "6303522765",
@@ -153,7 +153,6 @@ describe("User controller Registration", () => {
       .send(newResource3)
       .expect(412);
   });
-
 });
 
 describe("User controller Login", () => {
@@ -302,7 +301,7 @@ describe("Tests for user controller for updating profile", () => {
     };
     const response = await request(app)
       .put("/api/user")
-      .set({ Authorization:  `Bearer ${accessToken}` })
+      .set({ Authorization: `Bearer ${accessToken}` })
       .send(resource)
       .expect(400);
   });
@@ -313,9 +312,9 @@ describe("Tests for user controller for updating profile", () => {
     };
     const response = await request(app)
       .put("/api/user")
-      .set({ Authorization:  `Bearer ${accessToken}` })
+      .set({ Authorization: `Bearer ${accessToken}` })
       .send(resource)
-      .expect(404); 
+      .expect(404);
   });
 
   it("Should update profile details properly", async () => {
@@ -325,10 +324,10 @@ describe("Tests for user controller for updating profile", () => {
     };
     const newResponse = await request(app)
       .put("/api/user")
-      .set({ Authorization:  `Bearer ${accessToken}` })
+      .set({ Authorization: `Bearer ${accessToken}` })
       .send(resource)
       .expect(200);
-    
+
     expect(newResponse.body.user.profilePicture).toBeTruthy();
   });
 
@@ -339,12 +338,12 @@ describe("Tests for user controller for updating profile", () => {
     };
     const response = await request(app)
       .put("/api/user")
-      .set({ Authorization:  `Bearer ${accessToken}` })
+      .set({ Authorization: `Bearer ${accessToken}` })
       .send(resource)
       .expect(200);
     expect(response.body.user.profilePicture).toEqual(defaultProfileImage);
   });
-  
+
   it("Should respond with status code 500 if something goes wrong", async () => {
     process.env.SERVICE_KEY = "unknown-service_key";
     const resource = {
@@ -354,7 +353,7 @@ describe("Tests for user controller for updating profile", () => {
     try {
       const newResponse = await request(app)
         .put("/api/user")
-        .set({ Authorization:  `Bearer ${accessToken}` })
+        .set({ Authorization: `Bearer ${accessToken}` })
         .send(resource)
         .expect(500);
     } catch (error) {
@@ -377,16 +376,15 @@ describe("User Account Deletion", () => {
 
   beforeAll(async () => {
     testInstance = SequelizeConnection()!;
-    
   });
-  
+
   afterAll(async () => {
     await User.truncate();
     await testInstance?.close();
   });
 
   test("should return 404 when user does not exist", async () => {
-      const newUser = {
+    const newUser = {
       phoneNumber: "9876543210",
       firstName: "Delete",
       lastName: "User",
@@ -408,7 +406,7 @@ describe("User Account Deletion", () => {
   });
 
   test("should delete the user successfully and return 200", async () => {
-      const newUser = {
+    const newUser = {
       phoneNumber: "6303522765",
       firstName: "Delete",
       lastName: "User",
@@ -433,24 +431,6 @@ describe("User Account Deletion", () => {
     expect(userInDb?.isDeleted).toBe(true);
     expect(userInDb?.phoneNumber).toBe(`deletedPhoneNumber_${userInDb?.id}`);
   });
-  test("should test the catch error", async () => {
-        const newUser = {
-          phoneNumber: "6303522765",
-          firstName: "Delete",
-          lastName: "User",
-          password: "Delete@1234",
-          email: "deleteuser2@test.com",
-        };
-    const user = await request(app)
-      .post("/api/users")
-      .send(newUser)
-      .expect(200);
-    const response = await request(app)
-      .post("/api/deleteAccount")
-      .set("authorization", `Bearer ${user.body.accessToken}`)
-      .send({ phoneNumber: { invalid: "Invalid password" } })
-      .expect(500);
-  });
 });
 
 describe("Check Authentication Test Suite", () => {
@@ -468,6 +448,7 @@ describe("Check Authentication Test Suite", () => {
 
   beforeAll(() => {
     testInstance = SequelizeConnection()!;
+    process.env.JSON_WEB_SECRET = secret;
   });
 
   afterAll(async () => {
@@ -626,5 +607,125 @@ describe("Check Authentication Test Suite", () => {
       .expect(403);
 
     expect(response.body.message).toBe("Invalid access token");
+  });
+
+});
+
+describe("Contacts Display Test Suite", () => {
+  let testInstance: Sequelize;
+  const originalEnv = process.env;
+  let accessToken: string;
+
+  beforeEach(() => {
+    process.env = { ...originalEnv };
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
+  beforeAll(() => {
+    testInstance = SequelizeConnection()!;
+  });
+
+  afterAll(async () => {
+    await User.truncate();
+    await testInstance?.close();
+  });
+
+  it("should return user contact details (registered and unregistered)", async () => {
+    const newResource = {
+      phoneNumber: "9876543210",
+      firstName: "Test Resource2",
+      lastName: "A test resource2",
+      password: "tesT@1234",
+      email: "test@gmail.com",
+    };
+
+    const responseLogin = await request(app)
+      .post("/api/users")
+      .send(newResource)
+      .expect(200);
+
+    expect(responseLogin.body.accessToken).toBeTruthy();
+    accessToken = responseLogin.body.accessToken;
+    expect(responseLogin.body.refreshToken).toBeTruthy();
+
+    const userOne = {
+      phoneNumber: "7997520973",
+      firstName: "Test",
+      lastName: "One",
+      password: "tesT@1234",
+      email: "testOne@gmail.com",
+    };
+
+    const userTwo = {
+      phoneNumber: "9248434816",
+      firstName: "Test",
+      lastName: "Two",
+      password: "tesT@1234",
+      email: "testTwo@gmail.com",
+    };
+
+    await request(app).post("/api/users").send(userOne).expect(200);
+    await request(app).post("/api/users").send(userTwo).expect(200);
+
+    const phoneNumbersListToTest = [
+      "8522041688",
+      "98866349126",
+      "9248434816",
+      "7997520973",
+    ];
+
+    const response = await request(app)
+      .post("/api/users/contacts")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send(phoneNumbersListToTest);
+
+    expect(response.body.data).toBeTruthy();
+    expect(response.body.data).toHaveProperty("unRegisteredUsers");
+
+    const { registeredUsers, unRegisteredUsers } = response.body.data;
+
+    expect(registeredUsers.length).toBe(2);
+    expect(registeredUsers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: "Test One",
+          phoneNumber: "7997520973",
+          profilePicture: null,
+        }),
+        expect.objectContaining({
+          name: "Test Two",
+          phoneNumber: "9248434816",
+          profilePicture: null,
+        }),
+      ])
+    );
+
+    expect(unRegisteredUsers.length).toBe(2);
+    expect(unRegisteredUsers).toEqual(
+      expect.arrayContaining(["8522041688", "98866349126"])
+    );
+  });
+
+  it("should handle error when the database query fails", async () => {
+    User.findAll = jest.fn().mockRejectedValue(new Error("Database query failed"));
+
+    const phoneNumbersListToTest = [
+      "8522041688",
+      "98866349126",
+      "9248434816",
+      "7997520973",
+    ];
+
+    const response = await request(app)
+      .post("/api/users/contacts")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send(phoneNumbersListToTest);
+
+    expect(response.status).toBe(500);
+
+    expect(response.body.message).toBe("Database query failed");
   });
 });

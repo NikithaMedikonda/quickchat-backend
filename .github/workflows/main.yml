@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - token-authentication
+      - route/contacts-display
 
 jobs:
   QuickChat-backend:

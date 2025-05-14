@@ -1,5 +1,5 @@
 import express from "express";
-import { refreshOrValidateAuth, login, register, deleteAccount, update} from "./user.controller";
+import { refreshOrValidateAuth, login, register, deleteAccount, update,} from "./user.controller";
 import { authenticateToken, validateInputFields, validateLoginInputFields } from "./user.middleware";
 
 export const userRouter = express.Router();

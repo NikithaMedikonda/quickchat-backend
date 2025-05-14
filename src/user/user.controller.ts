@@ -3,11 +3,12 @@ import * as dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import { Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
+import { Op } from "sequelize";
 import { defaultProfileImage } from "../constants/example.defaultProfile";
 import { DbUser, user } from "../types/user";
 import { getProfileImageLink } from "../utils/uploadImage";
 import { User } from "./user.model";
-import { Op } from "sequelize";
+
 
 dotenv.config();
 

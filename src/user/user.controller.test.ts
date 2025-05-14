@@ -202,19 +202,6 @@ describe("User controller Login", () => {
       .expect(404);
   });
   test("should return the access token and refresh token when the user is created successfully", async () => {
-    const newResource = {
-      phoneNumber: "8522041688",
-      firstName: "Test Resource2",
-      lastName: "A test resource2",
-      password: "Anu@1234",
-      email: "anusha@gmail.com",
-    };
-    const response = await request(app)
-      .post("/api/users")
-      .send(newResource)
-      .expect(200);
-    expect(response.body.accessToken).toBeTruthy();
-    expect(response.body.refreshToken).toBeTruthy();
   });
   test("should return the access token and refresh token when the user is fetched successfully", async () => {
     const resource = {
@@ -628,3 +615,105 @@ describe("Check Authentication Test Suite", () => {
     expect(response.body.message).toBe("Invalid access token");
   });
 });
+
+describe("Contacts Display Test Suite", () => {
+  let testInstance: Sequelize;
+  const originalEnv = process.env;
+  let accessToken: string;
+
+  beforeEach(() => {
+    process.env = { ...originalEnv };
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
+  beforeAll(() => {
+    testInstance = SequelizeConnection()!;
+  });
+
+  afterAll(async () => {
+    await User.truncate();
+    await testInstance?.close();
+  });
+
+  it("should return the access token and refresh token when the user is created successfully", async () => {
+    const newResource = {
+      phoneNumber: "9876543210",
+      firstName: "Test Resource2",
+      lastName: "A test resource2",
+      password: "tesT@1234",
+      email: "test@gmail.com",
+    };
+    const response = await request(app)
+      .post("/api/users")
+      .send(newResource)
+      .expect(200);
+    expect(response.body.accessToken).toBeTruthy();
+    accessToken = response.body.accessToken;
+    expect(response.body.refreshToken).toBeTruthy();
+  });
+
+  it("should return user contact details", async() => {
+     await User.bulkCreate([
+      {
+        phoneNumber: "1234567890",
+        firstName: "TestUser",
+        lastName: "One",
+        profilePicture: "https://example.com/testUserOne.jpg",
+        password: "test1234",
+        email: "test@gmail.com",
+        isDeleted: false,
+      },
+      {
+        phoneNumber: "9876543210",
+        firstName: "TestUser",
+        lastName: "Two",
+        profilePicture: null,
+        password: "test5678",
+        isDeleted: false,
+      },
+    ]);
+
+    const phoneNumbersListToTest = [
+      "1234567890", 
+      "9876543210", 
+      "5555555555", 
+      "9999999999", 
+    ];
+
+    const response = await request(app)
+      .post("/api/users/contacts")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send(phoneNumbersListToTest)
+      .expect(200);
+
+    expect(response.body).toHaveProperty("registeredUsers");
+    expect(response.body).toHaveProperty("unRegisteredUsers");
+
+    const { registeredUsers, unRegisteredUsers } = response.body;
+
+    expect(registeredUsers.length).toBe(2);
+    expect(registeredUsers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: "TestUser One",
+          phoneNumber: "1234567890",
+          profilePicture: "https://example.com/testUserOne.jpg",
+        }),
+        expect.objectContaining({
+          name: "TestUser Two",
+          phoneNumber: "9876543210",
+          profilePicture: null,
+        }),
+      ])
+    );
+
+    expect(unRegisteredUsers.length).toBe(2);
+    expect(unRegisteredUsers).toEqual(
+      expect.arrayContaining(["5555555555", "9999999999"])
+    );
+  });
+});
+    

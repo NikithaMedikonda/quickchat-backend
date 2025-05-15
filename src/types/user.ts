@@ -13,7 +13,7 @@ export type DbUser = {
   firstName: string;
   lastName: string;
   profilePicture: string | null ;
-  email?: string ;
+  email: string |null;
   password: string;
   isDeleted: boolean;
 };

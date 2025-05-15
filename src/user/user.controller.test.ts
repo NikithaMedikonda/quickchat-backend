@@ -3,6 +3,7 @@ import request from "supertest";
 import { app } from "../../server";
 import { base64 } from "../constants/example.base64";
 import { defaultProfileImage } from "../constants/example.defaultProfile";
+import { databaseImage } from "../constants/example.defaultProfile";
 import { SequelizeConnection } from "../connection/dbconnection";
 import { Sequelize } from "sequelize";
 import { User } from "./user.model";

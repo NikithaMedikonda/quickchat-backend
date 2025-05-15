@@ -16,7 +16,7 @@ export class User extends Model<
   declare firstName: string;
   declare lastName: string;
   declare profilePicture: string | null;
-  declare email: string | undefined;
+  declare email: string | null;
   declare password: string;
   declare isDeleted: boolean;
 }

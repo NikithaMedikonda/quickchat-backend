@@ -167,6 +167,10 @@ export async function update(
       });
       return;
     }
+    const profilePicture = existingUser.dataValues.profilePicture;
+    if(user.profilePicture===''){
+      user.profilePicture=profilePicture
+    }
     if (user.profilePicture) {
       let profilePicture = null;
       if (user.profilePicture === defaultProfileImage) {
@@ -176,6 +180,7 @@ export async function update(
         user.profilePicture = profilePicture;
       }
     }
+    
     await existingUser.update(user);
     response.status(200).json({
       message: "Profile updated successfully.",

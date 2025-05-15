@@ -21,7 +21,7 @@ export async function createUser(user: user) {
     firstName: user.firstName,
     lastName: user.lastName,
     profilePicture: user.profilePicture ? user.profilePicture : null,
-    email: user.email,
+    email: user.email? user.email:null,
     password: hashPassword,
     isDeleted: false,
   };

@@ -9,7 +9,6 @@ import { DbUser, user } from "../types/user";
 import { getProfileImageLink } from "../utils/uploadImage";
 import { User } from "./user.model";
 
-
 dotenv.config();
 
 export async function createUser(user: user) {
@@ -21,7 +20,7 @@ export async function createUser(user: user) {
     firstName: user.firstName,
     lastName: user.lastName,
     profilePicture: user.profilePicture ? user.profilePicture : null,
-    email: user.email? user.email:null,
+    email: user.email ? user.email : null,
     password: hashPassword,
     isDeleted: false,
   };
@@ -43,11 +42,9 @@ export async function register(
       },
     });
     if (existingUser) {
-      response
-        .status(409)
-        .json({
-          message: "User already exists with this phone number or email",
-        });
+      response.status(409).json({
+        message: "User already exists with this phone number or email",
+      });
     } else {
       const secret_key = process.env.JSON_WEB_SECRET;
       if (!secret_key) {
@@ -167,26 +164,24 @@ export async function update(
       });
       return;
     }
-    const profilePicture = existingUser.dataValues.profilePicture;
-    if(user.profilePicture===''){
-      user.profilePicture=profilePicture
-    }
+    let profilePicture = existingUser.dataValues.profilePicture;
     if (user.profilePicture) {
-      let profilePicture = null;
       if (user.profilePicture === defaultProfileImage) {
         profilePicture = user.profilePicture;
       } else {
         profilePicture = await getProfileImageLink(user.profilePicture);
         user.profilePicture = profilePicture;
       }
+    } else {
+      user.profilePicture = profilePicture;
     }
-    
     await existingUser.update(user);
     response.status(200).json({
       message: "Profile updated successfully.",
       user: existingUser,
     });
   } catch (error) {
+    console.log(error);
     response.status(500).json({ error: error });
   }
 }
@@ -312,28 +307,27 @@ export async function contactDetails(
           [Op.in]: phoneNumbersList,
         },
       },
-      attributes: ["firstName", "lastName", "phoneNumber", "profilePicture"], 
+      attributes: ["firstName", "lastName", "phoneNumber", "profilePicture"],
     });
 
-    const registeredUsers = users.map(user => ({
+    const registeredUsers = users.map((user) => ({
       name: `${user.firstName} ${user.lastName}`,
       phoneNumber: user.phoneNumber,
       profilePicture: user.profilePicture,
-    }))
+    }));
 
-    const registeredPhoneNumbers = users.map(user => user.phoneNumber);
+    const registeredPhoneNumbers = users.map((user) => user.phoneNumber);
 
     const unRegisteredUsers = phoneNumbersList.filter(
-      phone => !registeredPhoneNumbers.includes(phone)
+      (phone) => !registeredPhoneNumbers.includes(phone)
     );
 
-    response.status(200).json({ 
-     data: {
-    registeredUsers: registeredUsers,
-    unRegisteredUsers: unRegisteredUsers
-  }
-     });
-
+    response.status(200).json({
+      data: {
+        registeredUsers: registeredUsers,
+        unRegisteredUsers: unRegisteredUsers,
+      },
+    });
   } catch (error: any) {
     response.status(500).json({ message: error.message });
   }

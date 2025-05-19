@@ -344,6 +344,19 @@ describe("Tests for user controller for updating profile", () => {
       .expect(200);
     expect(response.body.user.profilePicture).toEqual(defaultProfileImage);
   });
+  
+  it("Should just assign db profile pic if user didn't change the profile dp", async () => {
+    const resource = {
+      phoneNumber: "9876543210",
+      profilePicture: '',
+    };
+    const response = await request(app)
+      .put("/api/user")
+      .set({ Authorization: `Bearer ${accessToken}` })
+      .send(resource)
+      .expect(200);
+    expect(response.body.user.profilePicture).toEqual(defaultProfileImage);
+  });
 
   it("Should respond with status code 500 if something goes wrong", async () => {
     process.env.SERVICE_KEY = "unknown-service_key";

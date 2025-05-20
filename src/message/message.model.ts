@@ -5,9 +5,9 @@ import {
   InferCreationAttributes,
   Model,
 } from "sequelize";
+import { Chat } from "../chat/chat.model";
 import { sequelizeInstance } from "../connection/dbconnection";
 import { User } from "../user/user.model";
-import { Chat } from "../chat/chat.model";
 
 export enum MessageStatus {
   Sent = "sent",
@@ -26,6 +26,7 @@ export class Message extends Model<
   declare content: string;
   declare status: MessageStatus;
   declare isEncrypted: boolean;
+  declare createdAt: Date;
 }
 
 Message.init(
@@ -75,6 +76,7 @@ Message.init(
       defaultValue: false,
       field: "is_encrypted",
     },
+    createdAt: DataTypes.DATE,
   },
   {
     sequelize: sequelizeInstance,

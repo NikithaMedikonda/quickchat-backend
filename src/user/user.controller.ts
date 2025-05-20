@@ -1,20 +1,20 @@
 import bcrypt from "bcrypt";
 import * as dotenv from "dotenv";
 import jwt from "jsonwebtoken";
+import { Op } from "sequelize";
 import { Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
-import { Op } from "sequelize";
+import { DbUser, UserInfo} from "../types/user";
 import { defaultProfileImage } from "../constants/example.defaultProfile";
-import { DbUser, user } from "../types/user";
 import { getProfileImageLink } from "../utils/uploadImage";
 import { User } from "./user.model";
 
 dotenv.config();
 
-export async function createUser(user: user) {
+export async function createUser(user: UserInfo) {
   const salt = await bcrypt.genSalt();
   const hashPassword = await bcrypt.hash(user.password, salt);
-  const newUser: DbUser = {
+  const newUser = {
     id: uuidv4(),
     phoneNumber: user.phoneNumber,
     firstName: user.firstName,
@@ -23,6 +23,9 @@ export async function createUser(user: user) {
     email: user.email ? user.email : null,
     password: hashPassword,
     isDeleted: false,
+    publicKey: user.publicKey,
+    privateKey: user.privateKey,
+    socketId: user.socketId ? user.socketId : "",
   };
   const createdUser: DbUser = await User.create(newUser);
   return createdUser;
@@ -54,7 +57,7 @@ export async function register(
         if (request.body.profilePicture) {
           profileUrl = await getProfileImageLink(request.body.profilePicture);
         }
-        const userBody: user = {
+        const userBody: UserInfo = {
           phoneNumber: request.body.phoneNumber,
           firstName: request.body.firstName,
           lastName: request.body.lastName,
@@ -62,6 +65,9 @@ export async function register(
           password: request.body.password,
           isDeleted: false,
           profilePicture: profileUrl,
+          publicKey: request.body.publicKey,
+          privateKey: request.body.privateKey,
+          socketId: request.body.socketId,
         };
         const newUser: DbUser = await createUser(userBody);
         const token = jwt.sign(
@@ -76,12 +82,16 @@ export async function register(
           secret_key.toString()
         );
         const user = {
+          id:newUser.id,
           firstName: newUser.firstName,
           lastName: newUser.lastName,
           profilePicture: newUser.profilePicture,
           email: newUser.email,
           phoneNumber: newUser.phoneNumber,
           isDeleted: newUser.isDeleted,
+          publicKey: newUser.publicKey,
+          privateKey: newUser.privateKey,
+          socketId: newUser.socketId,
         };
         response
           .status(200)
@@ -132,6 +142,9 @@ export async function login(
       email: existingUser.email,
       phoneNumber: existingUser.phoneNumber,
       isDeleted: existingUser.isDeleted,
+      publicKey: existingUser.publicKey,
+      privateKey: existingUser.privateKey,
+      socketId: existingUser.socketId,
     };
     response.status(200).json({
       accessToken,
@@ -181,7 +194,6 @@ export async function update(
       user: existingUser,
     });
   } catch (error) {
-    console.log(error);
     response.status(500).json({ error: error });
   }
 }
@@ -207,6 +219,9 @@ export async function deleteAccount(
           email: `deletedEmail_${existingUser.id}`,
           password: "deletePhoneNumber",
           isDeleted: true,
+          publicKey: "deletedPublicKey",
+          privateKey: "deletedPrivateKey",
+          socketId: "deletedSocketId",
         },
         { where: { phoneNumber } }
       );

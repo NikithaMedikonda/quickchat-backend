@@ -1,9 +1,7 @@
-import dotenv from "dotenv";
 import request from "supertest";
 import { app } from "../../server";
 import { base64 } from "../constants/example.base64";
 import { defaultProfileImage } from "../constants/example.defaultProfile";
-import { databaseImage } from "../constants/example.defaultProfile";
 import { SequelizeConnection } from "../connection/dbconnection";
 import { Sequelize } from "sequelize";
 import { User } from "./user.model";
@@ -22,7 +20,7 @@ describe("User controller Registration", () => {
     testInstance = SequelizeConnection()!;
   });
   afterAll(async () => {
-    await User.truncate();
+    await User.truncate({ cascade: true });
     await testInstance?.close();
   });
   test("Should return error message when the required fields are missing", async () => {
@@ -169,7 +167,7 @@ describe("User controller Login", () => {
     testInstance = SequelizeConnection()!;
   });
   afterAll(async () => {
-    await User.truncate();
+    await User.truncate({ cascade: true });
     await testInstance?.close();
   });
   test("Should return error message when the required fields are missing in while user login", async () => {
@@ -276,7 +274,7 @@ describe("Tests for user controller for updating profile", () => {
     testInstance = SequelizeConnection()!;
   });
   afterAll(async () => {
-    await User.truncate();
+    await User.truncate({ cascade: true });
     await testInstance?.close();
   });
 
@@ -393,7 +391,7 @@ describe("User Account Deletion", () => {
   });
 
   afterAll(async () => {
-    await User.truncate();
+    await User.truncate({ cascade: true });
     await testInstance?.close();
   });
 
@@ -466,7 +464,7 @@ describe("Check Authentication Test Suite", () => {
   });
 
   afterAll(async () => {
-    await User.truncate();
+    await User.truncate({ cascade: true });
     await testInstance?.close();
   });
 
@@ -643,7 +641,7 @@ describe("Contacts Display Test Suite", () => {
   });
 
   afterAll(async () => {
-    await User.truncate();
+    await User.truncate({ cascade: true });
     await testInstance?.close();
   });
 

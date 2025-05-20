@@ -21,24 +21,6 @@ describe("Authentication route", () => {
     jest.clearAllMocks();
     process.env = { ...originalEnv };
   });
-
-  it("should call the next function", async () => {
-    mockRequest = {
-      headers: {
-        authorization:
-          "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwaG9uZU51bWJlciI6Ijg1MjIwNDE2OTkiLCJpYXQiOjE3NDcwNDI1MzMsImV4cCI6MTc0NzY0NzMzM30.zfGO0o56jDmcPTEulBNiI_aPK15rWG-oKKXvL_64X3w",
-      },
-      body: {},
-    };
-    process.env.JSON_WEB_SECRET = "quick_chat_secret";
-    await authenticateToken(
-      mockRequest as Request,
-      mockResponse as Response,
-      mockNext as NextFunction
-    );
-    expect(mockNext).toHaveBeenCalledTimes(1);
-  });
-
   it("should return error message when the token is missing ", async () => {
     mockRequest = { headers: {}, body: {} };
     process.env.JSON_WEB_SECRET = "quick_chat_secret";

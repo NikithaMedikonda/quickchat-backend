@@ -31,9 +31,11 @@ const startServer = async () => {
     if (process.env.NODE_ENV === "test") {
       await sequelizeInstance.sync({ alter: true });
     }
+    if(process.env.NODE_ENV!=="test"){
     server.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
     });
+  }
   } catch (error: any) {
     if (error instanceof Error) {
       throw new Error(

@@ -8,7 +8,8 @@ export const findByPhoneNumber = async (phoneNumber: string) => {
     }
     return user.id;
   } catch (error) {
-    throw new Error(`${error}`);
+    throw new Error(
+      `Error while fetching the user ${(error as Error).message}`
+    );
   }
 };
-

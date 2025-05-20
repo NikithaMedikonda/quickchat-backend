@@ -21,7 +21,8 @@ const startServer = async () => {
     await sequelizeInstance.authenticate();
     console.log("Database connected successfully!");
     syncAssociations();
-    console.log("Associations synced successfully.")
+    console.log("Associations synced successfully.");
+    await sequelizeInstance.sync({alter:true})
     app.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
     });

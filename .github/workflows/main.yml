@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - edit-profile-edgecases
+      - user-model-modification
 
 jobs:
   QuickChat-backend:

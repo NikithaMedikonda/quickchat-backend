@@ -1,5 +1,5 @@
 import { Server } from "socket.io";
-import { Message } from "../types/message";
+import { MessageData, PrivateMessage } from "../types/message";
 
 interface UserSockets {
   [userId: string]: string;
@@ -13,7 +13,7 @@ export const setupSocket = (io: Server) => {
       userSockets[userId] = socket.id;
     });
 
-    socket.on("send_message", (data: Message) => {
+    socket.on("send_message", (data: MessageData) => {
       const userId =
         Object.keys(userSockets).find(
           (userId) => userSockets[userId] === socket.id
@@ -28,12 +28,7 @@ export const setupSocket = (io: Server) => {
         fromUserId,
         message,
         timestamp,
-      }: {
-        toUserId: number;
-        fromUserId: number;
-        message: string;
-        timestamp: any;
-      }) => {
+      }: PrivateMessage) => {
         const targetSocketId = userSockets[toUserId];
         if (targetSocketId) {
           io.to(targetSocketId).emit("receive_private_message", {

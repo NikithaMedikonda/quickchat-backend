@@ -19,6 +19,9 @@ export class User extends Model<
   declare email: string | null;
   declare password: string;
   declare isDeleted: boolean;
+  declare publicKey: string;
+  declare privateKey: string;
+  declare socketId: string;
 }
 
 User.init(
@@ -62,6 +65,18 @@ User.init(
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+    publicKey: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    privateKey: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    socketId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
   },
   {
     sequelize: sequelizeInstance!,
@@ -70,4 +85,3 @@ User.init(
     timestamps: true,
   }
 );
-

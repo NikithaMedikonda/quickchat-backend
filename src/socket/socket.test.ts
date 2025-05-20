@@ -57,7 +57,14 @@ test("should send a private message from one user to another", (done) => {
   clientB = Client(SERVER_URL);
 
   let clientBReady = false;
-
+  function sendPrivateMessageIfReady() {
+    clientA.emit("send_private_message", {
+      toUserId,
+      fromUserId,
+      message,
+      timestamp,
+    });
+  }
   clientB.on("connect", () => {
     clientB.emit("join", { userId: toUserId });
 
@@ -85,12 +92,5 @@ test("should send a private message from one user to another", (done) => {
     }
   });
 
-  function sendPrivateMessageIfReady() {
-    clientA.emit("send_private_message", {
-      toUserId,
-      fromUserId,
-      message,
-      timestamp,
-    });
-  }
+ 
 });

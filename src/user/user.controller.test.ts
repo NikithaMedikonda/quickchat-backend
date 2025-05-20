@@ -1,14 +1,13 @@
-import dotenv from "dotenv";
+import jwt from "jsonwebtoken";
 import request from "supertest";
 import { app } from "../../server";
 import { base64 } from "../constants/example.base64";
 import { defaultProfileImage } from "../constants/example.defaultProfile";
-import { databaseImage } from "../constants/example.defaultProfile";
 import { SequelizeConnection } from "../connection/dbconnection";
 import { Sequelize } from "sequelize";
 import { User } from "./user.model";
 import { validateEmail } from "./user.middleware";
-import jwt from "jsonwebtoken";
+
 describe("User controller Registration", () => {
   let testInstance: Sequelize;
   const originalEnv = process.env;
@@ -22,7 +21,7 @@ describe("User controller Registration", () => {
     testInstance = SequelizeConnection()!;
   });
   afterAll(async () => {
-    await User.truncate();
+    await User.truncate({ cascade: true });
     await testInstance?.close();
   });
   test("Should return error message when the required fields are missing", async () => {
@@ -169,7 +168,7 @@ describe("User controller Login", () => {
     testInstance = SequelizeConnection()!;
   });
   afterAll(async () => {
-    await User.truncate();
+    await User.truncate({ cascade: true });
     await testInstance?.close();
   });
   test("Should return error message when the required fields are missing in while user login", async () => {
@@ -276,7 +275,7 @@ describe("Tests for user controller for updating profile", () => {
     testInstance = SequelizeConnection()!;
   });
   afterAll(async () => {
-    await User.truncate();
+    await User.truncate({ cascade: true });
     await testInstance?.close();
   });
 
@@ -393,7 +392,7 @@ describe("User Account Deletion", () => {
   });
 
   afterAll(async () => {
-    await User.truncate();
+    await User.truncate({ cascade: true });
     await testInstance?.close();
   });
 
@@ -466,7 +465,7 @@ describe("Check Authentication Test Suite", () => {
   });
 
   afterAll(async () => {
-    await User.truncate();
+    await User.truncate({ cascade: true });
     await testInstance?.close();
   });
 
@@ -513,6 +512,9 @@ describe("Check Authentication Test Suite", () => {
       lastName: "Test",
       password: "Test@123",
       isDeleted: false,
+      publicKey: "",
+      privateKey: "",
+      socketId: "",
     });
 
     const token = jwt.sign(
@@ -588,6 +590,9 @@ describe("Check Authentication Test Suite", () => {
       password: "Test@123",
       isDeleted: false,
       email: "abc@gmail.com",
+      publicKey: "",
+      privateKey: "",
+      socketId: "",
     });
 
     const expiredAccessToken = jwt.sign(
@@ -622,7 +627,6 @@ describe("Check Authentication Test Suite", () => {
 
     expect(response.body.message).toBe("Invalid access token");
   });
-
 });
 
 describe("Contacts Display Test Suite", () => {
@@ -643,7 +647,7 @@ describe("Contacts Display Test Suite", () => {
   });
 
   afterAll(async () => {
-    await User.truncate();
+    await User.truncate({ cascade: true });
     await testInstance?.close();
   });
 
@@ -724,7 +728,9 @@ describe("Contacts Display Test Suite", () => {
   });
 
   it("should handle error when the database query fails", async () => {
-    User.findAll = jest.fn().mockRejectedValue(new Error("Database query failed"));
+    User.findAll = jest
+      .fn()
+      .mockRejectedValue(new Error("Database query failed"));
 
     const phoneNumbersListToTest = [
       "8522041688",
@@ -743,5 +749,3 @@ describe("Contacts Display Test Suite", () => {
     expect(response.body.message).toBe("Database query failed");
   });
 });
-
-    

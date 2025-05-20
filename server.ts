@@ -3,9 +3,9 @@ import dotenv from "dotenv";
 import express from "express";
 import http from "http";
 import { Server } from "socket.io";
+import { syncAssociations } from "./src/associations/associations";
 import { sequelizeInstance } from "./src/connection/dbconnection";
 import { setupSocket } from "./src/socket/socket";
-import { syncAssociations } from "./src/associations/associations";
 import { userRouter } from "./src/user/user.route";
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` });
@@ -39,7 +39,7 @@ const startServer = async () => {
     server.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
     });
-  } catch (error: unknown) {
+  } catch (error: any) {
     if (error instanceof Error) {
       throw new Error(
         `Error occurred during server startup:, ${error.message}`

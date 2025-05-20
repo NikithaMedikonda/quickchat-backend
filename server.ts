@@ -27,15 +27,10 @@ const startServer = async () => {
       throw new Error("Sequelize instance not found. Please create!");
     }
     await sequelizeInstance.authenticate();
-    console.log("Database connected successfully!");
-
     syncAssociations();
-    console.log("Associations synced successfully.");
     if (process.env.NODE_ENV === "test") {
       await sequelizeInstance.sync({ alter: true });
     }
-    console.log("Associations synced successfully.");
-
     server.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
     });

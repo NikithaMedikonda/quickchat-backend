@@ -1,4 +1,5 @@
 import { Server } from "socket.io";
+import { Message } from "../types/message";
 
 interface UserSockets {
   [userId: string]: string;
@@ -8,11 +9,11 @@ const userSockets: UserSockets = {};
 
 export const setupSocket = (io: Server) => {
   io.on("connection", (socket) => {
-    socket.on("join", ({ userId }: any) => {
+    socket.on("join", ({ userId }:{userId:number}) => {
       userSockets[userId] = socket.id;
     });
 
-    socket.on("send_message", (data: any) => {
+    socket.on("send_message", (data: Message) => {
       const userId =
         Object.keys(userSockets).find(
           (userId) => userSockets[userId] === socket.id

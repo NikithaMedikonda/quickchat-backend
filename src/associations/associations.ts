@@ -5,8 +5,8 @@ import { Message } from "../message/message.model";
 import { User } from "../user/user.model";
 
 export const syncAssociations = () => {
-  User.hasMany(Chat, { as: "chatInitiated", foreignKey: "chatId" });
-  User.hasMany(Chat, { as: "chatReceived", foreignKey: "chatId" });
+  User.hasMany(Chat, { as: "chatInitiated", foreignKey: "userAId" });
+  User.hasMany(Chat, { as: "chatReceived", foreignKey: "userBId" });
 
   Chat.belongsTo(User, { as: "userA", foreignKey: "userAId" });
   Chat.belongsTo(User, { as: "userB", foreignKey: "userBId" });
@@ -18,10 +18,7 @@ export const syncAssociations = () => {
   User.hasMany(Message, { as: "messagesReceived", foreignKey: "receiverId" });
   Message.belongsTo(User, { as: "sender", foreignKey: "senderId" });
   Message.belongsTo(User, { as: "receiver", foreignKey: "receiverId" });
-
-  User.hasMany(Conversation, { foreignKey: "userId" });
-  Conversation.belongsTo(User, { foreignKey: "userId" });
-
+  
   User.hasMany(BlockedUsers, { as: "blockedUsers", foreignKey: "blocker" });
   User.hasMany(BlockedUsers, { as: "blockedBy", foreignKey: "blocked" });
   BlockedUsers.belongsTo(User, { as: "blocked_by", foreignKey: "blocker" });

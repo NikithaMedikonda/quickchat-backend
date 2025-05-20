@@ -4,7 +4,8 @@
   "scripts": {
     "start": "NODE_ENV=development nodemon server.ts",
     "test": "NODE_ENV=test jest --coverage",
-    "build": "tsc"
+    "build": "tsc",
+    "testing": "NODE_ENV=test nodemon server.ts"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +23,8 @@
     "pg-hstore": "^2.3.4",
     "postgres": "^3.4.5",
     "sequelize": "^6.37.7",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
     "supertest": "^7.1.0",
     "ts-node": "^10.9.2"
   },

@@ -27,7 +27,7 @@ Chat.init(
       allowNull: false,
     },
     userAId: {
-      type: DataTypes.STRING,
+      type: DataTypes.UUID,
 
       allowNull: false,
       references: {
@@ -37,7 +37,7 @@ Chat.init(
       field: "user1_id",
     },
     userBId: {
-      type: DataTypes.STRING,
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: User,

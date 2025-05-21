@@ -27,7 +27,7 @@ BlockedUsers.init(
       allowNull: false,
     },
     blocker: {
-      type: DataTypes.STRING,
+      type: DataTypes.UUID,
       unique: true,
       allowNull: false,
       references: {
@@ -37,7 +37,7 @@ BlockedUsers.init(
       field: "blocker_id",
     },
     blocked: {
-      type: DataTypes.STRING,
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: User,

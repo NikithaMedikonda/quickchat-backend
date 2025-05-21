@@ -5,6 +5,7 @@ import { syncAssociations } from "./src/associations/associations";
 import { sequelizeInstance } from "./src/connection/dbconnection";
 import { messageRouter } from "./src/message/message.router";
 import { userRouter } from "./src/user/user.route";
+import { blockedUsersRouter } from "./src/blockedusers/blocked-users.router";
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` });
 export const app = express();
@@ -14,6 +15,7 @@ app.use(express.json());
 app.use(cors());
 app.use(userRouter);
 app.use(messageRouter);
+app.use(blockedUsersRouter);
 
 const startServer = async () => {
   try {

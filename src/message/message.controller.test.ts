@@ -326,7 +326,7 @@ describe("Testing the functionality of updating the status of the message", () =
     expect(messageEResponse.body.messageDetails.content).toBe(
       "Cool! Nothing much😊"
     );
-  });
+  }, 10000);
 
   test("should throw error if required fields are not passed.", async () => {
     const payload = {

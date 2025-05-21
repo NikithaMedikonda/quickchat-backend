@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - post-message
+      - retrieve-messages
 
 jobs:
   QuickChat-backend:

@@ -4,6 +4,7 @@ import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import { syncAssociations } from "./src/associations/associations";
+import { chatRouter } from "./src/chat/chat.router";
 import { sequelizeInstance } from "./src/connection/dbconnection";
 import { messageRouter } from "./src/message/message.router";
 import { setupSocket } from "./src/socket/socket";
@@ -16,6 +17,7 @@ const PORT = process.env.PORT;
 
 app.use(express.json());
 app.use(cors());
+app.use(chatRouter);
 app.use(userRouter);
 app.use(messageRouter);
 

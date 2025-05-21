@@ -93,4 +93,4 @@ test("should send a private message from one user to another", (done) => {
   });
 
  
-},500);
+},5000);

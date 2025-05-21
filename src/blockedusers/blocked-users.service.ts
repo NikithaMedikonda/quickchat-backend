@@ -11,6 +11,7 @@ export const addBlockedUserEntry = async (
     });
     return blockUserDetails;
   } catch (error) {
-    throw new Error(`Error occured while blocking user : ${(error as Error).message}`);
+    throw new Error(`Error occurred while blocking user : ${(error as Error).message}`);
   }
 };
+

@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - post-message
+      - block-user-route
 
 jobs:
   QuickChat-backend:

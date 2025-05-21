@@ -2,6 +2,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import { syncAssociations } from "./src/associations/associations";
+import { chatRouter } from "./src/chat/chat.router";
 import { sequelizeInstance } from "./src/connection/dbconnection";
 import { messageRouter } from "./src/message/message.router";
 import { userRouter } from "./src/user/user.route";
@@ -12,6 +13,7 @@ const PORT = process.env.PORT;
 
 app.use(express.json());
 app.use(cors());
+app.use(chatRouter);
 app.use(userRouter);
 app.use(messageRouter);
 

@@ -16,7 +16,7 @@ describe("Blocked Users Controller", () => {
   const blockedPhoneNumber = "+922222222222";
 
   beforeAll(async () => {
-    testInstance = SequelizeConnection()!;
+    testInstance = SequelizeConnection();
     const blocker = await createUser({
       phoneNumber: blockerPhoneNumber,
       firstName: "Blocker",
@@ -121,7 +121,7 @@ describe("Blocked Users Controller", () => {
 
   test("should throw error if invalid blockerId and blockedId are sent ", async () => {
     await expect(addBlockedUserEntry("blockerId", "blockedId")).rejects.toThrow(
-      `Error occured while blocking user : invalid input syntax for type uuid: \"blockerId\"`
+      `Error occurred while blocking user : invalid input syntax for type uuid: \"blockerId\"`
     );
   });
 });

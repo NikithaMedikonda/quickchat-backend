@@ -1,19 +1,26 @@
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
+import http from "http";
+import { Server } from "socket.io";
 import { syncAssociations } from "./src/associations/associations";
 import { sequelizeInstance } from "./src/connection/dbconnection";
 import { messageRouter } from "./src/message/message.router";
+import { setupSocket } from "./src/socket/socket";
 import { userRouter } from "./src/user/user.route";
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` });
+
 export const app = express();
 const PORT = process.env.PORT;
 
 app.use(express.json());
 app.use(cors());
 app.use(userRouter);
-app.use(messageRouter);
+
+const server = http.createServer(app);
+const io = new Server(server);
+setupSocket(io);
 
 const startServer = async () => {
   try {
@@ -22,14 +29,22 @@ const startServer = async () => {
     }
     await sequelizeInstance.authenticate();
     syncAssociations();
-    await sequelizeInstance.sync({ alter: true });
-    if (process.env.NODE_ENV !== "test") {
-      app.listen(PORT, () => {
-        console.log(`Server is running on http://localhost:${PORT}`);
-      });
+    if (process.env.NODE_ENV === "test") {
+      await sequelizeInstance.sync({ alter: true });
     }
-  } catch (error) {
-    `Error occurred during server startup:, ${error}`;
+    if(process.env.NODE_ENV!=="test"){
+    server.listen(PORT, () => {
+      console.log(`Server is running on http://localhost:${PORT}`);
+    });
+  }
+  } catch (error: any) {
+    if (error instanceof Error) {
+      throw new Error(
+        `Error occurred during server startup:, ${error.message}`
+      );
+    } else {
+      throw new Error(`An unknown error occurred.`);
+    }
   }
 };
 startServer();

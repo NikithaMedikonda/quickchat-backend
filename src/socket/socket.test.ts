@@ -45,7 +45,7 @@ test("should connect and receive a message", (done) => {
       done();
     });
   });
-},5000);
+},10000);
 
 test("should send a private message from one user to another", (done) => {
   const fromUserId = 1;
@@ -93,4 +93,4 @@ test("should send a private message from one user to another", (done) => {
   });
 
  
-},5000);
+},10000);

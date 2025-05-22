@@ -65,13 +65,13 @@ describe("Testing the delete chat functionality", () => {
     expect(receiver.id).toBeTruthy();
   });
 
-  test("should return 404 if required fields are missing", async () => {
+  test("should return 400 if required fields are missing", async () => {
     const response = await request(app)
       .post("/api/chat/delete")
       .set({ Authorization: `Bearer ${accessToken}` })
       .send({ senderPhoneNumber });
 
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(400);
     expect(response.body.message).toBe(
       "Please provide all the necessary fields."
     );

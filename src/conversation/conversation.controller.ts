@@ -12,7 +12,7 @@ export const deleteConversation = async (
     const { senderPhoneNumber, receiverPhoneNumber, timestamp } = request.body;
     if (!senderPhoneNumber || !receiverPhoneNumber || !timestamp) {
       response
-        .status(404)
+        .status(400)
         .json({ message: "Please provide all the necessary fields." });
       return;
     }

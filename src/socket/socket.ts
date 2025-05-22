@@ -1,54 +1,70 @@
+import { Op } from "sequelize";
 import { Server } from "socket.io";
-import { MessageData, PrivateMessage } from "../types/message";
-
-interface UserSockets {
-  [userId: string]: string;
-}
-
-const userSockets: UserSockets = {};
+import { Message, MessageStatus } from "../message/message.model";
+import { PrivateMessage } from "../types/message";
+import { findByPhoneNumber } from "../utils/findByPhoneNumber";
+import {
+  disconnectUser,
+  findUserSocketId,
+  storeMessage,
+  updateUserSocketId,
+} from "./socket.service";
 
 export const setupSocket = (io: Server) => {
   io.on("connection", (socket) => {
-    socket.on("join", ({ userId }:{userId:number}) => {
-      userSockets[userId] = socket.id;
-    });
-
-    socket.on("send_message", (data: MessageData) => {
-      const userId =
-        Object.keys(userSockets).find(
-          (userId) => userSockets[userId] === socket.id
-        ) || null;
-      io.emit("receive_message", data.message);
+    socket.on("join", async (phoneNumber: string) => {
+      await updateUserSocketId(phoneNumber, socket.id);
     });
 
     socket.on(
       "send_private_message",
-      ({
-        toUserId,
-        fromUserId,
+      async ({
+        recipientPhoneNumber,
+        senderPhoneNumber,
         message,
         timestamp,
       }: PrivateMessage) => {
-        const targetSocketId = userSockets[toUserId];
-        if (targetSocketId) {
-          io.to(targetSocketId).emit("receive_private_message", {
-            fromUserId,
+        try {
+          await storeMessage({
+            recipientPhoneNumber,
+            senderPhoneNumber,
             message,
             timestamp,
           });
-        } else {
-          console.log(`User ${toUserId} not connected.`);
+          const senderId = await findByPhoneNumber(senderPhoneNumber);
+          const receiverId = await findByPhoneNumber(recipientPhoneNumber);
+
+          const targetSocketId = await findUserSocketId(recipientPhoneNumber);
+          if (targetSocketId) {
+            await Message.update(
+              { status: "delivered" as MessageStatus },
+              {
+                where: {
+                  senderId: senderId,
+                  receiverId: receiverId,
+                  status: "sent" as MessageStatus,
+                  createdAt: {
+                    [Op.lte]: new Date(timestamp),
+                  },
+                },
+              }
+            );
+            io.to(targetSocketId).emit(
+              `receive_private_message_${senderPhoneNumber}`,
+              { recipientPhoneNumber, senderPhoneNumber, message, timestamp }
+            );
+          } else {
+          }
+        } catch (error) {
+          throw new Error(
+            `Failed to store or send message: ${(error as Error).message}`
+          );
         }
       }
     );
 
-    socket.on("disconnect", () => {
-      const userId = Object.keys(userSockets).find(
-        (key) => userSockets[key] === socket.id
-      );
-      if (userId) {
-        delete userSockets[userId];
-      }
+    socket.on("disconnect", async () => {
+      await disconnectUser(socket.id);
     });
   });
 };

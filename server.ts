@@ -6,10 +6,11 @@ import { Server } from "socket.io";
 import { syncAssociations } from "./src/associations/associations";
 import { chatRouter } from "./src/chat/chat.router";
 import { sequelizeInstance } from "./src/connection/dbconnection";
+import { userConversationRouter } from "./src/conversation/conversation.route";
 import { messageRouter } from "./src/message/message.router";
 import { setupSocket } from "./src/socket/socket";
 import { userRouter } from "./src/user/user.route";
-import { blockedUsersRouter } from "./src/blockedusers/blocked-users.router";
+import { userRestrictionRouter } from "./src/userRestriction/userRestriction.router"; 
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` });
 
@@ -21,7 +22,8 @@ app.use(cors());
 app.use(chatRouter);
 app.use(userRouter);
 app.use(messageRouter);
-app.use(blockedUsersRouter);
+app.use(userRestrictionRouter);
+app.use(userConversationRouter);
 
 const server = http.createServer(app);
 const io = new Server(server);

@@ -8,16 +8,16 @@ import {
 import { sequelizeInstance } from "../connection/dbconnection";
 import { User } from "../user/user.model";
 
-export class BlockedUsers extends Model<
-  InferAttributes<BlockedUsers>,
-  InferCreationAttributes<BlockedUsers>
+export class UserRestriction extends Model<
+  InferAttributes<UserRestriction>,
+  InferCreationAttributes<UserRestriction>
 > {
   declare id: CreationOptional<string>;
   declare blocker: string;
   declare blocked: string;
 }
 
-BlockedUsers.init(
+UserRestriction.init(
   {
     id: {
       type: DataTypes.UUID,
@@ -48,8 +48,8 @@ BlockedUsers.init(
   },
   {
     sequelize: sequelizeInstance!,
-    modelName: "Block",
-    tableName: "blocks",
+    modelName: "UserRestriction",
+    tableName: "userRestrictions",
     timestamps: true,
   }
 );

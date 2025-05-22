@@ -201,4 +201,19 @@ describe("Testing the functionality of retrieving the messages of two users", ()
     expect(response.body.chats[0].content).toBe("Hey Mamatha, Hi");
     expect(response.body.chats[1].content).toBe("What are you doing?");
   });
+
+  test("should return 500 status code if wrong phone number is given", async () => {
+    const payload = {
+      senderPhoneNumber: senderPhoneNumber,
+      receiverPhoneNumber: "+918787878787",
+    };
+
+    const response = await request(app)
+      .post("/api/users/messages")
+      .set({ Authorization: `Bearer ${accessToken}` })
+      .send(payload);
+
+    expect(response.status).toBe(500);
+    expect(response.body.error).toMatch(/User not found/i);
+  }, 10000);
 });

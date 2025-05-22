@@ -5,11 +5,11 @@ import { app } from "../../server";
 import { SequelizeConnection } from "../connection/dbconnection";
 import { createUser } from "../user/user.controller";
 import { User } from "../user/user.model";
-import { BlockedUsers } from "./blocked-users.model";
+import { UserRestriction } from "./userRestriction.model"; 
 import {
   addBlockedUserEntry,
   removeBlockedUserEntry,
-} from "./blocked-users.service";
+} from "./userRestriction.service";
 
 describe("Blocked Users Controller", () => {
   let testInstance: Sequelize;
@@ -51,7 +51,7 @@ describe("Blocked Users Controller", () => {
   });
 
   afterAll(async () => {
-    await BlockedUsers.truncate({ cascade: true });
+    await UserRestriction.truncate({ cascade: true });
     await User.truncate({ cascade: true });
     await testInstance.close();
   });

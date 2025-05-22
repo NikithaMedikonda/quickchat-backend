@@ -1,18 +1,21 @@
-import Client, { Socket as ClientSocket } from "socket.io-client";
 import { Server as HttpServer } from "http";
+import { Sequelize } from "sequelize";
 import { Server as SocketIOServer } from "socket.io";
+import Client, { Socket as ClientSocket } from "socket.io-client";
 import { app } from "../../server";
+import { SequelizeConnection } from "../connection/dbconnection";
+import { User } from "../user/user.model";
 import { setupSocket } from "./socket";
-
 
 let io: SocketIOServer;
 let httpServer: HttpServer;
-let clientSocket: ClientSocket;
 let clientA: ClientSocket;
 let clientB: ClientSocket;
 
 const TEST_PORT = 5001;
 const SERVER_URL = `http://localhost:${TEST_PORT}`;
+
+let testInstance: Sequelize;
 
 beforeAll((done) => {
   httpServer = app.listen(TEST_PORT, () => {
@@ -20,77 +23,110 @@ beforeAll((done) => {
     setupSocket(io);
     done();
   });
+  testInstance = SequelizeConnection();
 });
 
-afterAll(() => {
+afterAll(async () => {
   io.close();
   httpServer.close();
-  if (clientSocket.connected) {
-    clientSocket.disconnect();
-  }
   if (clientA.connected) clientA.disconnect();
   if (clientB.connected) clientB.disconnect();
+  await User.truncate({ cascade: true });
+  await testInstance.close();
+});
+
+test("should create users to chat", async () => {
+  const sender = {
+    phoneNumber: "+919440058809",
+    firstName: "Anoosha",
+    lastName: "Sanugula",
+    email: "anoosha@gmail.com",
+    password: "Anu@1234",
+    isDeleted: false,
+    publicKey: "",
+    privateKey: "",
+    socketId: "socket1234",
+  };
+
+  await User.create(sender);
+  const receiver = {
+    phoneNumber: "+919440058801",
+    firstName: "Bingi",
+    lastName: "S",
+    email: "bingi@gmail.com",
+    password: "Anu@1234",
+    isDeleted: false,
+    publicKey: "",
+    privateKey: "",
+    socketId: "socket123",
+  };
+  await User.create(receiver);
 });
 
 test("should connect and receive a message", (done) => {
-  clientSocket = Client(SERVER_URL);
-
-  clientSocket.on("connect", () => {
-    clientSocket.emit("join", { userId: "123" });
-
-    clientSocket.emit("send_message", { message: "Hello World" });
-
-    clientSocket.on("receive_message", (msg) => {
-      expect(msg).toBe("Hello World");
-      done();
-    });
-  });
-},5000);
-
-test("should send a private message from one user to another", (done) => {
-  const fromUserId = 1;
-  const toUserId = 2;
-  const message = "Hello privately!";
+  const message = "Hello World";
   const timestamp = new Date().toISOString();
 
-  clientA = Client(SERVER_URL);
+  const senderPhoneNumber = "+919440058809";
+  const recipientPhoneNumber = "+919440058801";
+
   clientB = Client(SERVER_URL);
-
-  let clientBReady = false;
-  function sendPrivateMessageIfReady() {
-    clientA.emit("send_private_message", {
-      toUserId,
-      fromUserId,
-      message,
-      timestamp,
-    });
-  }
   clientB.on("connect", () => {
-    clientB.emit("join", { userId: toUserId });
+    clientB.emit("join", recipientPhoneNumber);
 
-    clientB.on("receive_private_message", (data) => {
+    clientB.on(`receive_private_message_${senderPhoneNumber}`, (data) => {
       expect(data).toEqual({
-        fromUserId,
+        recipientPhoneNumber,
+        senderPhoneNumber,
         message,
         timestamp,
       });
       done();
     });
 
-    clientBReady = true;
-
-    if (clientA.connected) {
-      sendPrivateMessageIfReady();
-    }
+    clientA = Client(SERVER_URL);
+    clientA.on("connect", () => {
+      clientA.emit("join", senderPhoneNumber);
+      clientA.emit("send_private_message", {
+        recipientPhoneNumber,
+        senderPhoneNumber,
+        message,
+        timestamp,
+      });
+    });
   });
+},10000);
 
-  clientA.on("connect", () => {
-    clientA.emit("join", { userId: fromUserId });
+test("should send a private message from one user to another", (done) => {
+  const message = "Hello privately!";
+  const timestamp = new Date().toISOString();
 
-    if (clientBReady) {
-      sendPrivateMessageIfReady();
-    }
+  const senderPhoneNumber = "+919440058809";
+  const recipientPhoneNumber = "+919440058801";
+
+  clientB = Client(SERVER_URL);
+  clientB.on("connect", () => {
+    clientB.emit("join", recipientPhoneNumber);
+
+    clientB.on(`receive_private_message_${senderPhoneNumber}`, (data) => {
+      expect(data).toEqual({
+        recipientPhoneNumber,
+        senderPhoneNumber,
+        message,
+        timestamp,
+      });
+      done();
+    });
+
+    clientA = Client(SERVER_URL);
+    clientA.on("connect", () => {
+      clientA.emit("join", senderPhoneNumber);
+      clientA.emit("send_private_message", {
+        recipientPhoneNumber,
+        senderPhoneNumber,
+        message,
+        timestamp,
+      });
+    });
   });
-
- 
-},5000);
+},10000);

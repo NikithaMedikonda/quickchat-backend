@@ -25,7 +25,7 @@ export async function createUser(user: UserInfo) {
     isDeleted: false,
     publicKey: user.publicKey,
     privateKey: user.privateKey,
-    socketId: user.socketId ? user.socketId : "",
+    socketId: user.socketId ? user.socketId : null,
   };
   const createdUser: DbUser = await User.create(newUser);
   return createdUser;

@@ -21,7 +21,7 @@ export class User extends Model<
   declare isDeleted: boolean;
   declare publicKey: string;
   declare privateKey: string;
-  declare socketId: string;
+  declare socketId: string | null;
 }
 
 User.init(

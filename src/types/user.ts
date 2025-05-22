@@ -21,5 +21,5 @@ export type DbUser = {
   isDeleted: boolean;
   publicKey: string;
   privateKey: string;
-  socketId?: string;
+  socketId?: string | null;
 };

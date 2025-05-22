@@ -63,40 +63,6 @@ test("should create users to chat", async () => {
   await User.create(receiver);
 });
 
-test("should connect and receive a message", (done) => {
-  const message = "Hello World";
-  const timestamp = new Date().toISOString();
-
-  const senderPhoneNumber = "+919440058809";
-  const recipientPhoneNumber = "+919440058801";
-
-  clientB = Client(SERVER_URL);
-  clientB.on("connect", () => {
-    clientB.emit("join", recipientPhoneNumber);
-
-    clientB.on(`receive_private_message_${senderPhoneNumber}`, (data) => {
-      expect(data).toEqual({
-        recipientPhoneNumber,
-        senderPhoneNumber,
-        message,
-        timestamp,
-      });
-      done();
-    });
-
-    clientA = Client(SERVER_URL);
-    clientA.on("connect", () => {
-      clientA.emit("join", senderPhoneNumber);
-      clientA.emit("send_private_message", {
-        recipientPhoneNumber,
-        senderPhoneNumber,
-        message,
-        timestamp,
-      });
-    });
-  });
-},10000);
-
 test("should send a private message from one user to another", (done) => {
   const message = "Hello privately!";
   const timestamp = new Date().toISOString();

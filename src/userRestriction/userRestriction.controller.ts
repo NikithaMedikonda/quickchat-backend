@@ -1,12 +1,12 @@
 import { Request, Response } from "express";
 import { findByPhoneNumber } from "../utils/findByPhoneNumber";
-import { BlockedUsers } from "./blocked-users.model";
+import { UserRestriction } from "./userRestriction.model";
 import {
   addBlockedUserEntry,
   removeBlockedUserEntry,
-} from "./blocked-users.service";
+} from "./userRestriction.service";
 
-export const executeUserBlock = async (req: Request, res: Response) => {
+export const blockUserAccount = async (req: Request, res: Response) => {
   try {
     const blockerPhoneNumber = req.body.blockerPhoneNumber;
     const blockedPhoneNumber = req.body.blockedPhoneNumber;
@@ -26,7 +26,7 @@ export const executeUserBlock = async (req: Request, res: Response) => {
       return;
     }
 
-    const existingBlockedUser = await BlockedUsers.findOne({
+    const existingBlockedUser = await UserRestriction.findOne({
       where: {
         blocker: blockerId,
         blocked: blockedId,
@@ -38,7 +38,7 @@ export const executeUserBlock = async (req: Request, res: Response) => {
       return;
     }
 
-    const blockedUsers: BlockedUsers = await addBlockedUserEntry(
+    const blockedUsers: UserRestriction = await addBlockedUserEntry(
       blockerId,
       blockedId
     );
@@ -52,7 +52,7 @@ export const executeUserBlock = async (req: Request, res: Response) => {
   }
 };
 
-export const executeUserUnblock = async (req: Request, res: Response) => {
+export const unblockUserAccount = async (req: Request, res: Response) => {
   try {
     const blockerPhoneNumber = req.body.blockerPhoneNumber;
     const blockedPhoneNumber = req.body.blockedPhoneNumber;
@@ -72,7 +72,7 @@ export const executeUserUnblock = async (req: Request, res: Response) => {
       return;
     }
 
-    const existingBlockedUser = await BlockedUsers.findOne({
+    const existingBlockedUser = await UserRestriction.findOne({
       where: {
         blocker: blockerId,
         blocked: blockedId,

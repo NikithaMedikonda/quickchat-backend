@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - unblock-user-route
+      - delete-chat
 
 jobs:
   QuickChat-backend:

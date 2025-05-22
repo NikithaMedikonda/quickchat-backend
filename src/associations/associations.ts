@@ -1,4 +1,4 @@
-import { BlockedUsers } from "../blockedusers/blocked-users.model";
+import { UserRestriction } from "../userRestriction/userRestriction.model";
 import { Chat } from "../chat/chat.model";
 import { Conversation } from "../conversation/conversation.model";
 import { Message } from "../message/message.model";
@@ -19,10 +19,10 @@ export const syncAssociations = () => {
   Message.belongsTo(User, { as: "sender", foreignKey: "senderId" });
   Message.belongsTo(User, { as: "receiver", foreignKey: "receiverId" });
   
-  User.hasMany(BlockedUsers, { as: "blockedUsers", foreignKey: "blocker" });
-  User.hasMany(BlockedUsers, { as: "blockedBy", foreignKey: "blocked" });
-  BlockedUsers.belongsTo(User, { as: "blocked_by", foreignKey: "blocker" });
-  BlockedUsers.belongsTo(User, { as: "blocked_whom", foreignKey: "blocked" });
+  User.hasMany(UserRestriction, { as: "blockedUsers", foreignKey: "blocker" });
+  User.hasMany(UserRestriction, { as: "blockedBy", foreignKey: "blocked" });
+  UserRestriction.belongsTo(User, { as: "blocked_by", foreignKey: "blocker" });
+  UserRestriction.belongsTo(User, { as: "blocked_whom", foreignKey: "blocked" });
 
   User.belongsToMany(Chat, {
     through: Conversation,

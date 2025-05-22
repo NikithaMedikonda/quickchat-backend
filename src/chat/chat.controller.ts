@@ -7,18 +7,16 @@ import { User } from "../user/user.model";
 import { findByPhoneNumber } from "../utils/findByPhoneNumber";
 
 export const userChats = async (req: Request, res: Response) => {
-  const { senderPhoneNumber, receiverPhoneNumber } = req.body;
-  if (!senderPhoneNumber || !receiverPhoneNumber) {
-    res
-      .status(400)
-      .json({ message: "Please provide all the necessary fields." });
-    return;
-  }
-
-  const senderId = await findByPhoneNumber(senderPhoneNumber);
-  const receiverId = await findByPhoneNumber(receiverPhoneNumber);
-
   try {
+    const { senderPhoneNumber, receiverPhoneNumber } = req.body;
+    if (!senderPhoneNumber || !receiverPhoneNumber) {
+      res
+        .status(400)
+        .json({ message: "Please provide all the necessary fields." });
+      return;
+    }
+    const senderId = await findByPhoneNumber(senderPhoneNumber);
+    const receiverId = await findByPhoneNumber(receiverPhoneNumber);
     const chat = await Chat.findOne({
       where: {
         [Op.or]: [
@@ -39,7 +37,7 @@ export const userChats = async (req: Request, res: Response) => {
       },
     });
 
-    const lastClearedAt = conversation?.lastClearedAt ?? new Date(0);
+    const lastClearedAt = conversation!.lastClearedAt ?? new Date(0);
     const messages = await Message.findAll({
       where: {
         chatId: chat.id,
@@ -61,7 +59,7 @@ export const userChats = async (req: Request, res: Response) => {
         },
       ],
     });
-    res.json({
+    res.status(200).json({
       chatId: chat.id,
       participants: [chat.userAId, chat.userBId],
       chats: messages,

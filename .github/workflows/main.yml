@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - delete-chat
 
 jobs:
   QuickChat-backend:

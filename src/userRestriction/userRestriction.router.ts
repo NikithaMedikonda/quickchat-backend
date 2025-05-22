@@ -7,12 +7,12 @@ import {
 
 export const userRestrictionRouter = express.Router();
 
- userRestrictionRouter.post(
+userRestrictionRouter.post(
   "/api/block/users",
   authenticateToken,
   blockUserAccount
 );
- userRestrictionRouter.post(
+userRestrictionRouter.post(
   "/api/unblock/users",
   authenticateToken,
   unblockUserAccount

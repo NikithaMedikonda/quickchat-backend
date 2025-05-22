@@ -1,19 +1,19 @@
 import express from "express";
 import { authenticateToken } from "../user/user.middleware";
 import {
-  executeUserBlock,
-  executeUserUnblock,
-} from "./blocked-users.controller";
+  blockUserAccount,
+  unblockUserAccount,
+} from "./userRestriction.controller";
 
-export const blockedUsersRouter = express.Router();
+export const userRestrictionRouter = express.Router();
 
-blockedUsersRouter.post(
+ userRestrictionRouter.post(
   "/api/block/users",
   authenticateToken,
-  executeUserBlock
+  blockUserAccount
 );
-blockedUsersRouter.post(
+ userRestrictionRouter.post(
   "/api/unblock/users",
   authenticateToken,
-  executeUserUnblock
+  unblockUserAccount
 );

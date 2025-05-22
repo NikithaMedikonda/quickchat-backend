@@ -2,8 +2,8 @@ export type MessageData = {
   message: string;
 };
 export type PrivateMessage = {
-  toUserId: number;
-  fromUserId: number;
+  recipientPhoneNumber: string;
+  senderPhoneNumber: string;
   message: string;
   timestamp: string;
 };

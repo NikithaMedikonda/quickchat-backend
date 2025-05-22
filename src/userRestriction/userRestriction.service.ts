@@ -1,11 +1,11 @@
-import { BlockedUsers } from "./blocked-users.model";
+import { UserRestriction } from "./userRestriction.model";
 
 export const addBlockedUserEntry = async (
   blockerId: string,
   blockedId: string
-): Promise<BlockedUsers> => {
+): Promise<UserRestriction> => {
   try {
-    const blockUserDetails = await BlockedUsers.create({
+    const blockUserDetails = await UserRestriction.create({
       blocker: blockerId,
       blocked: blockedId,
     });
@@ -22,7 +22,7 @@ export const removeBlockedUserEntry = async (
   blockedId: string
 ): Promise<void> => {
   try {
-    const blockedEntry = await BlockedUsers.findOne({
+    const blockedEntry = await UserRestriction.findOne({
       where: {
         blocker: blockerId,
         blocked: blockedId,

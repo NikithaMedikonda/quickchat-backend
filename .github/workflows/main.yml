@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - feature/socket.io-private-messaging
 
 jobs:
   QuickChat-backend:

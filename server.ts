@@ -22,6 +22,8 @@ app.use(cors());
 app.use(chatRouter);
 app.use(userRouter);
 app.use(messageRouter);
+app.use(userRestrictionRouter);
+app.use(userConversationRouter);
 
 const server = http.createServer(app);
 const io = new Server(server);

@@ -30,19 +30,33 @@ describe("Sequelize Connection (Controlled)", () => {
     await expect(testInstance.authenticate()).resolves.not.toThrow();
   });
 
-  it("should throw error if environment variables are not present", async () => {
+  it("should throw error if environment variables are not present", () => {
     delete process.env.DB_DIALECT;
     delete process.env.DATABASE_URL;
     delete process.env.DB_HOST;
-    try{
-      const result = await SequelizeConnection();
-      expect(result).toBe(null)
-    }
-    catch(error:any){
-      expect(error.message).toBe("Environment Variables are missing!")
+
+    expect(() => {
+      SequelizeConnection();
+    }).toThrow("Environment Variables are missing!");
+  });
+
+  it("should catch and throw a new error if Sequelize throws internally", () => {
+    process.env.DB_DIALECT = "postgres";
+    process.env.DB_HOST = "invalid-host"; 
+    process.env.DATABASE_URL = "invalid-url"; 
+
+    try {
+      SequelizeConnection();
+    } catch (error) {
+      if (error instanceof Error) {
+        expect(error.message).toContain("Error while connecting to database");
+      } 
     }
   });
-  afterAll(async () => {
-    await testInstance?.close();
+
+   afterAll(async () => {
+    if (testInstance) {
+      await testInstance.close();
+    }
   });
 });

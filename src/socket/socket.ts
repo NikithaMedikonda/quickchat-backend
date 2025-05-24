@@ -53,8 +53,7 @@ export const setupSocket = (io: Server) => {
               `receive_private_message_${senderPhoneNumber}`,
               { recipientPhoneNumber, senderPhoneNumber, message, timestamp }
             );
-          } else {
-          }
+          } 
         } catch (error) {
           throw new Error(
             `Failed to store or send message: ${(error as Error).message}`

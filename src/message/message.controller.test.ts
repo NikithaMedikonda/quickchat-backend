@@ -38,7 +38,7 @@ describe("Testing the functionality of storing message in data base", () => {
       privateKey: "",
       socketId: "",
     });
-    const receiver = await createUser({
+    await createUser({
       phoneNumber: "+911234567890",
       firstName: "test",
       lastName: "receiver",
@@ -72,7 +72,7 @@ describe("Testing the functionality of storing message in data base", () => {
       phoneNumber: "+9876543210",
       content: "Hi",
     };
-    const response = await request(app)
+    await request(app)
       .post("/api/message")
       .send(resource)
       .set({ Authorization: `Bearer ${accessToken}` })
@@ -115,7 +115,7 @@ describe("Testing the functionality of storing message in data base", () => {
       timeStamp:"2024-01-01T10:00:00Z"
     };
 
-    const messageResponse = await request(app)
+    await request(app)
       .post("/api/message")
       .set({ Authorization: `Bearer ${accessToken}` })
       .send(messagePayload)
@@ -130,7 +130,7 @@ describe("Testing the functionality of storing message in data base", () => {
       timeStamp:"2024-01-01T10:00:00Z"
     };
 
-    const messageResponse = await request(app)
+    await request(app)
       .post("/api/message")
       .set({ Authorization: `Bearer ${accessToken}` })
       .send(messagePayload)
@@ -145,7 +145,7 @@ describe("Testing the functionality of storing message in data base", () => {
       timeStamp:"2024-01-01T10:00:00Z"
     };
 
-    const messageResponse = await request(app)
+    await request(app)
       .post("/api/message")
       .set({ Authorization: `Bearer ${accessToken}` })
       .send(messagePayload)
@@ -154,13 +154,13 @@ describe("Testing the functionality of storing message in data base", () => {
 
   test("should throw error if invalid senderId and receiverId are sent", async () => {
     await expect(findOrCreateChat("senderId", "receiverId")).rejects.toThrow(
-      `SequelizeDatabaseError: invalid input syntax for type uuid: \"receiverId\"`
+      `SequelizeDatabaseError: invalid input syntax for type uuid: "receiverId"`
     );
   });
 
   test("should throw error if invalid senderId and receiverId are sent", async () => {
     await expect(createConversation("chatId", "userId")).rejects.toThrow(
-      `SequelizeDatabaseError: invalid input syntax for type uuid: \"chatId\"`
+      `SequelizeDatabaseError: invalid input syntax for type uuid: "chatId"`
     );
   });
 });
@@ -191,7 +191,6 @@ describe("Testing the functionality of updating the status of the message", () =
   const senderPhoneNumber = "+916303974914";
   const receiverPhoneNumber = "+916303552765";
   let accessToken: string = "";
-  let chatId: string = "";
 
   test("should create two users in the database to have chat", async () => {
     const sender = await createUser({
@@ -212,7 +211,7 @@ describe("Testing the functionality of updating the status of the message", () =
       publicKey: "publicKey",
       privateKey: "privateKey",
     });
-    const messager = await createUser({
+    await createUser({
       firstName: "Test",
       lastName: "User",
       phoneNumber: "+919876543210",
@@ -249,7 +248,6 @@ describe("Testing the functionality of updating the status of the message", () =
     expect(messageAResponse.body.messageDetails.senderId).toBeDefined();
     expect(messageAResponse.body.messageDetails.status).toBe("sent");
     expect(messageAResponse.body.messageDetails.content).toBe("Hey Man! Wasup");
-    chatId = messageAResponse.body.messageDetails.chatId;
 
     const messagePayloadB = {
       senderPhoneNumber: receiverPhoneNumber,

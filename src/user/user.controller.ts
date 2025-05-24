@@ -98,8 +98,8 @@ export async function register(
           .json({ accessToken: token, refreshToken: refreshToken, user: user });
       }
     }
-  } catch (error: any) {
-    response.status(500).send(error.message);
+  } catch (error) {
+    response.status(500).send(`${(error as Error).message}`);
   }
 }
 
@@ -151,8 +151,8 @@ export async function login(
       refreshToken,
       user,
     });
-  } catch (error: any) {
-    response.status(500).send(error.message);
+  } catch (error) {
+    response.status(500).send(`${(error as Error).message}`);
   }
 }
 
@@ -227,8 +227,9 @@ export async function deleteAccount(
       );
       response.status(200).json({ message: "Account deleted succesfully" });
     }
-  } catch (error: any) {
-    response.status(500).send(error.message);
+  } catch (error) {
+    console.log(error)
+    response.status(500).send(`${(error as Error).message}`);
   }
 }
 
@@ -264,8 +265,8 @@ export async function refreshOrValidateAuth(
       }
 
       response.status(200).json({ message: "Access token valid" });
-    } catch (error: any) {
-      if (error.name === "TokenExpiredError") {
+    } catch (error) {
+      if ((error as Error).name === "TokenExpiredError") {
         try {
           const decodedRefresh = jwt.verify(refreshToken, secret_key) as
             | string
@@ -304,8 +305,8 @@ export async function refreshOrValidateAuth(
         response.status(403).json({ message: "Invalid access token" });
       }
     }
-  } catch (error: any) {
-    response.status(500).send(error.message);
+  } catch (error) {
+    response.status(500).send(`${(error as Error).message}`);
   }
 }
 
@@ -343,7 +344,7 @@ export async function contactDetails(
         unRegisteredUsers: unRegisteredUsers,
       },
     });
-  } catch (error: any) {
-    response.status(500).json({ message: error.message });
+  } catch (error) {
+    response.status(500).json({ message: `${(error as Error).message}`});
   }
 }

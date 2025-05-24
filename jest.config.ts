@@ -6,5 +6,14 @@ module.exports = {
     "^.+\\.tsx?$": "ts-jest",
   },
   moduleFileExtensions: ["ts", "js"],
-  testMatch: ["**/src/**/*.test.ts"],
+  testMatch: ["**/src/**/*.test.ts", "**/__tests__/**/*.test.ts"],
+  collectCoverage: true,
+  coverageThreshold: {
+    global: {
+      branches: 90,
+      functions: 95,
+      lines: 95,
+      statements: 95,
+    },
+  },
 };

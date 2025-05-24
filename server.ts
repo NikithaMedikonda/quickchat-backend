@@ -44,7 +44,7 @@ const startServer = async () => {
       console.log(`Server is running on http://localhost:${PORT}`);
     });
   }
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof Error) {
       throw new Error(
         `Error occurred during server startup:, ${error.message}`
@@ -54,4 +54,5 @@ const startServer = async () => {
     }
   }
 };
-startServer();
+
+startServer(); 

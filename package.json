@@ -5,7 +5,8 @@
     "start": "NODE_ENV=development nodemon server.ts",
     "test": "NODE_ENV=test jest --runInBand --coverage",
     "build": "tsc",
-    "testing": "NODE_ENV=test nodemon server.ts"
+    "testing": "NODE_ENV=test nodemon server.ts",
+    "lint": "eslint --ext ts"
   },
   "keywords": [],
   "author": "",
@@ -29,6 +30,7 @@
     "ts-node": "^10.9.2"
   },
   "devDependencies": {
+    "@eslint/js": "^9.27.0",
     "@types/bcrypt": "^5.0.2",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
@@ -36,9 +38,13 @@
     "@types/jsonwebtoken": "^9.0.9",
     "@types/supertest": "^6.0.3",
     "@types/uuid": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.32.1",
+    "@typescript-eslint/parser": "^8.32.1",
+    "eslint": "^9.27.0",
     "jest": "^29.7.0",
     "nodemon": "^3.0.3",
     "ts-jest": "^29.3.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.32.1"
   }
 }

@@ -55,7 +55,7 @@ describe("Testing the functionality of retrieving the messages of two users", ()
       publicKey: "publicKey",
       privateKey: "privateKey",
     });
-    const messager = await createUser({
+    await createUser({
       firstName: "Test",
       lastName: "User",
       phoneNumber: "+919876543210",
@@ -134,7 +134,7 @@ describe("Testing the functionality of retrieving the messages of two users", ()
     const payload = {
       senderPhoneNumber: senderPhoneNumber,
     };
-    const response = await request(app)
+    await request(app)
       .post("/api/users/messages")
       .set({ Authorization: `Bearer ${accessToken}` })
       .send(payload)

@@ -11,30 +11,33 @@ import { validateEmail } from "./user.middleware";
 describe("User controller Registration", () => {
   let testInstance: Sequelize;
   const originalEnv = process.env;
+
   beforeEach(() => {
     process.env = { ...originalEnv };
   });
+
   afterEach(() => {
     process.env = originalEnv;
   });
+
   beforeAll(() => {
     testInstance = SequelizeConnection()!;
   });
+
   afterAll(async () => {
     await User.truncate({ cascade: true });
     await testInstance?.close();
   });
+
   test("Should return error message when the required fields are missing", async () => {
     const newResource = {
       firstName: "Test Resource",
       lastName: "A test resource",
       password: "Anu@1234",
     };
-    const response = await request(app)
-      .post("/api/users")
-      .send(newResource)
-      .expect(400);
+    await request(app).post("/api/users").send(newResource).expect(400);
   });
+
   test("should return the error when the profile picture data is invalid", async () => {
     const newResource = {
       firstName: "Test Resource",
@@ -43,11 +46,9 @@ describe("User controller Registration", () => {
       profilePicture: "somePicture",
       phoneNumber: "8522041688",
     };
-    const response = await request(app)
-      .post("/api/users")
-      .send(newResource)
-      .expect(500);
+    await request(app).post("/api/users").send(newResource).expect(500);
   });
+
   test("Should return the error message when the password is not in the valid form", async () => {
     const newResource = {
       phoneNumber: "9866349126",
@@ -55,11 +56,9 @@ describe("User controller Registration", () => {
       lastName: "A test resource2",
       password: "anu@1234",
     };
-    const response = await request(app)
-      .post("/api/users")
-      .send(newResource)
-      .expect(406);
+    await request(app).post("/api/users").send(newResource).expect(406);
   });
+
   test("should return bad request when the invalid email is given", async () => {
     const newResource = {
       phoneNumber: "9866349126",
@@ -68,11 +67,9 @@ describe("User controller Registration", () => {
       password: "anu@1234",
       email: "anu@du",
     };
-    const response = await request(app)
-      .post("/api/users")
-      .send(newResource)
-      .expect(400);
+    await request(app).post("/api/users").send(newResource).expect(400);
   });
+
   test("should return un authorised message whenever the phone number is invalid", async () => {
     const newResource = {
       phoneNumber: "234567893",
@@ -80,11 +77,9 @@ describe("User controller Registration", () => {
       lastName: "A test resource2",
       password: "anu@1234",
     };
-    const response = await request(app)
-      .post("/api/users")
-      .send(newResource)
-      .expect(401);
+    await request(app).post("/api/users").send(newResource).expect(401);
   });
+
   test("should return the access token and refresh token when the user is created successfully", async () => {
     const newResource = {
       phoneNumber: "9440058809",
@@ -100,6 +95,7 @@ describe("User controller Registration", () => {
     expect(response.body.accessToken).toBeTruthy();
     expect(response.body.refreshToken).toBeTruthy();
   });
+
   test("should return user already existed with this number when the phone number is already registered", async () => {
     const newResource2 = {
       phoneNumber: "9440058809",
@@ -108,10 +104,7 @@ describe("User controller Registration", () => {
       password: "Anu@12345",
       email: "anusha@gmail.com",
     };
-    const response2 = await request(app)
-      .post("/api/users")
-      .send(newResource2)
-      .expect(409);
+    await request(app).post("/api/users").send(newResource2).expect(409);
   });
 
   test("validate email should return the true when the email is valid", async () => {
@@ -125,6 +118,7 @@ describe("User controller Registration", () => {
     const response = validateEmail(newResource.email);
     expect(response).toBe(true);
   }, 5000);
+
   test("should return the error when the error occurs", async () => {
     const newResource = {
       phoneNumber: "9999988888",
@@ -148,10 +142,7 @@ describe("User controller Registration", () => {
       password: "Anu@12345",
       email: "anusha1234@gmail.com",
     };
-    const response2 = await request(app)
-      .post("/api/users")
-      .send(newResource3)
-      .expect(412);
+    await request(app).post("/api/users").send(newResource3).expect(412);
   });
 });
 
@@ -175,30 +166,21 @@ describe("User controller Login", () => {
     const existingResource = {
       phoneNumber: "1431431432",
     };
-    const response = await request(app)
-      .post("/api/user")
-      .send(existingResource)
-      .expect(400);
+    await request(app).post("/api/user").send(existingResource).expect(400);
   });
   test("Should return error message when the phone number is not valid", async () => {
     const existingResource = {
       phoneNumber: "143143143",
       password: "testuser@1234",
     };
-    const response = await request(app)
-      .post("/api/user")
-      .send(existingResource)
-      .expect(401);
+    await request(app).post("/api/user").send(existingResource).expect(401);
   });
   test("should return un authorised message whenever the user not exists with that phone number", async () => {
     const resource = {
       phoneNumber: "2345678930",
       password: "testuser@1234",
     };
-    const response = await request(app)
-      .post("/api/user")
-      .send(resource)
-      .expect(404);
+    await request(app).post("/api/user").send(resource).expect(404);
   });
   test("should return the access token and refresh token when the user is created successfully", async () => {
     const newResource = {
@@ -232,20 +214,14 @@ describe("User controller Login", () => {
       phoneNumber: "9440058809",
       password: "Anu@123",
     };
-    const response = await request(app)
-      .post("/api/user")
-      .send(resource)
-      .expect(401);
+    await request(app).post("/api/user").send(resource).expect(401);
   });
   test("Should return error, when password doesn't match", async () => {
     const resource = {
       phoneNumber: "9440058809",
       password: { password: "Invalid password" },
     };
-    const response = await request(app)
-      .post("/api/user")
-      .send(resource)
-      .expect(500);
+    await request(app).post("/api/user").send(resource).expect(500);
   });
 
   test("should return secret_key missing error when the secret_key is missing", async () => {
@@ -254,10 +230,7 @@ describe("User controller Login", () => {
       phoneNumber: "9440058809",
       password: "Anu@1234",
     };
-    const response = await request(app)
-      .post("/api/user")
-      .send(resource)
-      .expect(412);
+    await request(app).post("/api/user").send(resource).expect(412);
   });
 });
 
@@ -295,22 +268,24 @@ describe("Tests for user controller for updating profile", () => {
     accessToken = response.body.accessToken;
     expect(response.body.refreshToken).toBeTruthy();
   });
+
   it("Should throw error if phone number is not sent in request body", async () => {
     const resource = {
       profilePicture: "base:image/jpg",
     };
-    const response = await request(app)
+    await request(app)
       .put("/api/user")
       .set({ Authorization: `Bearer ${accessToken}` })
       .send(resource)
       .expect(400);
   });
+
   it("Should throw error if user is not present with the provided phone number", async () => {
     const resource = {
       phoneNumber: "7330205168",
       profilePicture: "base:image/jpg",
     };
-    const response = await request(app)
+    await request(app)
       .put("/api/user")
       .set({ Authorization: `Bearer ${accessToken}` })
       .send(resource)
@@ -343,11 +318,11 @@ describe("Tests for user controller for updating profile", () => {
       .expect(200);
     expect(response.body.user.profilePicture).toEqual(defaultProfileImage);
   });
-  
+
   it("Should just assign db profile pic if user didn't change the profile dp", async () => {
     const resource = {
       phoneNumber: "9876543210",
-      profilePicture: '',
+      profilePicture: "",
     };
     const response = await request(app)
       .put("/api/user")
@@ -364,7 +339,7 @@ describe("Tests for user controller for updating profile", () => {
       profilePicture: base64,
     };
     try {
-      const newResponse = await request(app)
+      await request(app)
         .put("/api/user")
         .set({ Authorization: `Bearer ${accessToken}` })
         .send(resource)

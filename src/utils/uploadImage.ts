@@ -21,7 +21,7 @@ export async function getProfileImageLink(base64String: string) {
       process.env.SERVICE_KEY
     );
     const fileName = `image-${Date.now()}.jpg`;
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from(process.env.BUCKET_NAME)
       .upload(`images/${fileName}`, buffer, {
         contentType: contentType,
@@ -34,7 +34,7 @@ export async function getProfileImageLink(base64String: string) {
       .getPublicUrl(`images/${fileName}`);
     const profileUrl = publicUrlData.publicUrl;
     return profileUrl;
-  } catch (error:any) {
-    throw new Error(`Error uploading the image to bucket: ${error.message}`);
+  } catch (error) {
+    throw new Error(`Error uploading the image to bucket: ${(error as Error).message}`);
   }
 }

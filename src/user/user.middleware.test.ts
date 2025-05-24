@@ -11,13 +11,13 @@ describe("Authentication route", () => {
   const originalEnv = process.env;
   beforeEach(() => {
     mockSend = jest.fn();
-    (mockBody = jest.fn()),
-      (mockNext = jest.fn()),
-      (mockResponse = {
-        sendStatus: jest.fn().mockReturnThis(),
-        send: mockSend,
-        json: mockBody.mockReturnThis(),
-      });
+    mockBody = jest.fn();
+    mockNext = jest.fn();
+    mockResponse = {
+      sendStatus: jest.fn().mockReturnThis(),
+      send: mockSend,
+      json: mockBody.mockReturnThis(),
+    };
     jest.clearAllMocks();
     process.env = { ...originalEnv };
   });

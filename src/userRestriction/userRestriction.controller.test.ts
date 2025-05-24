@@ -124,7 +124,7 @@ describe("Blocked Users Controller", () => {
 
   test("should throw error if invalid blockerId and blockedId are sent ", async () => {
     await expect(addBlockedUserEntry("blockerId", "blockedId")).rejects.toThrow(
-      `Error occurred while blocking user : invalid input syntax for type uuid: \"blockerId\"`
+      `Error occurred while blocking user : invalid input syntax for type uuid: "blockerId"`
     );
   });
 
@@ -226,7 +226,7 @@ describe("Blocked Users Controller", () => {
       await expect(
         removeBlockedUserEntry("blockerId", "blockedId")
       ).rejects.toThrow(
-        `Error occurred while unblocking user: invalid input syntax for type uuid: \"blockerId\"`
+        `Error occurred while unblocking user: invalid input syntax for type uuid: "blockerId"`
       );
     });
 

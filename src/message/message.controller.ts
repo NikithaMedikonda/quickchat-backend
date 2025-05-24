@@ -32,7 +32,9 @@ export const postMessage = async (req: Request, res: Response) => {
       messageDetails: message,
     });
   } catch (error) {
-    res.status(500).json({ message: "Creating message failed." });
+     res
+      .status(500)
+      .json({ error: `Creating message failed. ${(error as Error).message}` });
   }
 };
 

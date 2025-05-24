@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` });
 
 export const SequelizeConnection = () => {
-  let sequelize;
+  let sequelize: Sequelize;
   try {
     if (
       !process.env.DB_DIALECT ||
@@ -20,9 +20,11 @@ export const SequelizeConnection = () => {
       });
     }
     return sequelize;
-  } catch (error: any) {
-    throw new Error(error.message);
-  }
+  } catch (error) {
+    throw new Error(
+      `Error while connecting to database ${(error as Error).message}`
+    );
+  } 
 };
 
 export const sequelizeInstance = SequelizeConnection();

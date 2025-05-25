@@ -93,3 +93,28 @@ export const unblockUserAccount = async (req: Request, res: Response) => {
     res.status(500).json({ message: `${(error as Error).message}` });
   }
 };
+
+export const checkBlockStatus = async (req: Request, res: Response) => {
+  try {
+    const { blockerPhoneNumber, blockedPhoneNumber } = req.body;
+    if (!blockerPhoneNumber || !blockedPhoneNumber) {
+      res
+        .status(400)
+        .json({ message: "Please provide the necessary details." });
+      return;
+    }
+    const blocker = await findByPhoneNumber(blockerPhoneNumber);
+    const blocked = await findByPhoneNumber(blockedPhoneNumber);
+    const blockRecord = await UserRestriction.findOne({
+      where: { blocker: blocker, blocked: blocked },
+    });
+    res.status(200).json({ isBlocked: !!blockRecord });
+    return;
+  } catch (error) {
+    res.status(500).json({
+      error: `Error while fetching user block status: ${
+        (error as Error).message
+      }`,
+    });
+  }
+};

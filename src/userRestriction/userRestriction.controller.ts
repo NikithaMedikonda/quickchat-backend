@@ -103,10 +103,10 @@ export const checkBlockStatus = async (req: Request, res: Response) => {
         .json({ message: "Please provide the necessary details." });
       return;
     }
-    const senderId = await findByPhoneNumber(blockerPhoneNumber);
-    const receiverId = await findByPhoneNumber(blockedPhoneNumber);
+    const blocker = await findByPhoneNumber(blockerPhoneNumber);
+    const blocked = await findByPhoneNumber(blockedPhoneNumber);
     const blockRecord = await UserRestriction.findOne({
-      where: { blocker: senderId, blocked: receiverId },
+      where: { blocker: blocker, blocked: blocked },
     });
     res.status(200).json({ isBlocked: !!blockRecord });
     return;

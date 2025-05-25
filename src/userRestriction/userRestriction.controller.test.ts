@@ -359,7 +359,7 @@ describe("Tests for checking blocked status functionality", () => {
     expect(response.body.unblockedUsersDetails.blocked).toBeDefined();
   });
 
-  test("Should return false, if user is blocked", async () => {
+  test("Should return false, if user is not blocked", async () => {
     const response = await request(app)
       .post("/api/users/block-status")
       .set({ Authorization: `Bearer ${accessToken}` })

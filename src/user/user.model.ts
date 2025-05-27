@@ -22,6 +22,7 @@ export class User extends Model<
   declare publicKey: string;
   declare privateKey: string;
   declare socketId: string | null;
+  declare isLogin : boolean;
 }
 
 User.init(
@@ -76,6 +77,10 @@ User.init(
     socketId: {
       type: DataTypes.STRING,
       allowNull: true,
+    },
+    isLogin: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
     },
   },
   {

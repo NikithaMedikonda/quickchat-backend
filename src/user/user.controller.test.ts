@@ -197,18 +197,7 @@ describe("User controller Login", () => {
     expect(response.body.accessToken).toBeTruthy();
     expect(response.body.refreshToken).toBeTruthy();
   });
-  test("should return the access token and refresh token when the user is fetched successfully", async () => {
-    const resource = {
-      phoneNumber: "9440058809",
-      password: "Anu@1234",
-    };
-    const response = await request(app)
-      .post("/api/user")
-      .send(resource)
-      .expect(200);
-    expect(response.body.accessToken).toBeTruthy();
-    expect(response.body.refreshToken).toBeTruthy();
-  });
+
   test("Should return error, when password doesn't match", async () => {
     const resource = {
       phoneNumber: "9440058809",
@@ -231,6 +220,133 @@ describe("User controller Login", () => {
       password: "Anu@1234",
     };
     await request(app).post("/api/user").send(resource).expect(412);
+  });
+    test("should return the access token and refresh token when the user is fetched successfully", async () => {
+    const resource = {
+      phoneNumber: "9440058809",
+      password: "Anu@1234",
+    };
+    const response = await request(app)
+      .post("/api/user")
+      .send(resource)
+      .expect(200);
+    expect(response.body.accessToken).toBeTruthy();
+    expect(response.body.refreshToken).toBeTruthy();
+  });
+    test("should return 409 if user already user logged in", async () => {
+    const resource = {
+      phoneNumber: "9440058809",
+      password: "Anu@1234",
+    };
+    await request(app).post("/api/user").send(resource).expect(409);
+  });
+});
+
+describe("User controller Logout", () => {
+  let testInstance: Sequelize;
+  const originalEnv = process.env;
+  beforeEach(() => {
+    process.env = { ...originalEnv };
+  });
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+  beforeAll(() => {
+    testInstance = SequelizeConnection()!;
+  });
+  afterAll(async () => {
+    await User.truncate({ cascade: true });
+    await testInstance?.close();
+  });
+  test("Should return error message when the required fields are missing in while user login", async () => {
+    const existingResource = {
+      phoneNumber: "",
+    };
+    await request(app).post("/api/logout").send(existingResource).expect(400);
+  });
+    test("Should return error message when the required fields are missing in while user login", async () => {
+    const existingResource = {
+      phoneNumber: "123456789012345678",
+    };
+    await request(app).post("/api/logout").send(existingResource).expect(401);
+  });
+  test("Should return error message when the phone number is not valid", async () => {
+    const existingResource = {
+      phoneNumber: "9440058809",
+    };
+    await request(app).post("/api/logout").send(existingResource).expect(404);
+  });
+  test("should return un authorised message whenever the user not exists with that phone number", async () => {
+    const resource = {
+      phoneNumber: "2345678930",
+    };
+    await request(app).post("/api/logout").send(resource).expect(404);
+  });
+  test("should return the access token and refresh token when the user is created successfully", async () => {
+    const newResource = {
+      phoneNumber: "9440058809",
+      firstName: "Test Resource2",
+      lastName: "A test resource2",
+      password: "Anu@1234",
+      email: "anusha@gmail.com",
+    };
+    const response = await request(app)
+      .post("/api/users")
+      .send(newResource)
+      .expect(200);
+    expect(response.body.accessToken).toBeTruthy();
+    expect(response.body.refreshToken).toBeTruthy();
+  });
+
+    test("should return the access token and refresh token when the user is fetched successfully", async () => {
+    const resource = {
+      phoneNumber: "9440058809",
+      password: "Anu@1234",
+    };
+    const response = await request(app)
+      .post("/api/user")
+      .send(resource)
+      .expect(200);
+    expect(response.body.accessToken).toBeTruthy();
+    expect(response.body.refreshToken).toBeTruthy();
+  });
+
+    test("should return secret_key missing error when the secret_key is missing", async () => {
+    delete process.env.JSON_WEB_SECRET;
+    const resource = {
+      phoneNumber: "9440058809",
+    };
+    await request(app).post("/api/logout").send(resource).expect(412);
+  });
+    test("should return un authorised message whenever the user not exists with that phone number", async () => {
+    const resource = {
+      phoneNumber: "9440058809",
+    };
+    await request(app).post("/api/logout").send(resource).expect(200);
+  });
+
+  it("Should respond with status code 500 if something goes wrong", async () => {
+    process.env.SERVICE_KEY = "unknown-service_key";
+    const accessToken = 'wsfdhgvhwgdv'
+    const resource = {
+      phoneNumber: "9876543210",
+    };
+    try {
+      await request(app)
+        .put("/api/logout")
+        .set({ Authorization: `Bearer ${accessToken}` })
+        .send(resource)
+        .expect(500);
+    } catch (error) {
+      expect(error).toBeDefined();
+    }
+  });
+
+    test("should return 409 if user already user logged in", async () => {
+    const resource = {
+      phoneNumber: "9440058809",
+    };
+    await request(app).post("/api/logout").send(resource).expect(409);
   });
 });
 
@@ -490,6 +606,7 @@ describe("Check Authentication Test Suite", () => {
       publicKey: "",
       privateKey: "",
       socketId: "",
+      isLogin: false,
     });
 
     const token = jwt.sign(
@@ -568,6 +685,7 @@ describe("Check Authentication Test Suite", () => {
       publicKey: "",
       privateKey: "",
       socketId: "",
+      isLogin: false,
     });
 
     const expiredAccessToken = jwt.sign(

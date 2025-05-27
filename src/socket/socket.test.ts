@@ -46,6 +46,7 @@ test("should create users to chat", async () => {
     publicKey: "",
     privateKey: "",
     socketId: "socket1234",
+    isLogin:false,
   };
 
   await User.create(sender);
@@ -59,6 +60,7 @@ test("should create users to chat", async () => {
     publicKey: "",
     privateKey: "",
     socketId: "socket123",
+    isLogin:false,
   };
   await User.create(receiver);
 });

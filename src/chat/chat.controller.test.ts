@@ -45,6 +45,7 @@ describe("Testing the functionality of retrieving the messages of two users", ()
       isDeleted: false,
       publicKey: "publicKey",
       privateKey: "privateKey",
+      isLogin:false,
     });
     const receiver = await createUser({
       firstName: "Varun",
@@ -54,6 +55,7 @@ describe("Testing the functionality of retrieving the messages of two users", ()
       isDeleted: false,
       publicKey: "publicKey",
       privateKey: "privateKey",
+      isLogin:false,
     });
     await createUser({
       firstName: "Test",
@@ -63,6 +65,7 @@ describe("Testing the functionality of retrieving the messages of two users", ()
       isDeleted: false,
       publicKey: "publicKey",
       privateKey: "privateKey",
+      isLogin:false,
     });
     accessToken = jwt.sign(
       { phoneNumber: senderPhoneNumber },

@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import { Op } from "sequelize";
 import { Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
-import { DbUser, UserInfo} from "../types/user";
+import { DbUser, UserInfo } from "../types/user";
 import { defaultProfileImage } from "../constants/example.defaultProfile";
 import { getProfileImageLink } from "../utils/uploadImage";
 import { User } from "./user.model";
@@ -26,6 +26,7 @@ export async function createUser(user: UserInfo) {
     publicKey: user.publicKey,
     privateKey: user.privateKey,
     socketId: user.socketId ? user.socketId : null,
+    isLogin: false,
   };
   const createdUser: DbUser = await User.create(newUser);
   return createdUser;
@@ -68,6 +69,7 @@ export async function register(
           publicKey: request.body.publicKey,
           privateKey: request.body.privateKey,
           socketId: request.body.socketId,
+          isLogin: true,
         };
         const newUser: DbUser = await createUser(userBody);
         const token = jwt.sign(
@@ -82,7 +84,7 @@ export async function register(
           secret_key.toString()
         );
         const user = {
-          id:newUser.id,
+          id: newUser.id,
           firstName: newUser.firstName,
           lastName: newUser.lastName,
           profilePicture: newUser.profilePicture,
@@ -92,6 +94,7 @@ export async function register(
           publicKey: newUser.publicKey,
           privateKey: newUser.privateKey,
           socketId: newUser.socketId,
+          isLogin: newUser.isLogin,
         };
         response
           .status(200)
@@ -118,6 +121,10 @@ export async function login(
         .json({ message: "User doesn't exists with this phone number" });
       return;
     }
+    if (existingUser.isLogin) {
+      response.status(409).json({ message: "User is already logged in" });
+      return;
+    }
     const validPassword = await bcrypt.compare(password, existingUser.password);
     if (!validPassword) {
       response.status(401).json({ message: "Password is invalid" });
@@ -134,6 +141,8 @@ export async function login(
       { expiresIn: "7d" }
     );
     const refreshToken = jwt.sign(existingUser.phoneNumber, secret_key);
+    existingUser.isLogin = true;
+    await existingUser.save();
     const user = {
       id: existingUser.id,
       firstName: existingUser.firstName,
@@ -145,12 +154,45 @@ export async function login(
       publicKey: existingUser.publicKey,
       privateKey: existingUser.privateKey,
       socketId: existingUser.socketId,
+      isLogin: existingUser.isLogin,
     };
     response.status(200).json({
       accessToken,
       refreshToken,
       user,
     });
+  } catch (error) {
+    response.status(500).send(`${(error as Error).message}`);
+  }
+}
+
+export async function logout(
+  request: Request,
+  response: Response
+): Promise<void> {
+  try {
+    const { phoneNumber } = request.body;
+    const existingUser = await User.findOne({
+      where: { phoneNumber },
+    });
+    if (!existingUser) {
+      response
+        .status(404)
+        .json({ message: "User doesn't exists with this phone number" });
+      return;
+    }
+    if (!existingUser.isLogin) {
+      response.status(409).json({ message: "User is already logged out" });
+      return;
+    }
+    const secret_key = process.env.JSON_WEB_SECRET;
+    if (!secret_key) {
+      response.status(412).json({ message: "Missing JWT secret key" });
+      return;
+    }
+    existingUser.isLogin = false;
+    await existingUser.save();
+    response.status(200).json({ message: "Successfully logout" });
   } catch (error) {
     response.status(500).send(`${(error as Error).message}`);
   }
@@ -222,13 +264,14 @@ export async function deleteAccount(
           publicKey: "deletedPublicKey",
           privateKey: "deletedPrivateKey",
           socketId: "deletedSocketId",
+          isLogin: false,
         },
         { where: { phoneNumber } }
       );
       response.status(200).json({ message: "Account deleted succesfully" });
     }
   } catch (error) {
-    console.log(error)
+    console.log(error);
     response.status(500).send(`${(error as Error).message}`);
   }
 }
@@ -345,6 +388,6 @@ export async function contactDetails(
       },
     });
   } catch (error) {
-    response.status(500).json({ message: `${(error as Error).message}`});
+    response.status(500).json({ message: `${(error as Error).message}` });
   }
 }

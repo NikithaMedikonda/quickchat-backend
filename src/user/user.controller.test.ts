@@ -244,7 +244,6 @@ describe("User controller Login", () => {
 
 describe("User controller Logout", () => {
   let testInstance: Sequelize;
-  let accessToken: string;
   const originalEnv = process.env;
   beforeEach(() => {
     process.env = { ...originalEnv };

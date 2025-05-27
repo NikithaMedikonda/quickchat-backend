@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - user-login-status
 
 jobs:
   QuickChat-backend:

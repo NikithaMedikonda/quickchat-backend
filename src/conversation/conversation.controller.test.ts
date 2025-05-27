@@ -45,6 +45,7 @@ describe("Testing the delete chat functionality", () => {
       isDeleted: false,
       publicKey: "pubKey",
       privateKey: "privKey",
+      isLogin:false,
     });
 
     const receiver = await createUser({
@@ -55,6 +56,7 @@ describe("Testing the delete chat functionality", () => {
       isDeleted: false,
       publicKey: "pubKey",
       privateKey: "privKey",
+      isLogin:false,
     });
 
     accessToken = jwt.sign({ phoneNumber: senderPhoneNumber }, secret_key, {

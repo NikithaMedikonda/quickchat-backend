@@ -37,6 +37,7 @@ describe("Testing the functionality of storing message in data base", () => {
       publicKey: "",
       privateKey: "",
       socketId: "",
+      isLogin:false,
     });
     await createUser({
       phoneNumber: "+911234567890",
@@ -48,6 +49,7 @@ describe("Testing the functionality of storing message in data base", () => {
       publicKey: "",
       privateKey: "",
       socketId: "",
+      isLogin:false,
     });
     const secret_key = process.env.JSON_WEB_SECRET || "quick_chat_secret";
     accessToken = jwt.sign(
@@ -201,6 +203,7 @@ describe("Testing the functionality of updating the status of the message", () =
       isDeleted: false,
       publicKey: "publicKey",
       privateKey: "privateKey",
+      isLogin:false,
     });
     const receiver = await createUser({
       firstName: "Varun",
@@ -210,6 +213,7 @@ describe("Testing the functionality of updating the status of the message", () =
       isDeleted: false,
       publicKey: "publicKey",
       privateKey: "privateKey",
+      isLogin:false,
     });
     await createUser({
       firstName: "Test",
@@ -219,6 +223,7 @@ describe("Testing the functionality of updating the status of the message", () =
       isDeleted: false,
       publicKey: "publicKey",
       privateKey: "privateKey",
+      isLogin:false,
     });
     accessToken = jwt.sign(
       { phoneNumber: senderPhoneNumber },

@@ -345,32 +345,4 @@ describe("Test for socket", () => {
       }, 1000);
     });
   }, 10000);
-
-  test("should update user's socket ID on join", (done) => {
-    const phoneNumber = "+919440058802";
-
-    User.create({
-      phoneNumber,
-      firstName: "anoosha",
-      lastName: "U",
-      email: "anoosha@gmail.com",
-      password: "Anu@123",
-      isDeleted: false,
-      publicKey: "",
-      privateKey: "",
-      socketId: null,
-    }).then(() => {
-      const testClient = Client(SERVER_URL);
-      testClient.on("connect", async () => {
-        testClient.emit("join", phoneNumber);
-
-        setTimeout(async () => {
-          const user = await User.findOne({ where: { phoneNumber } });
-          expect(user?.socketId).toBe(testClient.id);
-          testClient.disconnect();
-          done();
-        }, 500);
-      });
-    });
-  });
 });

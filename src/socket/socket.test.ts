@@ -47,6 +47,7 @@ test("should create users to chat", async () => {
     privateKey: "",
     socketId: "socket1234",
     isLogin:false,
+    deviceId:'vadgsghsgahadgs'
   };
 
   await User.create(sender);
@@ -61,6 +62,7 @@ test("should create users to chat", async () => {
     privateKey: "",
     socketId: "socket123",
     isLogin:false,
+    deviceId:'qwertyuiop'
   };
   await User.create(receiver);
 });

@@ -1,6 +1,6 @@
 import { Chat } from "../chat/chat.model";
 import { findOrCreateChat } from "../chat/chat.service";
-import { Message } from "../message/message.model";
+import { Message, MessageStatus } from "../message/message.model";
 import { createMessage } from "../message/message.service";
 import { PrivateMessage } from "../types/message";
 import { User } from "../user/user.model";
@@ -39,6 +39,7 @@ export const storeMessage = async ({
   recipientPhoneNumber,
   senderPhoneNumber,
   message,
+  status,
   timestamp,
 }: PrivateMessage) => {
   const senderId = await findByPhoneNumber(senderPhoneNumber);
@@ -49,6 +50,7 @@ export const storeMessage = async ({
     recipientId,
     chat.id,
     message,
+    status,
     timestamp
   );
   return newMessage;
@@ -68,4 +70,18 @@ export const disconnectUser = async (socketId: string) => {
     { where: { phoneNumber: existingUser.phoneNumber } }
   );
   return existingUser;
+};
+export const changeStatusToDelivered = async (phoneNumber: string) => {
+  const recipientId = await findByPhoneNumber(phoneNumber);
+  const status = "delivered";
+  const messages = await Message.update(
+    { status: status as MessageStatus },
+    {
+      where: {
+        receiverId: recipientId,
+        status: "sent",
+      },
+    }
+  );
+  return messages;
 };

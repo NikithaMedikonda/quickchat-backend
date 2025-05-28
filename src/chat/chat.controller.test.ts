@@ -80,6 +80,7 @@ describe("Testing the functionality of retrieving the messages of two users", ()
       senderPhoneNumber: senderPhoneNumber,
       receiverPhoneNumber: receiverPhoneNumber,
       content: "Hey Man! Wasup",
+      status:"sent",
       timeStamp: "2024-05-21T11:44:00Z",
     };
 
@@ -97,6 +98,7 @@ describe("Testing the functionality of retrieving the messages of two users", ()
       senderPhoneNumber: receiverPhoneNumber,
       receiverPhoneNumber: senderPhoneNumber,
       content: "Hey Mamatha, Hi",
+      status:"sent",
       timeStamp: "2024-05-21T11:48:00Z",
     };
 
@@ -116,6 +118,7 @@ describe("Testing the functionality of retrieving the messages of two users", ()
       receiverPhoneNumber: receiverPhoneNumber,
       content: "What are you doing?",
       timeStamp: "2024-05-21T11:49:00Z",
+      status:"sent",
     };
 
     const messageCResponse = await request(app)
@@ -159,7 +162,7 @@ describe("Testing the functionality of retrieving the messages of two users", ()
     expect(response.body.chats[2].content).toBe("What are you doing?");
   });
 
-  test("should respoonse with [] if no messages are there", async () => {
+  test("should response with [] if no messages are there", async () => {
     const payload = {
       senderPhoneNumber: senderPhoneNumber,
       receiverPhoneNumber: "+919876543210",

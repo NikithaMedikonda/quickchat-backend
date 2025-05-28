@@ -10,6 +10,7 @@ export type UserInfo = {
   privateKey: string;
   socketId?: string;
   isLogin:boolean;
+  deviceId: string;
 };
 export type DbUser = {
   id: string;
@@ -24,4 +25,5 @@ export type DbUser = {
   privateKey: string;
   socketId?: string | null;
   isLogin:boolean;
+  deviceId:string;
 };

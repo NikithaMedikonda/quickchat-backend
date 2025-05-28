@@ -5,6 +5,7 @@ export const createMessage = async (
   receiverId: string,
   chatId: string,
   content: string,
+  status: string,
   timestamp: string
 ): Promise<Message> => {
   try {
@@ -13,7 +14,7 @@ export const createMessage = async (
       senderId: senderId,
       receiverId: receiverId,
       content: content,
-      status: MessageStatus.Sent,
+      status: status as MessageStatus,
       isEncrypted: true,
       createdAt: new Date(timestamp),
     });

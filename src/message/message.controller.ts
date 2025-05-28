@@ -11,8 +11,15 @@ export const postMessage = async (req: Request, res: Response) => {
     const senderPhoneNumber = req.body.senderPhoneNumber;
     const receiverPhoneNumber = req.body.receiverPhoneNumber;
     const text = req.body.content;
+    const status = req.body.status;
     const timeStamp = req.body.timeStamp;
-    if (!senderPhoneNumber || !receiverPhoneNumber || !text || !timeStamp) {
+    if (
+      !senderPhoneNumber ||
+      !receiverPhoneNumber ||
+      !text ||
+      !timeStamp ||
+      !status
+    ) {
       res
         .status(400)
         .json({ message: "Please provide all the necessary fields." });
@@ -26,13 +33,14 @@ export const postMessage = async (req: Request, res: Response) => {
       receiverId,
       chat.id,
       text,
+      status,
       timeStamp
     );
     res.status(200).json({
       messageDetails: message,
     });
   } catch (error) {
-     res
+    res
       .status(500)
       .json({ error: `Creating message failed. ${(error as Error).message}` });
   }
@@ -65,7 +73,7 @@ export const updateMessageStatus = async (req: Request, res: Response) => {
 
     const senderId = await findByPhoneNumber(senderPhoneNumber);
     const receiverId = await findByPhoneNumber(receiverPhoneNumber);
-
+    const formattedTimestamp = new Date(timestamp);
     const [updatedCount] = await Message.update(
       { status: currentStatus as MessageStatus },
       {
@@ -74,12 +82,11 @@ export const updateMessageStatus = async (req: Request, res: Response) => {
           receiverId: receiverId,
           status: previousStatus as MessageStatus,
           createdAt: {
-            [Op.lte]: new Date(timestamp),
+            [Op.lte]: formattedTimestamp,
           },
         },
       }
     );
-
     if (updatedCount === 0) {
       res.status(204).end();
       return;

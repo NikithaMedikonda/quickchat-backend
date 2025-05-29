@@ -26,7 +26,7 @@ export async function createUser(user: UserInfo) {
     publicKey: user.publicKey,
     privateKey: user.privateKey,
     socketId: user.socketId ? user.socketId : null,
-    isLogin: false,
+    isLogin: true,
     deviceId:user.deviceId
   };
   const createdUser: DbUser = await User.create(newUser);
@@ -85,6 +85,7 @@ export async function register(
           request.body.phoneNumber,
           secret_key.toString()
         );
+        
         const user = {
           id: newUser.id,
           firstName: newUser.firstName,
@@ -408,7 +409,6 @@ export async function contactDetails(
       },
     });
   } catch (error) {
-    console.error(error)
     response.status(500).json({ message: `${(error as Error).message}` });
   }
 }

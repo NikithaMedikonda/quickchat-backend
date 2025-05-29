@@ -86,6 +86,7 @@ describe("Tests for socket services", () => {
         senderPhoneNumber: user.phoneNumber,
         message,
         timestamp,
+        status:"sent"
       });
 
       expect(result.senderId).toBe(id);

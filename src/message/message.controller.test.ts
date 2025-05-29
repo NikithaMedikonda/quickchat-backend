@@ -21,14 +21,14 @@ describe("Testing the functionality of storing message in data base", () => {
     process.env = originalEnv;
   });
 
-  const senderPhoneNumber = "+919876543210";
-  const receiverPhoneNumber = "+911234567890";
-  let accessToken: string = "";
+  const senderPhoneNumber = "+919440058809";
+  const receiverPhoneNumber = "+916303522765";
+  let accessToken: string = "anu";
 
   beforeAll(async () => {
     testInstance = SequelizeConnection()!;
     const sender = await createUser({
-      phoneNumber: "+919876543210",
+      phoneNumber: "+919440058809",
       firstName: "test",
       lastName: "sender",
       password: "Send@1234",
@@ -42,7 +42,7 @@ describe("Testing the functionality of storing message in data base", () => {
     });
     
     await createUser({
-      phoneNumber: "+911234567890",
+      phoneNumber: "+916303522765",
       firstName: "test",
       lastName: "receiver",
       password: "Receiver@1234",
@@ -75,6 +75,8 @@ describe("Testing the functionality of storing message in data base", () => {
 
   test("Should throw error if necessary fields are not passed", async () => {
     const resource = {
+      content: "Hi",
+      status: "sent",
       senderPhoneNumber: "+919876543210",
     };
     await request(app)
@@ -88,8 +90,9 @@ describe("Testing the functionality of storing message in data base", () => {
     const messagePayload = {
       senderPhoneNumber: senderPhoneNumber,
       receiverPhoneNumber: receiverPhoneNumber,
-      content: "Hello!",
       timeStamp: "2024-01-01T10:00:00Z",
+      status: "sent",
+      content: "Hello!",
     };
 
     const messageResponse = await request(app)
@@ -97,7 +100,6 @@ describe("Testing the functionality of storing message in data base", () => {
       .set({ Authorization: `Bearer ${accessToken}` })
       .send(messagePayload)
       .expect(200);
-
     expect(messageResponse.body.messageDetails.senderId).toBeDefined();
     expect(messageResponse.body.messageDetails.content).toBe("Hello!");
 
@@ -117,7 +119,8 @@ describe("Testing the functionality of storing message in data base", () => {
       senderPhoneNumber: "+914567891234", 
       receiverPhoneNumber: receiverPhoneNumber,
       content: "Hello!",
-      timeStamp: "2024-01-01T10:00:00Z"
+      timeStamp: "2024-01-01T10:00:00Z",
+      status: "sent",
     };
 
     await request(app)
@@ -131,8 +134,9 @@ describe("Testing the functionality of storing message in data base", () => {
     const messagePayload = {
       senderPhoneNumber: senderPhoneNumber,
       receiverPhoneNumber: receiverPhoneNumber,
-      content: ["Hello!"], 
-      timeStamp: "2024-01-01T10:00:00Z"
+      content: ["Hello!"],
+      timeStamp: "2024-01-01T10:00:00Z",
+      status: "sent",
     };
 
     await request(app)
@@ -146,8 +150,9 @@ describe("Testing the functionality of storing message in data base", () => {
     const messagePayload = {
       senderPhoneNumber: senderPhoneNumber,
       receiverPhoneNumber: receiverPhoneNumber,
-      content: { text: "Hello!" }, 
-      timeStamp: "2024-01-01T10:00:00Z"
+      content: ["Hello!"],
+      timeStamp: "2024-01-01T10:00:00Z",
+      status: "sent",
     };
 
     await request(app)
@@ -238,6 +243,7 @@ describe("Testing the functionality of updating the status of the message", () =
       receiverPhoneNumber: receiverPhoneNumber,
       content: "Hey Man! Wasup",
       timeStamp: "2025-05-21T11:44:00Z",
+      status: "sent",
     };
 
     const messageAResponse = await request(app)
@@ -255,6 +261,7 @@ describe("Testing the functionality of updating the status of the message", () =
       receiverPhoneNumber: senderPhoneNumber,
       content: "Hey Mamatha, Hi",
       timeStamp: "2025-05-21T11:48:00Z",
+      status: "sent",
     };
 
     const messageBResponse = await request(app)
@@ -272,6 +279,7 @@ describe("Testing the functionality of updating the status of the message", () =
       receiverPhoneNumber: receiverPhoneNumber,
       content: "What are you doing?",
       timeStamp: "2025-05-21T11:50:00Z",
+      status: "sent",
     };
 
     const messageCResponse = await request(app)
@@ -289,6 +297,7 @@ describe("Testing the functionality of updating the status of the message", () =
       receiverPhoneNumber: senderPhoneNumber,
       content: "I am chilling yar! What about you?",
       timeStamp: "2025-05-21T11:52:00Z",
+      status: "sent",
     };
 
     const messageDResponse = await request(app)
@@ -306,6 +315,7 @@ describe("Testing the functionality of updating the status of the message", () =
       receiverPhoneNumber: receiverPhoneNumber,
       content: "Cool! Nothing much😊",
       timeStamp: "2025-05-21T11:55:00Z",
+      status: "sent",
     };
 
     const messageEResponse = await request(app)

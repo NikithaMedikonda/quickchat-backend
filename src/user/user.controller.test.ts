@@ -253,17 +253,25 @@ describe("User controller Login", () => {
       password: "Anu@1234",
       deviceId: "qwertyuiop",
     };
-    const response = await request(app).post("/api/user").send(resource).expect(200);
-    expect(response.body.message).toEqual('Login success')
+    const response = await request(app)
+      .post("/api/user")
+      .send(resource)
+      .expect(200);
+    expect(response.body.message).toEqual("Login success");
   });
-    test("should return 200 if user already user logged in", async () => {
+  test("should return 200 if user already user logged in", async () => {
     const resource = {
       phoneNumber: "9440058809",
       password: "Anu@1234",
       deviceId: "afshgdfghfashdfafsjd",
     };
-    const response = await request(app).post("/api/user").send(resource).expect(200);
-    expect(response.body.message).toEqual('User was logged out from previous device and logged in on new device')
+    const response = await request(app)
+      .post("/api/user")
+      .send(resource)
+      .expect(200);
+    expect(response.body.message).toEqual(
+      "User was logged out from previous device and logged in on new device"
+    );
   });
 });
 
@@ -806,6 +814,7 @@ describe("Contacts Display Test Suite", () => {
       password: "tesT@1234",
       email: "testOne@gmail.com",
       deviceId: "qwertyuiop",
+      publicKey:"abc"
     };
 
     const userTwo = {
@@ -815,6 +824,7 @@ describe("Contacts Display Test Suite", () => {
       password: "tesT@1234",
       email: "testTwo@gmail.com",
       deviceId: "hagsdfhgdfvjga",
+      publicKey:"xyz"
     };
 
     await request(app).post("/api/users").send(userOne).expect(200);
@@ -844,11 +854,13 @@ describe("Contacts Display Test Suite", () => {
           name: "Test One",
           phoneNumber: "7997520973",
           profilePicture: null,
+          publicKey: "abc",
         }),
         expect.objectContaining({
           name: "Test Two",
           phoneNumber: "9248434816",
           profilePicture: null,
+          publicKey: "xyz",
         }),
       ])
     );

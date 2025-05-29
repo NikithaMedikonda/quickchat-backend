@@ -2,6 +2,7 @@ import express from "express";
 import { authenticateToken } from "../user/user.middleware";
 import {
   blockUserAccount,
+  checkBlockStatus,
   unblockUserAccount,
 } from "./userRestriction.controller";
 
@@ -17,3 +18,8 @@ userRestrictionRouter.post(
   authenticateToken,
   unblockUserAccount
 );
+userRestrictionRouter.post(
+  "/api/users/block-status",
+  authenticateToken,
+  checkBlockStatus
+)

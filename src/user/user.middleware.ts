@@ -11,7 +11,7 @@ export function validateEmail(inputEmail: string) {
   } else {
     return false;
   }
-};
+}
 
 export function validatePassword(inputPassword: string) {
   const schema = new passwordValidator();
@@ -30,15 +30,14 @@ export function validatePassword(inputPassword: string) {
     .not()
     .spaces();
   return schema.validate(inputPassword);
-};
+}
 
 export async function validateInputFields(
   request: Request,
   response: Response,
   next: NextFunction
 ): Promise<void> {
-  const phonePattern =
-    /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/;
+  const phonePattern = /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/;
   if (
     !request.body.phoneNumber ||
     !request.body.firstName ||
@@ -62,9 +61,24 @@ export async function validateLoginInputFields(
   response: Response,
   next: NextFunction
 ): Promise<void> {
+  const phonePattern = /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/;
+  if (!request.body.phoneNumber || !request.body.password) {
+    response.sendStatus(400);
+  } else if (!request.body.phoneNumber.match(phonePattern)) {
+    response.sendStatus(401);
+  } else {
+    next();
+  }
+}
+
+export async function validateLogOutInputFields(
+  request: Request,
+  response: Response,
+  next: NextFunction
+): Promise<void> {
   const phonePattern =
     /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/;
-  if (!request.body.phoneNumber || !request.body.password) {
+  if (!request.body.phoneNumber) {
     response.sendStatus(400);
   } else if (!request.body.phoneNumber.match(phonePattern)) {
     response.sendStatus(401);

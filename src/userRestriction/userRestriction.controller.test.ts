@@ -5,7 +5,7 @@ import { app } from "../../server";
 import { SequelizeConnection } from "../connection/dbconnection";
 import { createUser } from "../user/user.controller";
 import { User } from "../user/user.model";
-import { UserRestriction } from "./userRestriction.model"; 
+import { UserRestriction } from "./userRestriction.model";
 import {
   addBlockedUserEntry,
   removeBlockedUserEntry,
@@ -30,6 +30,8 @@ describe("Blocked Users Controller", () => {
       publicKey: "",
       privateKey: "",
       socketId: "",
+      isLogin: false,
+      deviceId: "qwertyuiop",
     });
 
     await createUser({
@@ -42,6 +44,8 @@ describe("Blocked Users Controller", () => {
       publicKey: "",
       privateKey: "",
       socketId: "",
+      isLogin: false,
+      deviceId: "kjhadjsghjs",
     });
 
     const secret_key = process.env.JSON_WEB_SECRET || "quick_chat_secret";
@@ -165,6 +169,8 @@ describe("Blocked Users Controller", () => {
         publicKey: "",
         privateKey: "",
         socketId: "",
+        isLogin: false,
+        deviceId: "ajhdsjhgahsjHGFGS",
       });
 
       const res = await request(app)
@@ -241,6 +247,8 @@ describe("Blocked Users Controller", () => {
         publicKey: "",
         privateKey: "",
         socketId: "",
+        isLogin: false,
+        deviceId: "GGGFWTE",
       });
 
       const user2 = await createUser({
@@ -253,11 +261,142 @@ describe("Blocked Users Controller", () => {
         publicKey: "",
         privateKey: "",
         socketId: "",
+        isLogin: false,
+        deviceId: "hgdfshcgfsjhv",
       });
 
       await expect(removeBlockedUserEntry(user1.id, user2.id)).rejects.toThrow(
         "Blocked entry not found."
       );
     });
+  });
+});
+
+describe("Tests for checking blocked status functionality", () => {
+  let testInstance: Sequelize;
+  let accessToken: string;
+
+  const blockerPhoneNumber = "+916303961097";
+  const blockedPhoneNumber = "+916303974914";
+
+  beforeAll(async () => {
+    testInstance = SequelizeConnection();
+    const blocker = await createUser({
+      phoneNumber: blockerPhoneNumber,
+      firstName: "Usha",
+      lastName: "Sri",
+      email: "uski@gmail.com",
+      password: "blockeR@1234",
+      isDeleted: false,
+      publicKey: "",
+      privateKey: "",
+      socketId: "",
+      isLogin: false,
+      deviceId: "qwertyuiop",
+    });
+
+    await createUser({
+      phoneNumber: blockedPhoneNumber,
+      firstName: "Mamatha",
+      lastName: "Niyal",
+      email: "mammu@gmail.com",
+      password: "blockeD@1234",
+      isDeleted: false,
+      publicKey: "",
+      privateKey: "",
+      socketId: "",
+      isLogin: false,
+      deviceId: "jhahgdjg",
+    });
+
+    const secret_key = process.env.JSON_WEB_SECRET || "quick_chat_secret";
+    accessToken = jwt.sign({ phoneNumber: blocker.phoneNumber }, secret_key, {
+      expiresIn: "7d",
+    });
+  });
+
+  afterAll(async () => {
+    await UserRestriction.truncate({ cascade: true });
+    await User.truncate({ cascade: true });
+    await testInstance.close();
+  });
+
+  test("Should return 400 if required fields are missing", async () => {
+    const res = await request(app)
+      .post("/api/users/block-status")
+      .set({ Authorization: `Bearer ${accessToken}` })
+      .send({ blockerPhoneNumber });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe("Please provide the necessary details.");
+  });
+
+  test("Should block a user i.e., create an entry in userRestriction table", async () => {
+    const res = await request(app)
+      .post("/api/block/users")
+      .set({ Authorization: `Bearer ${accessToken}` })
+      .send({
+        blockerPhoneNumber: blockerPhoneNumber,
+        blockedPhoneNumber: blockedPhoneNumber,
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.message).toBe("User blocked successfully.");
+    expect(res.body.blockedUsersDetails.blocker).toBeDefined();
+    expect(res.body.blockedUsersDetails.blocked).toBeDefined();
+  });
+
+  test("Should return true, if user is blocked", async () => {
+    const response = await request(app)
+      .post("/api/users/block-status")
+      .set({ Authorization: `Bearer ${accessToken}` })
+      .send({
+        blockerPhoneNumber: blockerPhoneNumber,
+        blockedPhoneNumber: blockedPhoneNumber,
+      })
+      .expect(200);
+    expect(response.body.isBlocked).toBe(true);
+  });
+
+  test("Should successfully unblock the user", async () => {
+    const response = await request(app)
+      .post("/api/unblock/users")
+      .set({ Authorization: `Bearer ${accessToken}` })
+      .send({
+        blockerPhoneNumber: blockerPhoneNumber,
+        blockedPhoneNumber: blockedPhoneNumber,
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.message).toBe("User unblocked successfully.");
+    expect(response.body.unblockedUsersDetails.blocker).toBeDefined();
+    expect(response.body.unblockedUsersDetails.blocked).toBeDefined();
+  });
+
+  test("Should return false, if user is not blocked", async () => {
+    const response = await request(app)
+      .post("/api/users/block-status")
+      .set({ Authorization: `Bearer ${accessToken}` })
+      .send({
+        blockerPhoneNumber: blockerPhoneNumber,
+        blockedPhoneNumber: blockedPhoneNumber,
+      })
+      .expect(200);
+    expect(response.body.isBlocked).toBe(false);
+  });
+
+  test("Should return 500 if any user is not found", async () => {
+    const response = await request(app)
+      .post("/api/users/block-status")
+      .set({ Authorization: `Bearer ${accessToken}` })
+      .send({
+        blockerPhoneNumber: blockerPhoneNumber,
+        blockedPhoneNumber: "+999999999999",
+      });
+
+    expect(response.status).toBe(500);
+    expect(response.body.error).toContain(
+      "User not found with the phone number"
+    );
   });
 });

@@ -90,7 +90,7 @@ describe("Testing the functionality of retrieving the messages of two users", ()
       senderPhoneNumber: senderPhoneNumber,
       receiverPhoneNumber: receiverPhoneNumber,
       content: "Hey Man! Wasup",
-      status:"sent",
+      status: "sent",
       timeStamp: "2024-05-21T11:44:00Z",
     };
 
@@ -108,7 +108,7 @@ describe("Testing the functionality of retrieving the messages of two users", ()
       senderPhoneNumber: receiverPhoneNumber,
       receiverPhoneNumber: senderPhoneNumber,
       content: "Hey Mamatha, Hi",
-      status:"sent",
+      status: "sent",
       timeStamp: "2024-05-21T11:48:00Z",
     };
 
@@ -128,7 +128,7 @@ describe("Testing the functionality of retrieving the messages of two users", ()
       receiverPhoneNumber: receiverPhoneNumber,
       content: "What are you doing?",
       timeStamp: "2024-05-21T11:49:00Z",
-      status:"sent",
+      status: "sent",
     };
 
     const messageCResponse = await request(app)
@@ -263,7 +263,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
       publicKey: "publicKey",
       privateKey: "privateKey",
       isLogin: false,
-      deviceId: "abcd"
+      deviceId: "abcd",
     });
     const receiverA = await createUser({
       firstName: "receiver",
@@ -274,7 +274,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
       publicKey: "publicKey",
       privateKey: "privateKey",
       isLogin: false,
-      deviceId: "efgh"
+      deviceId: "efgh",
     });
     const receiverB = await createUser({
       firstName: "receiver",
@@ -285,7 +285,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
       publicKey: "publicKey",
       privateKey: "privateKey",
       isLogin: false,
-      deviceId: "ijkl"
+      deviceId: "ijkl",
     });
     const receiverC = await createUser({
       firstName: "receiver",
@@ -296,7 +296,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
       publicKey: "publicKey",
       privateKey: "privateKey",
       isLogin: false,
-      deviceId: "mnop"
+      deviceId: "mnop",
     });
     accessToken = jwt.sign(
       { phoneNumber: senderPhoneNumber },
@@ -333,7 +333,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
       receiverPhoneNumber: receiverAPhoneNumber,
       content: "Hello, I am sending you a message!",
       timeStamp: "2025-05-25T14:35:00Z",
-      status:'sent'
+      status: "sent",
     };
 
     await request(app)
@@ -347,7 +347,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
       receiverPhoneNumber: senderPhoneNumber,
       content: "Hello, I am giving reply to you!",
       timeStamp: "2025-05-25T14:38:00Z",
-      status:'sent'
+      status: "sent",
     };
 
     await request(app)
@@ -361,7 +361,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
       receiverPhoneNumber: receiverAPhoneNumber,
       content: "Thanks for giving reply!",
       timeStamp: "2025-05-25T14:45:00Z",
-      status:'sent'
+      status: "sent",
     };
 
     await request(app)
@@ -377,7 +377,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
       receiverPhoneNumber: receiverBPhoneNumber,
       content: "Hello, I am sending you a message!",
       timeStamp: "2025-05-25T14:50:00Z",
-      status:'sent'
+      status: "sent",
     };
 
     await request(app)
@@ -391,7 +391,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
       receiverPhoneNumber: senderPhoneNumber,
       content: "Hello, I am giving reply to you!",
       timeStamp: "2025-05-25T14:55:00Z",
-      status:'sent'
+      status: "sent",
     };
 
     await request(app)
@@ -405,7 +405,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
       receiverPhoneNumber: receiverBPhoneNumber,
       content: "Thanks for giving reply!",
       timeStamp: "2025-05-25T15:00:00Z",
-      status:'sent'
+      status: "sent",
     };
 
     await request(app)
@@ -419,7 +419,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
       receiverPhoneNumber: senderPhoneNumber,
       content: "Your welcome.",
       timeStamp: "2025-05-25T15:05:00Z",
-      status:'sent'
+      status: "sent",
     };
 
     await request(app)
@@ -435,7 +435,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
       receiverPhoneNumber: receiverCPhoneNumber,
       content: "Hello, I am sending you a message!",
       timeStamp: "2025-05-25T14:50:00Z",
-      status:'sent'
+      status: "sent",
     };
 
     await request(app)
@@ -449,7 +449,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
       receiverPhoneNumber: senderPhoneNumber,
       content: "Hello, I am giving reply to you!",
       timeStamp: "2025-05-25T14:55:00Z",
-      status:'sent'
+      status: "sent",
     };
 
     await request(app)
@@ -463,7 +463,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
       receiverPhoneNumber: receiverCPhoneNumber,
       content: "Thanks for giving reply!",
       timeStamp: "2025-05-25T15:00:00Z",
-      status:'sent'
+      status: "sent",
     };
 
     await request(app)
@@ -477,7 +477,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
       receiverPhoneNumber: senderPhoneNumber,
       content: "Your welcome.",
       timeStamp: "2025-05-25T15:05:00Z",
-      status:'sent'
+      status: "sent",
     };
 
     await request(app)
@@ -491,7 +491,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
       receiverPhoneNumber: receiverCPhoneNumber,
       content: "Hello Again! Sorry for Deleting Chat with you.",
       timeStamp: "2025-05-25T15:10:00Z",
-      status:'sent'
+      status: "sent",
     };
 
     await request(app)
@@ -539,7 +539,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
       receiverPhoneNumber: senderPhoneNumber,
       content: "Hello, I am sending you a message!",
       timeStamp: "2025-05-25T14:50:00Z",
-      status:'sent'
+      status: "sent",
     };
 
     await request(app)
@@ -553,7 +553,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
       receiverPhoneNumber: senderPhoneNumber,
       content: "Hello, I am giving reply to you!",
       timeStamp: "2025-05-25T14:55:00Z",
-      status:'sent'
+      status: "sent",
     };
 
     await request(app)
@@ -587,6 +587,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
     expect(selfChat.lastMessageStatus).toBe("sent");
     expect(selfChat.lastMessageTimestamp).toBe("2025-05-25T14:55:00.000Z");
     expect(selfChat.unreadCount).toBe(2);
+    expect(selfChat.publicKey).toBeTruthy();
 
     expect(receiverBChat).toBeDefined();
     expect(receiverBChat.chatId).toBeTruthy();
@@ -598,6 +599,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
     expect(receiverBChat.lastMessageStatus).toBeNull();
     expect(receiverBChat.lastMessageTimestamp).toBe("2025-05-25T15:05:00.000Z");
     expect(receiverBChat.unreadCount).toBe(1);
+    expect(receiverBChat.publicKey).toBeTruthy();
 
     expect(receiverAChat).toBeDefined();
     expect(receiverAChat.chatId).toBeTruthy();
@@ -609,6 +611,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
     expect(receiverAChat.lastMessageStatus).toBe("sent");
     expect(receiverAChat.lastMessageTimestamp).toBe("2025-05-25T14:45:00.000Z");
     expect(receiverAChat.unreadCount).toBe(1);
+    expect(receiverAChat.publicKey).toBeTruthy();
   });
 
   test("should fetch chats of receiverA with sender", async () => {
@@ -633,6 +636,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
     expect(chat.lastMessageStatus).toBeNull();
     expect(chat.lastMessageTimestamp).toBe("2025-05-25T14:45:00.000Z");
     expect(chat.unreadCount).toBe(2);
+    expect(chat.publicKey).toBeTruthy();
   });
 
   test("should include chat in results when lastClearedAt is before the last message", async () => {
@@ -641,7 +645,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
       receiverPhoneNumber: receiverCPhoneNumber,
       content: "Message after clearing",
       timeStamp: "2025-05-25T18:10:00Z",
-      status:'sent'
+      status: "sent",
     };
 
     await request(app)

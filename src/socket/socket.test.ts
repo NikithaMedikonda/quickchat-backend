@@ -45,38 +45,7 @@ beforeEach(async () => {
   await Message.truncate({ cascade: true });
   await Chat.truncate({ cascade: true });
   await User.truncate({ cascade: true });
-test("should create users to chat", async () => {
-  const sender = {
-    phoneNumber: "+919440058809",
-    firstName: "Anoosha",
-    lastName: "Sanugula",
-    email: "anoosha@gmail.com",
-    password: "Anu@1234",
-    isDeleted: false,
-    publicKey: "",
-    privateKey: "",
-    socketId: "socket1234",
-    isLogin:false,
-    deviceId:'vadgsghsgahadgs'
-  };
-
-  await User.create(sender);
-  const receiver = {
-    phoneNumber: "+919440058801",
-    firstName: "Bingi",
-    lastName: "S",
-    email: "bingi@gmail.com",
-    password: "Anu@1234",
-    isDeleted: false,
-    publicKey: "",
-    privateKey: "",
-    socketId: "socket123",
-    isLogin:false,
-    deviceId:'qwertyuiop'
-  };
-  await User.create(receiver);
 });
-
 afterEach(() => {
   if (clientA?.connected) clientA.disconnect();
   if (clientB?.connected) clientB.disconnect();
@@ -93,6 +62,8 @@ describe("Test for socket", () => {
       publicKey: "",
       privateKey: "",
       socketId: null,
+      isLogin:true,
+      deviceId:""
     };
 
     const user1 = await User.create(sender);
@@ -107,6 +78,8 @@ describe("Test for socket", () => {
       publicKey: "",
       privateKey: "",
       socketId: null,
+      isLogin:true,
+      deviceId:""
     };
 
     const user2 = await User.create(receiver);
@@ -130,6 +103,8 @@ describe("Test for socket", () => {
       publicKey: "",
       privateKey: "",
       socketId: null,
+      isLogin: false,
+      deviceId: "",
     }).then(() => {
       clientA = Client(SERVER_URL);
       clientA.on("connect", () => {
@@ -169,6 +144,8 @@ describe("Test for socket", () => {
         publicKey: "",
         privateKey: "",
         socketId: null,
+        isLogin: false,
+        deviceId: "",
       }),
       User.create({
         phoneNumber: recipientPhoneNumber,
@@ -180,6 +157,8 @@ describe("Test for socket", () => {
         publicKey: "",
         privateKey: "",
         socketId: null,
+        isLogin: false,
+        deviceId: "",
       }),
     ])
       .then(async ([sender, recipient]) => {
@@ -248,6 +227,8 @@ describe("Test for socket", () => {
         publicKey: "",
         privateKey: "",
         socketId: null,
+        isLogin: false,
+        deviceId: "",
       }),
       User.create({
         phoneNumber: recipientPhoneNumber,
@@ -259,6 +240,8 @@ describe("Test for socket", () => {
         publicKey: "",
         privateKey: "",
         socketId: null,
+        isLogin: false,
+        deviceId: "",
       }),
     ]).then(async ([sender, recipient]) => {
       await findOrCreateChat(sender.id, recipient.id);
@@ -300,6 +283,8 @@ describe("Test for socket", () => {
         publicKey: "",
         privateKey: "",
         socketId: null,
+        isLogin: false,
+        deviceId: "",
       }),
       User.create({
         phoneNumber: user2PhoneNumber,
@@ -311,6 +296,8 @@ describe("Test for socket", () => {
         publicKey: "",
         privateKey: "",
         socketId: null,
+        isLogin: false,
+        deviceId: "",
       }),
     ]).then(() => {
       clientA = Client(SERVER_URL);
@@ -340,6 +327,8 @@ describe("Test for socket", () => {
         publicKey: "",
         privateKey: "",
         socketId: null,
+        isLogin: false,
+        deviceId: "",
       }),
       User.create({
         phoneNumber: user2PhoneNumber,
@@ -351,6 +340,8 @@ describe("Test for socket", () => {
         publicKey: "",
         privateKey: "",
         socketId: null,
+        isLogin: false,
+        deviceId: "",
       }),
     ]).then(() => {
       clientA = Client(SERVER_URL);

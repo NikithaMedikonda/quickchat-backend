@@ -35,6 +35,11 @@ describe("Tests for getting a socketId of a user to check online status", () => 
       password: "Anu@12343",
       email: "anuu@gmail.com",
       socketId: "1221",
+      isDeleted: false,
+      publicKey: "",
+      privateKey: "",
+      isLogin: false,
+      deviceId: "",
     };
     const user = await request(app).post("/api/users").send(newUser);
     expect(user.status).toBe(200);

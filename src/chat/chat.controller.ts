@@ -99,6 +99,7 @@ export const getChatsOfUser = async (req: Request, res: Response) => {
             "lastName",
             "profilePicture",
             "phoneNumber",
+            "publicKey",
           ],
         },
         {
@@ -110,6 +111,7 @@ export const getChatsOfUser = async (req: Request, res: Response) => {
             "lastName",
             "profilePicture",
             "phoneNumber",
+            "publicKey",
           ],
         },
       ],
@@ -172,12 +174,13 @@ export const getChatsOfUser = async (req: Request, res: Response) => {
           lastMessage.senderId === userId ? lastMessage.status : null,
         lastMessageTimestamp: lastMessage.createdAt,
         unreadCount: unreadCount,
+        publicKey: contact.publicKey,
       });
 
       chatsOfUser.sort((chatA, chatB) => {
         const timeA = new Date(chatA.lastMessageTimestamp).getTime();
         const timeB = new Date(chatB.lastMessageTimestamp).getTime();
-        return timeB - timeA; 
+        return timeB - timeA;
       });
     }
 

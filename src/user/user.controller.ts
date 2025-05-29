@@ -26,7 +26,8 @@ export async function createUser(user: UserInfo) {
     publicKey: user.publicKey,
     privateKey: user.privateKey,
     socketId: user.socketId ? user.socketId : null,
-    isLogin: false,
+    isLogin: true,
+    deviceId:user.deviceId
   };
   const createdUser: DbUser = await User.create(newUser);
   return createdUser;
@@ -70,6 +71,7 @@ export async function register(
           privateKey: request.body.privateKey,
           socketId: request.body.socketId,
           isLogin: true,
+          deviceId:request.body.deviceId,
         };
         const newUser: DbUser = await createUser(userBody);
         const token = jwt.sign(
@@ -83,6 +85,7 @@ export async function register(
           request.body.phoneNumber,
           secret_key.toString()
         );
+        
         const user = {
           id: newUser.id,
           firstName: newUser.firstName,
@@ -95,6 +98,7 @@ export async function register(
           privateKey: newUser.privateKey,
           socketId: newUser.socketId,
           isLogin: newUser.isLogin,
+          deviceId:newUser.deviceId
         };
         response
           .status(200)
@@ -111,38 +115,48 @@ export async function login(
   response: Response
 ): Promise<void> {
   try {
-    const { phoneNumber, password } = request.body;
+    const { phoneNumber, password, deviceId } = request.body;
     const existingUser = await User.findOne({
       where: { phoneNumber },
     });
+
     if (!existingUser) {
       response
         .status(404)
         .json({ message: "User doesn't exists with this phone number" });
       return;
     }
-    if (existingUser.isLogin) {
-      response.status(409).json({ message: "User is already logged in" });
-      return;
-    }
+
     const validPassword = await bcrypt.compare(password, existingUser.password);
     if (!validPassword) {
       response.status(401).json({ message: "Password is invalid" });
       return;
     }
+
     const secret_key = process.env.JSON_WEB_SECRET;
     if (!secret_key) {
       response.status(412).json({ message: "Missing JWT secret key" });
       return;
     }
+
+    const isDeviceChanged = existingUser.deviceId !== deviceId;
+    let responseMessage = "Login success";
+
+    if (isDeviceChanged) {
+      existingUser.deviceId = deviceId;
+      responseMessage = "User was logged out from previous device and logged in on new device";
+    }
+
     const accessToken = jwt.sign(
       { phoneNumber: existingUser.phoneNumber },
       secret_key,
       { expiresIn: "7d" }
     );
     const refreshToken = jwt.sign(existingUser.phoneNumber, secret_key);
+
     existingUser.isLogin = true;
     await existingUser.save();
+
     const user = {
       id: existingUser.id,
       firstName: existingUser.firstName,
@@ -155,12 +169,19 @@ export async function login(
       privateKey: existingUser.privateKey,
       socketId: existingUser.socketId,
       isLogin: existingUser.isLogin,
+      deviceId: existingUser.deviceId
     };
-    response.status(200).json({
+
+    const responseData = {
       accessToken,
       refreshToken,
       user,
-    });
+      deviceChanged: isDeviceChanged,
+      message:responseMessage
+    };
+
+    response.status(200).json(responseData);
+
   } catch (error) {
     response.status(500).send(`${(error as Error).message}`);
   }
@@ -265,13 +286,13 @@ export async function deleteAccount(
           privateKey: "deletedPrivateKey",
           socketId: "deletedSocketId",
           isLogin: false,
+          deviceId:`deviceId${existingUser.id}`
         },
         { where: { phoneNumber } }
       );
       response.status(200).json({ message: "Account deleted succesfully" });
     }
   } catch (error) {
-    console.log(error);
     response.status(500).send(`${(error as Error).message}`);
   }
 }

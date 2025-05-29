@@ -34,6 +34,7 @@ describe("User controller Registration", () => {
       firstName: "Test Resource",
       lastName: "A test resource",
       password: "Anu@1234",
+      deviceId: "qwertyuiop",
     };
     await request(app).post("/api/users").send(newResource).expect(400);
   });
@@ -45,6 +46,7 @@ describe("User controller Registration", () => {
       password: "Anu@1234",
       profilePicture: "somePicture",
       phoneNumber: "8522041688",
+      deviceId: "qwertyuiop",
     };
     await request(app).post("/api/users").send(newResource).expect(500);
   });
@@ -55,6 +57,7 @@ describe("User controller Registration", () => {
       firstName: "Test Resource2",
       lastName: "A test resource2",
       password: "anu@1234",
+      deviceId: "qwertyuiop",
     };
     await request(app).post("/api/users").send(newResource).expect(406);
   });
@@ -66,6 +69,7 @@ describe("User controller Registration", () => {
       lastName: "A test resource2",
       password: "anu@1234",
       email: "anu@du",
+      deviceId: "qwertyuiop",
     };
     await request(app).post("/api/users").send(newResource).expect(400);
   });
@@ -76,6 +80,7 @@ describe("User controller Registration", () => {
       firstName: "Test Resource2",
       lastName: "A test resource2",
       password: "anu@1234",
+      deviceId: "qwertyuiop",
     };
     await request(app).post("/api/users").send(newResource).expect(401);
   });
@@ -87,6 +92,7 @@ describe("User controller Registration", () => {
       lastName: "A test resource2",
       password: "Anu@1234",
       email: "anusha@gmail.com",
+      deviceId: "qwertyuiop",
     };
     const response = await request(app)
       .post("/api/users")
@@ -103,6 +109,7 @@ describe("User controller Registration", () => {
       lastName: "A test resource3",
       password: "Anu@12345",
       email: "anusha@gmail.com",
+      deviceId: "qwertyuiop",
     };
     await request(app).post("/api/users").send(newResource2).expect(409);
   });
@@ -114,6 +121,7 @@ describe("User controller Registration", () => {
       lastName: "A test resource2",
       password: "Anu@1234",
       email: "anushaupp@gmail.com",
+      deviceId: "qwertyuiop",
     };
     const response = validateEmail(newResource.email);
     expect(response).toBe(true);
@@ -141,6 +149,7 @@ describe("User controller Registration", () => {
       lastName: "A test resource3",
       password: "Anu@12345",
       email: "anusha1234@gmail.com",
+      deviceId: "qwertyuiop",
     };
     await request(app).post("/api/users").send(newResource3).expect(412);
   });
@@ -189,6 +198,7 @@ describe("User controller Login", () => {
       lastName: "A test resource2",
       password: "Anu@1234",
       email: "anusha@gmail.com",
+      deviceId: "qwertyuiop",
     };
     const response = await request(app)
       .post("/api/users")
@@ -202,6 +212,7 @@ describe("User controller Login", () => {
     const resource = {
       phoneNumber: "9440058809",
       password: "Anu@123",
+      deviceId: "qwertyuiop",
     };
     await request(app).post("/api/user").send(resource).expect(401);
   });
@@ -209,6 +220,7 @@ describe("User controller Login", () => {
     const resource = {
       phoneNumber: "9440058809",
       password: { password: "Invalid password" },
+      deviceId: "qwertyuiop",
     };
     await request(app).post("/api/user").send(resource).expect(500);
   });
@@ -218,13 +230,15 @@ describe("User controller Login", () => {
     const resource = {
       phoneNumber: "9440058809",
       password: "Anu@1234",
+      deviceId: "qwertyuiop",
     };
     await request(app).post("/api/user").send(resource).expect(412);
   });
-    test("should return the access token and refresh token when the user is fetched successfully", async () => {
+  test("should return the access token and refresh token when the user is fetched successfully", async () => {
     const resource = {
       phoneNumber: "9440058809",
       password: "Anu@1234",
+      deviceId: "qwertyuiop",
     };
     const response = await request(app)
       .post("/api/user")
@@ -233,22 +247,33 @@ describe("User controller Login", () => {
     expect(response.body.accessToken).toBeTruthy();
     expect(response.body.refreshToken).toBeTruthy();
   });
-    test("should return 409 if user already user logged in", async () => {
+  test("should return 200 if user already user logged in", async () => {
     const resource = {
       phoneNumber: "9440058809",
       password: "Anu@1234",
+      deviceId: "qwertyuiop",
     };
-    await request(app).post("/api/user").send(resource).expect(409);
+    const response = await request(app).post("/api/user").send(resource).expect(200);
+    expect(response.body.message).toEqual('Login success')
+  });
+    test("should return 200 if user already user logged in", async () => {
+    const resource = {
+      phoneNumber: "9440058809",
+      password: "Anu@1234",
+      deviceId: "afshgdfghfashdfafsjd",
+    };
+    const response = await request(app).post("/api/user").send(resource).expect(200);
+    expect(response.body.message).toEqual('User was logged out from previous device and logged in on new device')
   });
 });
 
 describe("User controller Logout", () => {
   let testInstance: Sequelize;
   const originalEnv = process.env;
-  beforeEach(() => {
+  beforeEach(async () => {
     process.env = { ...originalEnv };
   });
-  afterEach(() => {
+  afterEach(async () => {
     process.env = originalEnv;
   });
   beforeAll(() => {
@@ -264,7 +289,7 @@ describe("User controller Logout", () => {
     };
     await request(app).post("/api/logout").send(existingResource).expect(400);
   });
-    test("Should return error message when the required fields are missing in while user login", async () => {
+  test("Should return error message when the required fields are missing in while user login", async () => {
     const existingResource = {
       phoneNumber: "123456789012345678",
     };
@@ -289,6 +314,7 @@ describe("User controller Logout", () => {
       lastName: "A test resource2",
       password: "Anu@1234",
       email: "anusha@gmail.com",
+      deviceId: "qwertyuiop",
     };
     const response = await request(app)
       .post("/api/users")
@@ -298,10 +324,11 @@ describe("User controller Logout", () => {
     expect(response.body.refreshToken).toBeTruthy();
   });
 
-    test("should return the access token and refresh token when the user is fetched successfully", async () => {
+  test("should return the access token and refresh token when the user is fetched successfully", async () => {
     const resource = {
       phoneNumber: "9440058809",
       password: "Anu@1234",
+      deviceId: "qwertyuiop",
     };
     const response = await request(app)
       .post("/api/user")
@@ -309,16 +336,17 @@ describe("User controller Logout", () => {
       .expect(200);
     expect(response.body.accessToken).toBeTruthy();
     expect(response.body.refreshToken).toBeTruthy();
+    expect(response.body.message).toEqual("Login success");
   });
 
-    test("should return secret_key missing error when the secret_key is missing", async () => {
+  test("should return secret_key missing error when the secret_key is missing", async () => {
     delete process.env.JSON_WEB_SECRET;
     const resource = {
       phoneNumber: "9440058809",
     };
     await request(app).post("/api/logout").send(resource).expect(412);
   });
-    test("should return un authorised message whenever the user not exists with that phone number", async () => {
+  test("should return un authorised message whenever the user not exists with that phone number", async () => {
     const resource = {
       phoneNumber: "9440058809",
     };
@@ -327,7 +355,7 @@ describe("User controller Logout", () => {
 
   it("Should respond with status code 500 if something goes wrong", async () => {
     process.env.SERVICE_KEY = "unknown-service_key";
-    const accessToken = 'wsfdhgvhwgdv'
+    const accessToken = "wsfdhgvhwgdv";
     const resource = {
       phoneNumber: "9876543210",
     };
@@ -342,7 +370,7 @@ describe("User controller Logout", () => {
     }
   });
 
-    test("should return 409 if user already user logged in", async () => {
+  test("should return 409 if user already user logged in", async () => {
     const resource = {
       phoneNumber: "9440058809",
     };
@@ -375,6 +403,7 @@ describe("Tests for user controller for updating profile", () => {
       lastName: "A test resource2",
       password: "tesT@1234",
       email: "test@gmail.com",
+      deviceId: "qwertyuiop",
     };
     const response = await request(app)
       .post("/api/users")
@@ -426,6 +455,7 @@ describe("Tests for user controller for updating profile", () => {
     const resource = {
       phoneNumber: "9876543210",
       profilePicture: defaultProfileImage,
+      deviceId: "qwertyuiop",
     };
     const response = await request(app)
       .put("/api/user")
@@ -439,6 +469,7 @@ describe("Tests for user controller for updating profile", () => {
     const resource = {
       phoneNumber: "9876543210",
       profilePicture: "",
+      deviceId: "qwertyuiop",
     };
     const response = await request(app)
       .put("/api/user")
@@ -453,6 +484,7 @@ describe("Tests for user controller for updating profile", () => {
     const resource = {
       phoneNumber: "9876543210",
       profilePicture: base64,
+      deviceId: "qwertyuiop",
     };
     try {
       await request(app)
@@ -494,6 +526,7 @@ describe("User Account Deletion", () => {
       lastName: "User",
       password: "Delete@1234",
       email: "deleteuser@test.com",
+      deviceId: "qwertyuiop",
     };
     const user = await request(app)
       .post("/api/users")
@@ -516,6 +549,7 @@ describe("User Account Deletion", () => {
       lastName: "User",
       password: "Delete@1234",
       email: "deleteuser1@test.com",
+      deviceId: "poiuytrewq",
     };
     const user = await request(app)
       .post("/api/users")
@@ -530,7 +564,7 @@ describe("User Account Deletion", () => {
     expect(deleteResponse.body.message).toBe("Account deleted succesfully");
 
     const userInDb = await User.findOne({
-      where: { firstName: "deleteFirstName" },
+      where: { phoneNumber: `deletedPhoneNumber_${user.body.user.id}` },
     });
     expect(userInDb?.isDeleted).toBe(true);
     expect(userInDb?.phoneNumber).toBe(`deletedPhoneNumber_${userInDb?.id}`);
@@ -607,6 +641,7 @@ describe("Check Authentication Test Suite", () => {
       privateKey: "",
       socketId: "",
       isLogin: false,
+      deviceId: "qwertyuiop",
     });
 
     const token = jwt.sign(
@@ -686,6 +721,7 @@ describe("Check Authentication Test Suite", () => {
       privateKey: "",
       socketId: "",
       isLogin: false,
+      deviceId: "qwertyuiop",
     });
 
     const expiredAccessToken = jwt.sign(
@@ -735,7 +771,7 @@ describe("Contacts Display Test Suite", () => {
     process.env = originalEnv;
   });
 
-  beforeAll(() => {
+  beforeAll(async () => {
     testInstance = SequelizeConnection()!;
   });
 
@@ -751,6 +787,7 @@ describe("Contacts Display Test Suite", () => {
       lastName: "A test resource2",
       password: "tesT@1234",
       email: "test@gmail.com",
+      deviceId: "qwermnacbxhjgvtyuiop",
     };
 
     const responseLogin = await request(app)
@@ -768,6 +805,7 @@ describe("Contacts Display Test Suite", () => {
       lastName: "One",
       password: "tesT@1234",
       email: "testOne@gmail.com",
+      deviceId: "qwertyuiop",
     };
 
     const userTwo = {
@@ -776,6 +814,7 @@ describe("Contacts Display Test Suite", () => {
       lastName: "Two",
       password: "tesT@1234",
       email: "testTwo@gmail.com",
+      deviceId: "hagsdfhgdfvjga",
     };
 
     await request(app).post("/api/users").send(userOne).expect(200);

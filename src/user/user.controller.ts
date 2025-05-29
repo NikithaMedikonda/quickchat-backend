@@ -387,13 +387,14 @@ export async function contactDetails(
           [Op.in]: phoneNumbersList,
         },
       },
-      attributes: ["firstName", "lastName", "phoneNumber", "profilePicture"],
+      attributes: ["firstName", "lastName", "phoneNumber", "profilePicture", "publicKey"],
     });
 
     const registeredUsers = users.map((user) => ({
       name: `${user.firstName} ${user.lastName}`,
       phoneNumber: user.phoneNumber,
       profilePicture: user.profilePicture,
+      publicKey: user.publicKey
     }));
 
     const registeredPhoneNumbers = users.map((user) => user.phoneNumber);

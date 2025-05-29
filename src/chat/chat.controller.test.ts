@@ -16,11 +16,15 @@ describe("Testing the functionality of retrieving the messages of two users", ()
   beforeEach(() => {
     process.env = { ...originalEnv };
   });
-  afterEach(() => {
+  afterEach(async () => {
     process.env = originalEnv;
   });
-  beforeAll(() => {
+  beforeAll(async () => {
     testInstance = SequelizeConnection()!;
+    await Message.truncate({ cascade: true });
+    await Conversation.truncate({ cascade: true });
+    await Chat.truncate({ cascade: true });
+    await User.truncate({ cascade: true });
   });
   afterAll(async () => {
     await Message.truncate({ cascade: true });
@@ -45,6 +49,8 @@ describe("Testing the functionality of retrieving the messages of two users", ()
       isDeleted: false,
       publicKey: "publicKey",
       privateKey: "privateKey",
+      isLogin: false,
+      deviceId: "qwertyuiop",
     });
     const receiver = await createUser({
       firstName: "Varun",
@@ -54,6 +60,8 @@ describe("Testing the functionality of retrieving the messages of two users", ()
       isDeleted: false,
       publicKey: "publicKey",
       privateKey: "privateKey",
+      isLogin: false,
+      deviceId: "asghdv",
     });
     await createUser({
       firstName: "Test",
@@ -63,6 +71,8 @@ describe("Testing the functionality of retrieving the messages of two users", ()
       isDeleted: false,
       publicKey: "publicKey",
       privateKey: "privateKey",
+      isLogin: false,
+      deviceId: "jhUSGYGUYDF",
     });
     accessToken = jwt.sign(
       { phoneNumber: senderPhoneNumber },

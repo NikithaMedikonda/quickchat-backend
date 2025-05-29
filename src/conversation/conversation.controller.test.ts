@@ -16,7 +16,7 @@ describe("Testing the delete chat functionality", () => {
   beforeEach(() => {
     process.env = { ...originalEnv };
   });
-  afterEach(() => {
+  afterEach(async () => {
     process.env = originalEnv;
   });
   beforeAll(() => {
@@ -45,6 +45,8 @@ describe("Testing the delete chat functionality", () => {
       isDeleted: false,
       publicKey: "pubKey",
       privateKey: "privKey",
+      isLogin: false,
+      deviceId: "fdhgshgdva",
     });
 
     const receiver = await createUser({
@@ -55,6 +57,8 @@ describe("Testing the delete chat functionality", () => {
       isDeleted: false,
       publicKey: "pubKey",
       privateKey: "privKey",
+      isLogin: false,
+      deviceId: "qwertyuiop",
     });
 
     accessToken = jwt.sign({ phoneNumber: senderPhoneNumber }, secret_key, {

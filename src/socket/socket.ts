@@ -63,7 +63,7 @@ export const setupSocket = (io: Server) => {
         const targetSocketId = await findUserSocketId(withChattingPhoneNumber);
         if (targetSocketId) {
           io.to(targetSocketId).emit(`offline_with_${withChattingPhoneNumber}`, {
-            online: false,
+            isOnline: false,
           });
         }
       } catch (error) {

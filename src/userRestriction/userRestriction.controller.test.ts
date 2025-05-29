@@ -30,6 +30,8 @@ describe("Blocked Users Controller", () => {
       publicKey: "",
       privateKey: "",
       socketId: "",
+      isLogin: false,
+      deviceId: "qwertyuiop",
     });
 
     await createUser({
@@ -42,6 +44,8 @@ describe("Blocked Users Controller", () => {
       publicKey: "",
       privateKey: "",
       socketId: "",
+      isLogin: false,
+      deviceId: "kjhadjsghjs",
     });
 
     const secret_key = process.env.JSON_WEB_SECRET || "quick_chat_secret";
@@ -165,6 +169,8 @@ describe("Blocked Users Controller", () => {
         publicKey: "",
         privateKey: "",
         socketId: "",
+        isLogin: false,
+        deviceId: "ajhdsjhgahsjHGFGS",
       });
 
       const res = await request(app)
@@ -241,6 +247,8 @@ describe("Blocked Users Controller", () => {
         publicKey: "",
         privateKey: "",
         socketId: "",
+        isLogin: false,
+        deviceId: "GGGFWTE",
       });
 
       const user2 = await createUser({
@@ -253,6 +261,8 @@ describe("Blocked Users Controller", () => {
         publicKey: "",
         privateKey: "",
         socketId: "",
+        isLogin: false,
+        deviceId: "hgdfshcgfsjhv",
       });
 
       await expect(removeBlockedUserEntry(user1.id, user2.id)).rejects.toThrow(
@@ -281,6 +291,8 @@ describe("Tests for checking blocked status functionality", () => {
       publicKey: "",
       privateKey: "",
       socketId: "",
+      isLogin: false,
+      deviceId: "qwertyuiop",
     });
 
     await createUser({
@@ -293,6 +305,8 @@ describe("Tests for checking blocked status functionality", () => {
       publicKey: "",
       privateKey: "",
       socketId: "",
+      isLogin: false,
+      deviceId: "jhahgdjg",
     });
 
     const secret_key = process.env.JSON_WEB_SECRET || "quick_chat_secret";

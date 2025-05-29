@@ -45,6 +45,36 @@ beforeEach(async () => {
   await Message.truncate({ cascade: true });
   await Chat.truncate({ cascade: true });
   await User.truncate({ cascade: true });
+test("should create users to chat", async () => {
+  const sender = {
+    phoneNumber: "+919440058809",
+    firstName: "Anoosha",
+    lastName: "Sanugula",
+    email: "anoosha@gmail.com",
+    password: "Anu@1234",
+    isDeleted: false,
+    publicKey: "",
+    privateKey: "",
+    socketId: "socket1234",
+    isLogin:false,
+    deviceId:'vadgsghsgahadgs'
+  };
+
+  await User.create(sender);
+  const receiver = {
+    phoneNumber: "+919440058801",
+    firstName: "Bingi",
+    lastName: "S",
+    email: "bingi@gmail.com",
+    password: "Anu@1234",
+    isDeleted: false,
+    publicKey: "",
+    privateKey: "",
+    socketId: "socket123",
+    isLogin:false,
+    deviceId:'qwertyuiop'
+  };
+  await User.create(receiver);
 });
 
 afterEach(() => {

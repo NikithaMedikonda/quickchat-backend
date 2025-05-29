@@ -253,17 +253,25 @@ describe("User controller Login", () => {
       password: "Anu@1234",
       deviceId: "qwertyuiop",
     };
-    const response = await request(app).post("/api/user").send(resource).expect(200);
-    expect(response.body.message).toEqual('Login success')
+    const response = await request(app)
+      .post("/api/user")
+      .send(resource)
+      .expect(200);
+    expect(response.body.message).toEqual("Login success");
   });
-    test("should return 200 if user already user logged in", async () => {
+  test("should return 200 if user already user logged in", async () => {
     const resource = {
       phoneNumber: "9440058809",
       password: "Anu@1234",
       deviceId: "afshgdfghfashdfafsjd",
     };
-    const response = await request(app).post("/api/user").send(resource).expect(200);
-    expect(response.body.message).toEqual('User was logged out from previous device and logged in on new device')
+    const response = await request(app)
+      .post("/api/user")
+      .send(resource)
+      .expect(200);
+    expect(response.body.message).toEqual(
+      "User was logged out from previous device and logged in on new device"
+    );
   });
 });
 
@@ -649,9 +657,13 @@ describe("Check Authentication Test Suite", () => {
       process.env.JSON_WEB_SECRET!,
       { expiresIn: "1h" }
     );
+    const deviceId = {
+      deviceId: "qwertyuiop",
+    };
     const res = await request(app)
       .post("/api/auth/validate")
       .set("Authorization", `Bearer ${token}`)
+      .send(deviceId)
       .set("x-refresh-token", "dummy");
 
     expect(res.status).toBe(200);

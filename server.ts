@@ -36,7 +36,7 @@ const startServer = async () => {
     }
     await sequelizeInstance.authenticate();
     syncAssociations();
-    if (process.env.NODE_ENV === "test") {
+    if (process.env.NODE_ENV === "development") {
       await sequelizeInstance.sync({ alter: true });
     }
     if(process.env.NODE_ENV!=="test"){
@@ -50,6 +50,7 @@ const startServer = async () => {
         `Error occurred during server startup:, ${error.message}`
       );
     } else {
+       console.log(error)
       throw new Error(`An unknown error occurred.`);
     }
   }

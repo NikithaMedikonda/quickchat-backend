@@ -1,11 +1,11 @@
 import bcrypt from "bcrypt";
 import * as dotenv from "dotenv";
+import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { Op } from "sequelize";
-import { Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
-import { DbUser, UserInfo } from "../types/user";
 import { defaultProfileImage } from "../constants/example.defaultProfile";
+import { DbUser, UserInfo } from "../types/user";
 import { getProfileImageLink } from "../utils/uploadImage";
 import { User } from "./user.model";
 
@@ -410,5 +410,35 @@ export async function contactDetails(
     });
   } catch (error) {
     response.status(500).json({ message: `${(error as Error).message}` });
+  }
+}
+
+export async function checkStatus(
+  request: Request,
+  response: Response
+): Promise<void> {
+  try {
+    const { phoneNumber } = request.body;
+    if (!phoneNumber) {
+      response.status(400).json({
+        message: "Phone Number is required to get socketId",
+      });
+      return;
+    }
+    const existingUser = await User.findOne({
+      where: { phoneNumber: request.body.phoneNumber },
+    });
+    if (!existingUser) {
+      response.status(404).send({
+        message: "No user exists with the given phone number.",
+      });
+      return;
+    }
+    const data ={
+      socketId: existingUser.socketId
+    }
+    response.status(200).json({data });
+  } catch (error) {
+    response.status(500).json({ error: error });
   }
 }

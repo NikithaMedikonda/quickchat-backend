@@ -6,4 +6,5 @@ export type PrivateMessage = {
   senderPhoneNumber: string;
   message: string;
   timestamp: string;
+  status:string;
 };

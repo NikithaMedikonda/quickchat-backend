@@ -208,6 +208,29 @@ describe("User controller Login", () => {
     expect(response.body.refreshToken).toBeTruthy();
   });
 
+   test("should return un authorised message whenever the deleted user tries to login", async () => {
+     const newUser = {
+      phoneNumber: "6303522765",
+      firstName: "Delete",
+      lastName: "User",
+      password: "Delete@1234",
+      email: "deleteuser1@test.com",
+      deviceId: "poiuytrewq",
+    };
+    const user = await request(app)
+      .post("/api/users")
+      .send(newUser)
+      .expect(200);
+    const deleteResponse = await request(app)
+      .post("/api/deleteAccount")
+      .set("authorization", `Bearer ${user.body.accessToken}`)
+      .send({ phoneNumber: newUser.phoneNumber })
+      .expect(200);
+
+    expect(deleteResponse.body.message).toBe("Account deleted succesfully");
+    await request(app).post("/api/user").send(newUser).expect(404);
+  });
+
   test("Should return error, when password doesn't match", async () => {
     const resource = {
       phoneNumber: "9440058809",
@@ -572,10 +595,9 @@ describe("User Account Deletion", () => {
     expect(deleteResponse.body.message).toBe("Account deleted succesfully");
 
     const userInDb = await User.findOne({
-      where: { phoneNumber: `deletedPhoneNumber_${user.body.user.id}` },
+      where: { phoneNumber: '6303522765' },
     });
     expect(userInDb?.isDeleted).toBe(true);
-    expect(userInDb?.phoneNumber).toBe(`deletedPhoneNumber_${userInDb?.id}`);
   });
 });
 

@@ -27,7 +27,7 @@ export async function createUser(user: UserInfo) {
     privateKey: user.privateKey,
     socketId: user.socketId ? user.socketId : null,
     isLogin: true,
-    deviceId:user.deviceId
+    deviceId: user.deviceId,
   };
   const createdUser: DbUser = await User.create(newUser);
   return createdUser;
@@ -71,7 +71,7 @@ export async function register(
           privateKey: request.body.privateKey,
           socketId: request.body.socketId,
           isLogin: true,
-          deviceId:request.body.deviceId,
+          deviceId: request.body.deviceId,
         };
         const newUser: DbUser = await createUser(userBody);
         const token = jwt.sign(
@@ -85,7 +85,7 @@ export async function register(
           request.body.phoneNumber,
           secret_key.toString()
         );
-        
+
         const user = {
           id: newUser.id,
           firstName: newUser.firstName,
@@ -98,7 +98,7 @@ export async function register(
           privateKey: newUser.privateKey,
           socketId: newUser.socketId,
           isLogin: newUser.isLogin,
-          deviceId:newUser.deviceId
+          deviceId: newUser.deviceId,
         };
         response
           .status(200)
@@ -127,6 +127,13 @@ export async function login(
       return;
     }
 
+    if (existingUser.isDeleted === true) {
+      response
+        .status(404)
+        .json({ message: "This user doesn't exists on QuickChat anymore" });
+      return;
+    }
+
     const validPassword = await bcrypt.compare(password, existingUser.password);
     if (!validPassword) {
       response.status(401).json({ message: "Password is invalid" });
@@ -144,7 +151,8 @@ export async function login(
 
     if (isDeviceChanged) {
       existingUser.deviceId = deviceId;
-      responseMessage = "User was logged out from previous device and logged in on new device";
+      responseMessage =
+        "User was logged out from previous device and logged in on new device";
     }
 
     const accessToken = jwt.sign(
@@ -169,7 +177,7 @@ export async function login(
       privateKey: existingUser.privateKey,
       socketId: existingUser.socketId,
       isLogin: existingUser.isLogin,
-      deviceId: existingUser.deviceId
+      deviceId: existingUser.deviceId,
     };
 
     const responseData = {
@@ -177,11 +185,10 @@ export async function login(
       refreshToken,
       user,
       deviceChanged: isDeviceChanged,
-      message:responseMessage
+      message: responseMessage,
     };
 
     response.status(200).json(responseData);
-
   } catch (error) {
     response.status(500).send(`${(error as Error).message}`);
   }
@@ -275,18 +282,7 @@ export async function deleteAccount(
     } else {
       await User.update(
         {
-          firstName: "deleteFirstName",
-          lastName: "deleteLasttName",
-          profilePicture: "",
-          phoneNumber: `deletedPhoneNumber_${existingUser.id}`,
-          email: `deletedEmail_${existingUser.id}`,
-          password: "deletePhoneNumber",
           isDeleted: true,
-          publicKey: "deletedPublicKey",
-          privateKey: "deletedPrivateKey",
-          socketId: "deletedSocketId",
-          isLogin: false,
-          deviceId:`deviceId${existingUser.id}`
         },
         { where: { phoneNumber } }
       );
@@ -387,14 +383,20 @@ export async function contactDetails(
           [Op.in]: phoneNumbersList,
         },
       },
-      attributes: ["firstName", "lastName", "phoneNumber", "profilePicture", "publicKey"],
+      attributes: [
+        "firstName",
+        "lastName",
+        "phoneNumber",
+        "profilePicture",
+        "publicKey",
+      ],
     });
 
     const registeredUsers = users.map((user) => ({
       name: `${user.firstName} ${user.lastName}`,
       phoneNumber: user.phoneNumber,
       profilePicture: user.profilePicture,
-      publicKey: user.publicKey
+      publicKey: user.publicKey,
     }));
 
     const registeredPhoneNumbers = users.map((user) => user.phoneNumber);
@@ -435,10 +437,10 @@ export async function checkStatus(
       });
       return;
     }
-    const data ={
-      socketId: existingUser.socketId
-    }
-    response.status(200).json({data });
+    const data = {
+      socketId: existingUser.socketId,
+    };
+    response.status(200).json({ data });
   } catch (error) {
     response.status(500).json({ error: error });
   }

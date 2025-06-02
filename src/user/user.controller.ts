@@ -46,10 +46,14 @@ export async function register(
         ],
       },
     });
-    if (existingUser) {
+    if (existingUser?.isDeleted === true) {
+      response.status(404).json({ message: "Sorry, this account is deleted" });
+      return;
+    } else if (existingUser) {
       response.status(409).json({
         message: "User already exists with this phone number or email",
       });
+      return;
     } else {
       const secret_key = process.env.JSON_WEB_SECRET;
       if (!secret_key) {
@@ -286,7 +290,7 @@ export async function deleteAccount(
         },
         { where: { phoneNumber } }
       );
-      response.status(200).json({ message: "Account deleted succesfully" });
+      response.status(200).json({ message: "Account deleted successfully" });
     }
   } catch (error) {
     response.status(500).send(`${(error as Error).message}`);

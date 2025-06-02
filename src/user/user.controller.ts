@@ -449,3 +449,31 @@ export async function checkStatus(
     response.status(500).json({ error: error });
   }
 }
+
+export async function checkDeleteStatus(
+  request: Request,
+  response: Response
+): Promise<void> {
+  try {
+    const { phoneNumber } = request.body;
+    if (!phoneNumber) {
+      response.status(400).json({
+        message: "Phone Number is required to get user deleted status",
+      });
+      return;
+    }
+    const existingUser = await User.findOne({
+      where: { phoneNumber: request.body.phoneNumber },
+    });
+    if (!existingUser) {
+      response.status(404).send({
+        message: "No user exists with the given phone number.",
+      });
+      return;
+    }
+ 
+    response.status(200).json({ isDeleted: existingUser.isDeleted });
+  } catch (error) {
+    response.status(500).json({ error: error });
+  }
+}

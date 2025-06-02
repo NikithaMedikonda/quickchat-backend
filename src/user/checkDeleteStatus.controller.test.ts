@@ -81,7 +81,6 @@ describe("Tests for getting a user deleted status", () => {
         phoneNumber: "+919440058822",
       })
       .expect(200);
-    // expect(response.body.data).toHaveProp erty("isDeleted");
     expect(response.body.isDeleted).toBe(false);
   });
 

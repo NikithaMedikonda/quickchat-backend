@@ -102,7 +102,7 @@ socket.on("check_user_device", async (phoneNumber: string, deviceId: string) => 
         const targetSocketId = await findUserSocketId(withChattingPhoneNumber);
         if (targetSocketId) {
           io.to(targetSocketId).emit(`offline_with_${withChattingPhoneNumber}`, {
-            online: false,
+            isOnline: false,
           });
         }
       } catch (error) {

@@ -42,14 +42,17 @@ export async function register(
       where: {
         [Op.or]: [
           { phoneNumber: request.body.phoneNumber },
-          { email: request.body.email },
         ],
       },
     });
-    if (existingUser) {
+    if (existingUser?.isDeleted === true) {
+      response.status(404).json({ message: "Sorry, this account is deleted" });
+      return;
+    } else if (existingUser) {
       response.status(409).json({
         message: "User already exists with this phone number or email",
       });
+      return;
     } else {
       const secret_key = process.env.JSON_WEB_SECRET;
       if (!secret_key) {
@@ -124,6 +127,13 @@ export async function login(
       response
         .status(404)
         .json({ message: "User doesn't exists with this phone number" });
+      return;
+    }
+
+    if (existingUser.isDeleted === true) {
+      response
+        .status(404)
+        .json({ message: "This user doesn't exists on QuickChat anymore" });
       return;
     }
 
@@ -275,22 +285,11 @@ export async function deleteAccount(
     } else {
       await User.update(
         {
-          firstName: "deleteFirstName",
-          lastName: "deleteLasttName",
-          profilePicture: "",
-          phoneNumber: `deletedPhoneNumber_${existingUser.id}`,
-          email: `deletedEmail_${existingUser.id}`,
-          password: "deletePhoneNumber",
           isDeleted: true,
-          publicKey: "deletedPublicKey",
-          privateKey: "deletedPrivateKey",
-          socketId: "deletedSocketId",
-          isLogin: false,
-          deviceId: `deviceId${existingUser.id}`,
         },
         { where: { phoneNumber } }
       );
-      response.status(200).json({ message: "Account deleted succesfully" });
+      response.status(200).json({ message: "Account deleted successfully" });
     }
   } catch (error) {
     response.status(500).send(`${(error as Error).message}`);
@@ -386,13 +385,20 @@ export async function contactDetails(
           [Op.in]: phoneNumbersList,
         },
       },
-      attributes: ["firstName", "lastName", "phoneNumber", "profilePicture"],
+      attributes: [
+        "firstName",
+        "lastName",
+        "phoneNumber",
+        "profilePicture",
+        "publicKey",
+      ],
     });
 
     const registeredUsers = users.map((user) => ({
       name: `${user.firstName} ${user.lastName}`,
       phoneNumber: user.phoneNumber,
       profilePicture: user.profilePicture,
+      publicKey: user.publicKey,
     }));
 
     const registeredPhoneNumbers = users.map((user) => user.phoneNumber);
@@ -437,6 +443,34 @@ export async function checkStatus(
       socketId: existingUser.socketId,
     };
     response.status(200).json({ data });
+  } catch (error) {
+    response.status(500).json({ error: error });
+  }
+}
+
+export async function checkDeleteStatus(
+  request: Request,
+  response: Response
+): Promise<void> {
+  try {
+    const { phoneNumber } = request.body;
+    if (!phoneNumber) {
+      response.status(400).json({
+        message: "Phone Number is required to get user deleted status",
+      });
+      return;
+    }
+    const existingUser = await User.findOne({
+      where: { phoneNumber: request.body.phoneNumber },
+    });
+    if (!existingUser) {
+      response.status(404).send({
+        message: "No user exists with the given phone number.",
+      });
+      return;
+    }
+ 
+    response.status(200).json({ isDeleted: existingUser.isDeleted });
   } catch (error) {
     response.status(500).json({ error: error });
   }

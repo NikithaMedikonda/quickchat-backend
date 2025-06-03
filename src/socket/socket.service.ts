@@ -1,10 +1,13 @@
+import { Op } from "sequelize";
 import { Chat } from "../chat/chat.model";
 import { findOrCreateChat } from "../chat/chat.service";
 import { Message, MessageStatus } from "../message/message.model";
 import { createMessage } from "../message/message.service";
 import { PrivateMessage } from "../types/message";
 import { User } from "../user/user.model";
+import { getAllBlockedContacts } from "../userRestriction/userRestriction.service";
 import { findByPhoneNumber } from "../utils/findByPhoneNumber";
+import { UserRestriction } from "../userRestriction/userRestriction.model";
 
 export const updateUserSocketId = async (
   phoneNumber: string,
@@ -74,14 +77,30 @@ export const disconnectUser = async (socketId: string) => {
 export const changeStatusToDelivered = async (phoneNumber: string) => {
   const recipientId = await findByPhoneNumber(phoneNumber);
   const status = "delivered";
+  const blockedContacts = await getAllBlockedContacts(phoneNumber);
+  const blockedContactsIds = blockedContacts.map((contact) => contact.blocked);
   const messages = await Message.update(
     { status: status as MessageStatus },
     {
       where: {
         receiverId: recipientId,
         status: "sent",
+        senderId: { [Op.notIn]: blockedContactsIds },
       },
     }
   );
   return messages;
 };
+export async function getBlockedSocketIds(userPhoneNumber: string) {
+  const userId = await findByPhoneNumber(userPhoneNumber);
+  const blocked = await UserRestriction.findAll({ where: { blocker: userId } });
+  const blockedIds = blocked.map((blockedUser) => blockedUser.blocked);
+  const socketIds: string[] = [];
+  for (const user of blockedIds) {
+    const socketId = await User.findOne({ where: { id: user } });
+    if (socketId && socketId.socketId !== null) {
+      socketIds.push(socketId.socketId);
+    }
+  }
+  return socketIds;
+}

@@ -3,6 +3,7 @@ import { SequelizeConnection } from "../connection/dbconnection";
 import {
   disconnectUser,
   findUserSocketId,
+  getBlockedSocketIds,
   storeMessage,
   updateUserSocketId,
 } from "../socket/socket.service";
@@ -27,7 +28,9 @@ describe("Tests for socket services", () => {
       isLogin:false,
       deviceId:'qwertyuiop'
     };
+  
     user = await User.create(testUser);
+  
     id = user.id;
   });
 
@@ -110,4 +113,11 @@ describe("Tests for socket services", () => {
       expect(result).toEqual({ message: "No user exist with this socket id" });
     });
   });
+  describe("Test for function getBlockedSocketIds",()=>{
+  
+    it("should give the array of the socketIds that blocked by this user", async()=>{
+        const result=await getBlockedSocketIds('+919440058809');
+        expect(result).toEqual([]);
+    })
+  })
 });

@@ -111,7 +111,6 @@ describe("Test for socket", () => {
     clientA = Client(SERVER_URL);
 
     clientA.on("connect", () => {
-      // Case 1: Correct device ID
       clientA.emit("check_user_device", phoneNumber, correctDeviceId);
 
       clientA.once("user_device_verified", (response1) => {
@@ -122,7 +121,6 @@ describe("Test for socket", () => {
             action: "continue",
           });
 
-          // Case 2: Incorrect device ID
           clientA.emit("check_user_device", phoneNumber, incorrectDeviceId);
 
           clientA.once("user_device_verified", (response2) => {
@@ -134,7 +132,6 @@ describe("Test for socket", () => {
                 registeredDeviceId: correctDeviceId,
               });
 
-              // Case 3: Non-existent user
               clientA.emit("check_user_device", "+0000000000", "anyDevice");
 
               clientA.once("user_device_verified", (response3) => {

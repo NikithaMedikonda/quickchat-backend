@@ -49,7 +49,6 @@ const startServer = async () => {
         `Error occurred during server startup:, ${error.message}`
       );
     } else {
-       console.log(error)
       throw new Error(`An unknown error occurred.`);
     }
   }

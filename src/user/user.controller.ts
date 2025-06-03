@@ -327,12 +327,6 @@ export async function refreshOrValidateAuth(
         response.status(404).json({ message: "User not found" });
         return;
       }
-      // if (user.deviceId !== deviceId) {
-      //   response
-      //     .status(409)
-      //     .json({ message: "Already logged in another device" });
-      //   return;
-      // }
       response.status(200).json({ message: "Access token valid" });
     } catch (error) {
       if ((error as Error).name === "TokenExpiredError") {

@@ -5,16 +5,19 @@ import {
   changeStatusToDelivered,
   disconnectUser,
   findUserSocketId,
+  getBlockedSocketIds,
   storeMessage,
   updateUserSocketId,
 } from "./socket.service";
+import { getBlockStatus } from "../userRestriction/userRestriction.controller";
 
 export const setupSocket = (io: Server) => {
   io.on("connection", (socket) => {
     socket.on("join", async (phoneNumber: string) => {
       await changeStatusToDelivered(phoneNumber);
       await updateUserSocketId(phoneNumber, socket.id);
-      socket.broadcast.emit("I-joined", {
+      const exceptSocketIds = await getBlockedSocketIds(phoneNumber);
+      socket.broadcast.except(exceptSocketIds).emit("I-joined", {
         phoneNumber: phoneNumber,
         socketId: socket.id,
       });
@@ -29,8 +32,12 @@ export const setupSocket = (io: Server) => {
         timestamp,
       }: PrivateMessage) => {
         try {
+          const result = await getBlockStatus(
+            recipientPhoneNumber,
+            senderPhoneNumber
+          );
           const targetSocketId = await findUserSocketId(recipientPhoneNumber);
-          if (targetSocketId) {
+          if (targetSocketId && !result) {
             await storeMessage({
               recipientPhoneNumber,
               senderPhoneNumber,
@@ -62,9 +69,12 @@ export const setupSocket = (io: Server) => {
       try {
         const targetSocketId = await findUserSocketId(withChattingPhoneNumber);
         if (targetSocketId) {
-          io.to(targetSocketId).emit(`offline_with_${withChattingPhoneNumber}`, {
-            isOnline: false,
-          });
+          io.to(targetSocketId).emit(
+            `offline_with_${withChattingPhoneNumber}`,
+            {
+              isOnline: false,
+            }
+          );
         }
       } catch (error) {
         throw new Error(
@@ -77,9 +87,12 @@ export const setupSocket = (io: Server) => {
       try {
         const targetSocketId = await findUserSocketId(withChattingPhoneNumber);
         if (targetSocketId) {
-          io.to(targetSocketId).emit(`isOnline_with_${withChattingPhoneNumber}`, {
-            isOnline: true,
-          });
+          io.to(targetSocketId).emit(
+            `isOnline_with_${withChattingPhoneNumber}`,
+            {
+              isOnline: true,
+            }
+          );
         }
       } catch (error) {
         throw new Error(

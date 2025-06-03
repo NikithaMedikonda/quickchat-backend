@@ -28,9 +28,7 @@ describe("Tests for socket services", () => {
       isLogin:false,
       deviceId:'qwertyuiop'
     };
-  
     user = await User.create(testUser);
-  
     id = user.id;
   });
 

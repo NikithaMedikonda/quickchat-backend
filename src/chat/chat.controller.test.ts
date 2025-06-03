@@ -90,7 +90,7 @@ describe("Testing the functionality of retrieving the messages of two users", ()
       senderPhoneNumber: senderPhoneNumber,
       receiverPhoneNumber: receiverPhoneNumber,
       content: "Hey Man! Wasup",
-      status: "sent",
+      status: "delivered",
       timeStamp: "2024-05-21T11:44:00Z",
     };
 
@@ -108,7 +108,7 @@ describe("Testing the functionality of retrieving the messages of two users", ()
       senderPhoneNumber: receiverPhoneNumber,
       receiverPhoneNumber: senderPhoneNumber,
       content: "Hey Mamatha, Hi",
-      status: "sent",
+      status: "delivered",
       timeStamp: "2024-05-21T11:48:00Z",
     };
 
@@ -128,7 +128,7 @@ describe("Testing the functionality of retrieving the messages of two users", ()
       receiverPhoneNumber: receiverPhoneNumber,
       content: "What are you doing?",
       timeStamp: "2024-05-21T11:49:00Z",
-      status: "sent",
+      status: "delivered",
     };
 
     const messageCResponse = await request(app)

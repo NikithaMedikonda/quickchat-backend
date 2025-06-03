@@ -42,7 +42,6 @@ export async function register(
       where: {
         [Op.or]: [
           { phoneNumber: request.body.phoneNumber },
-          { email: request.body.email },
         ],
       },
     });

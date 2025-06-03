@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - single-login
 
 jobs:
   QuickChat-backend:

@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - user-restriction
 
 jobs:
   QuickChat-backend:

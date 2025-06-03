@@ -49,13 +49,12 @@ socket.on("check_user_device", async (phoneNumber: string, deviceId: string) => 
         action: "continue" 
       });
     }
-  } catch (error) {
+  } catch {
     socket.emit("user_device_verified", { 
       success: false, 
       message: "Server error during device verification",
       action: "logout" 
     });
-    console.error(`Error while checking user device: ${(error as Error).message}`);
   }
 });
 

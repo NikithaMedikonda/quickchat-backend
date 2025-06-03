@@ -302,7 +302,6 @@ export async function refreshOrValidateAuth(
   response: Response
 ): Promise<void> {
   try {
-    const { deviceId } = request.body;
     const authHeader = request.headers.authorization;
     const refreshToken = request.headers["x-refresh-token"] as string;
 
@@ -328,12 +327,12 @@ export async function refreshOrValidateAuth(
         response.status(404).json({ message: "User not found" });
         return;
       }
-      if (user.deviceId !== deviceId) {
-        response
-          .status(409)
-          .json({ message: "Already logged in another device" });
-        return;
-      }
+      // if (user.deviceId !== deviceId) {
+      //   response
+      //     .status(409)
+      //     .json({ message: "Already logged in another device" });
+      //   return;
+      // }
       response.status(200).json({ message: "Access token valid" });
     } catch (error) {
       if ((error as Error).name === "TokenExpiredError") {

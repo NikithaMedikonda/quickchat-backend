@@ -20,6 +20,45 @@ export const setupSocket = (io: Server) => {
       });
     });
 
+socket.on("check_user_device", async (phoneNumber: string, deviceId: string) => {
+  try {
+    const user = await User.findOne({
+      where: { phoneNumber },
+    });
+
+    if (!user) {
+      socket.emit("user_device_verified", { 
+        success: false, 
+        message: "User not found",
+        action: "logout" 
+      });
+      return;
+    }
+
+    if (user.deviceId !== deviceId) {
+      socket.emit("user_device_verified", { 
+        success: false, 
+        message: "Device mismatch - logged in from another device",
+        action: "logout",
+        registeredDeviceId: user.deviceId 
+      });
+    } else {
+      socket.emit("user_device_verified", { 
+        success: true, 
+        message: "Device verified",
+        action: "continue" 
+      });
+    }
+  } catch {
+    socket.emit("user_device_verified", { 
+      success: false, 
+      message: "Server error during device verification",
+      action: "logout" 
+    });
+  }
+});
+
+
     socket.on(
       "send_private_message",
       async ({

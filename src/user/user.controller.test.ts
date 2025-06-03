@@ -703,9 +703,13 @@ describe("Check Authentication Test Suite", () => {
       process.env.JSON_WEB_SECRET!,
       { expiresIn: "1h" }
     );
+    const deviceId = {
+      deviceId: "qwertyuiop",
+    };
     const res = await request(app)
       .post("/api/auth/validate")
       .set("Authorization", `Bearer ${token}`)
+      .send(deviceId)
       .set("x-refresh-token", "dummy");
 
     expect(res.status).toBe(200);

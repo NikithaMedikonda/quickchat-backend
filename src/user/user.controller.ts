@@ -326,7 +326,6 @@ export async function refreshOrValidateAuth(
         response.status(404).json({ message: "User not found" });
         return;
       }
-
       response.status(200).json({ message: "Access token valid" });
     } catch (error) {
       if ((error as Error).name === "TokenExpiredError") {

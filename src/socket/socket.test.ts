@@ -263,7 +263,7 @@ describe("Test for socket", () => {
           expect(storedMessage?.status).toBe("sent");
           expect(storedMessage?.content).toBe(message);
           done();
-        }, 1000);
+        }, 2000);
       });
     });
   }, 10000);

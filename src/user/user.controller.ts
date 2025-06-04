@@ -458,7 +458,7 @@ export async function checkStatus(
       return;
     }
     const data =  {
-      socketId: existingUser.socketId,,
+      socketId: existingUser.socketId,
     };;
     response.status(200).json({  data });
   } catch (error) {

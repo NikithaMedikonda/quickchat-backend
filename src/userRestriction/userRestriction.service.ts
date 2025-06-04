@@ -1,3 +1,4 @@
+import { findByPhoneNumber } from "../utils/findByPhoneNumber";
 import { UserRestriction } from "./userRestriction.model";
 
 export const addBlockedUserEntry = async (
@@ -40,3 +41,11 @@ export const removeBlockedUserEntry = async (
     );
   }
 };
+export async function getAllBlockedContacts(userPhoneNumber: string) {
+  const userId=await findByPhoneNumber(userPhoneNumber);
+
+  const result = await UserRestriction.findAll({
+    where: { blocker: userId},
+  });
+  return result;
+}

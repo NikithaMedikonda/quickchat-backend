@@ -8,6 +8,7 @@ import { defaultProfileImage } from "../constants/example.defaultProfile";
 import { DbUser, UserInfo } from "../types/user";
 import { getProfileImageLink } from "../utils/uploadImage";
 import { User } from "./user.model";
+import { getBlockStatus } from "../userRestriction/userRestriction.controller";
 
 dotenv.config();
 
@@ -286,6 +287,11 @@ export async function deleteAccount(
       await User.update(
         {
           isDeleted: true,
+          publicKey: "deletedPublicKey",
+          privateKey: "deletedPrivateKey",
+          socketId: "deletedSocketId",
+          isLogin: false,
+          deviceId: `deviceId${existingUser.id}`,
         },
         { where: { phoneNumber } }
       );
@@ -423,7 +429,8 @@ export async function checkStatus(
   response: Response
 ): Promise<void> {
   try {
-    const { phoneNumber } = request.body;
+    const { phoneNumber, requestedUserPhoneNumber } = request.body;
+
     if (!phoneNumber) {
       response.status(400).json({
         message: "Phone Number is required to get socketId",
@@ -439,10 +446,21 @@ export async function checkStatus(
       });
       return;
     }
-    const data = {
+    const isBlocked = await getBlockStatus(
+      phoneNumber,
+      requestedUserPhoneNumber
+    );
+    if (isBlocked) {
+      const data = {
+        socketId: null,
+      };
+      response.status(203).json({ data });
+      return;
+    }
+    const data =  {
       socketId: existingUser.socketId,
-    };
-    response.status(200).json({ data });
+    };;
+    response.status(200).json({  data });
   } catch (error) {
     response.status(500).json({ error: error });
   }

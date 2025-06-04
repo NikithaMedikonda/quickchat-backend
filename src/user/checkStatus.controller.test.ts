@@ -27,7 +27,7 @@ describe("Tests for getting a socketId of a user to check online status", () => 
     await testInstance?.close();
   });
 
-  it("should create user", async () => {
+  it("should create users", async () => {
     const newUser = {
       phoneNumber: "+919440058812",
       firstName: "Anooshaaa",
@@ -41,8 +41,23 @@ describe("Tests for getting a socketId of a user to check online status", () => 
       isLogin: false,
       deviceId: "",
     };
+    const newUserTwo = {
+      phoneNumber: "+918522041688",
+      firstName: "Anusha",
+      lastName: "Useraa",
+      password: "Anu@12343",
+      email: "anuuppu@gmail.com",
+      socketId: "1222",
+      isDeleted: false,
+      publicKey: "",
+      privateKey: "",
+      isLogin: false,
+      deviceId: "",
+    };
     const user = await request(app).post("/api/users").send(newUser);
+    const user2 = await request(app).post("/api/users").send(newUserTwo);
     expect(user.status).toBe(200);
+    expect(user2.status).toBe(200);
     accessToken = user.body.accessToken;
   });
 
@@ -79,6 +94,7 @@ describe("Tests for getting a socketId of a user to check online status", () => 
       .set({ Authorization: `Bearer ${accessToken}` })
       .send({
         phoneNumber: "+919440058812",
+        requestedUserPhoneNumber:'+918522041688'
       })
       .expect(200);
     expect(response.body.data).toHaveProperty("socketId");
@@ -91,6 +107,7 @@ describe("Tests for getting a socketId of a user to check online status", () => 
       .set({ Authorization: `Bearer ${accessToken}` })
       .send({
         phoneNumber: "733020518",
+        requestedUserPhoneNumber: "+918522041688",
       })
       .expect(404);
   });

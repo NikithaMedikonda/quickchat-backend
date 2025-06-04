@@ -24,7 +24,6 @@ app.use(userRouter);
 app.use(messageRouter);
 app.use(userRestrictionRouter);
 app.use(userConversationRouter);
-
 const server = http.createServer(app);
 const io = new Server(server);
 setupSocket(io);
@@ -36,7 +35,7 @@ const startServer = async () => {
     }
     await sequelizeInstance.authenticate();
     syncAssociations();
-    if (process.env.NODE_ENV === "test") {
+    if (process.env.NODE_ENV === "development") {
       await sequelizeInstance.sync({ alter: true });
     }
     if(process.env.NODE_ENV!=="test"){

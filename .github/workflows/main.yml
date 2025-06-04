@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - user-restriction
 
 jobs:
   QuickChat-backend:
@@ -16,12 +15,11 @@ jobs:
       DB_DIALECT: postgres
       JSON_WEB_SECRET: 'quick_chat_secret'
       DATABASE_URL: postgresql://postgres.bnmgjmxrqvqupbvkqcdw:QuickChat@testDb@aws-0-ap-south-1.pooler.supabase.com:5432/postgres
-      SUPABASE_URL: "https://sdjetntpocezxjoelxgb.supabase.co"
-      SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkamV0bnRwb2Nlenhqb2VseGdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY2MjExMjgsImV4cCI6MjA2MjE5NzEyOH0.BE1LuF59BB1Ck6SQkT73ZAT5xm7aZfSmchLanN6KwbQ'
-      SERVICE_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkamV0bnRwb2Nlenhqb2VseGdiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NjYyMTEyOCwiZXhwIjoyMDYyMTk3MTI4fQ.2yaw_TYWe6kCqpiE9E3f6nrPz4DK2FN1DnJTktcYXM0"
+      SUPABASE_URL: "https://evgvsjlaibgfnjizjzyi.supabase.co"
+      SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2Z3ZzamxhaWJnZm5qaXpqenlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg1MTIzOTEsImV4cCI6MjA2NDA4ODM5MX0.14BAK2LXLfXLbZDp1RnWfgzUQJKVHQdG79f-KsN4cOU'
+      SERVICE_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2Z3ZzamxhaWJnZm5qaXpqenlpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0ODUxMjM5MSwiZXhwIjoyMDY0MDg4MzkxfQ.RgLASpMIr5C1aSuiV19cm4HYVH63gknrprxBanEn8fs"
       BUCKET_NAME: "quick-chat"
-
-
+      
     steps:
       - name: Checkout code
         uses: actions/checkout@v3

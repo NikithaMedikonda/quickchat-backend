@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - emit-internet-status
 
 jobs:
   QuickChat-backend:

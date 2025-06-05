@@ -4,4 +4,3 @@ node_modules/
 .env.development
 coverage/
 .DS_Store
-.vscode/serviceAccountKey.json

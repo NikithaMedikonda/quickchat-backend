@@ -32,6 +32,7 @@ describe("Blocked Users Controller", () => {
       socketId: "",
       isLogin: false,
       deviceId: "qwertyuiop",
+      fcmToken:'wghasfhgvhgvghjs'
     });
 
     await createUser({
@@ -46,6 +47,7 @@ describe("Blocked Users Controller", () => {
       socketId: "",
       isLogin: false,
       deviceId: "kjhadjsghjs",
+      fcmToken:'gfdtasfufuyfdwuydsafgiy'
     });
 
     const secret_key = process.env.JSON_WEB_SECRET || "quick_chat_secret";
@@ -171,6 +173,7 @@ describe("Blocked Users Controller", () => {
         socketId: "",
         isLogin: false,
         deviceId: "ajhdsjhgahsjHGFGS",
+        fcmToken:'sghqwfhagdfhgfd'
       });
 
       const res = await request(app)
@@ -249,6 +252,7 @@ describe("Blocked Users Controller", () => {
         socketId: "",
         isLogin: false,
         deviceId: "GGGFWTE",
+        fcmToken:'fqghsfdfyfdiysfdyifeai'
       });
 
       const user2 = await createUser({
@@ -263,6 +267,7 @@ describe("Blocked Users Controller", () => {
         socketId: "",
         isLogin: false,
         deviceId: "hgdfshcgfsjhv",
+        fcmToken:'gsfadhfdfjqgwsd'
       });
 
       await expect(removeBlockedUserEntry(user1.id, user2.id)).rejects.toThrow(
@@ -293,6 +298,7 @@ describe("Tests for checking blocked status functionality", () => {
       socketId: "",
       isLogin: false,
       deviceId: "qwertyuiop",
+      fcmToken:'hvqhgsavdhgvhj'
     });
 
     await createUser({
@@ -307,6 +313,7 @@ describe("Tests for checking blocked status functionality", () => {
       socketId: "",
       isLogin: false,
       deviceId: "jhahgdjg",
+      fcmToken:'ggvahgsvdhjv'
     });
 
     const secret_key = process.env.JSON_WEB_SECRET || "quick_chat_secret";

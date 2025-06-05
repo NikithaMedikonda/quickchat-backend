@@ -47,6 +47,7 @@ describe("Testing the delete chat functionality", () => {
       privateKey: "privKey",
       isLogin: false,
       deviceId: "fdhgshgdva",
+      fcmToken:'HFQWTDFWYFSI'
     });
 
     const receiver = await createUser({
@@ -59,6 +60,7 @@ describe("Testing the delete chat functionality", () => {
       privateKey: "privKey",
       isLogin: false,
       deviceId: "qwertyuiop",
+      fcmToken:'FQGHEFASDF'
     });
 
     accessToken = jwt.sign({ phoneNumber: senderPhoneNumber }, secret_key, {

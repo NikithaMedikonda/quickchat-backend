@@ -24,6 +24,7 @@ export class User extends Model<
   declare socketId: string | null;
   declare isLogin: boolean;
   declare deviceId: string;
+  declare fcmToken: string | null;
 }
 
 User.init(
@@ -86,6 +87,10 @@ User.init(
     deviceId: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    fcmToken:{
+      type: DataTypes.STRING,
+     allowNull: true,
     },
   },
   {

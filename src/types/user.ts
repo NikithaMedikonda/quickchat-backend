@@ -11,6 +11,7 @@ export type UserInfo = {
   socketId?: string;
   isLogin:boolean;
   deviceId: string;
+  fcmToken?: string ;
 };
 export type DbUser = {
   id: string;
@@ -26,4 +27,5 @@ export type DbUser = {
   socketId?: string | null;
   isLogin:boolean;
   deviceId:string;
+  fcmToken?: string |null;
 };

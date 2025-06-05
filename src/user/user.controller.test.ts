@@ -250,7 +250,6 @@ describe("User controller Login", () => {
       .set("authorization", `Bearer ${user.body.accessToken}`)
       .send({ phoneNumber: newUser.phoneNumber })
       .expect(200);
-
     expect(deleteResponse.body.message).toBe("Account deleted successfully");
     await request(app).post("/api/user").send(newUser).expect(404);
   });

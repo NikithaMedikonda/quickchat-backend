@@ -215,7 +215,8 @@ describe("Testing the functionality of updating the status of the message", () =
       privateKey: "privateKey",
       isLogin: false,
       deviceId: 'qwertyuiop',
-      email: "mammu@gmail.com" 
+      email: "mammu@gmail.com",
+      fcmToken:'jhdsqjghdjhhjcshjavh'
     };
     
     const receiver = {
@@ -228,7 +229,8 @@ describe("Testing the functionality of updating the status of the message", () =
       privateKey: "privateKey",
       isLogin: false,
       deviceId: 'ajhgdjagjsg',
-      email: "varun@gmail.com"
+      email: "varun@gmail.com",
+      fcmToken:'hgfdqhgaefewtdf'
     };
     
     const userA = await request(app).post("/api/users").send(sender).expect(200);

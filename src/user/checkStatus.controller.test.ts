@@ -40,6 +40,7 @@ describe("Tests for getting a socketId of a user to check online status", () => 
       privateKey: "",
       isLogin: false,
       deviceId: "",
+      fcmToken:'HFQWTDFWYFSI'
     };
     const user = await request(app).post("/api/users").send(newUser);
     expect(user.status).toBe(200);

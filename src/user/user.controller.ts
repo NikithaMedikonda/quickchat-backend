@@ -29,6 +29,7 @@ export async function createUser(user: UserInfo) {
     socketId: user.socketId ? user.socketId : null,
     isLogin: true,
     deviceId: user.deviceId,
+    fcmToken: user.fcmToken? user.fcmToken : null,
   };
   const createdUser: DbUser = await User.create(newUser);
   return createdUser;
@@ -43,17 +44,18 @@ export async function register(
       where: {
         [Op.or]: [
           { phoneNumber: request.body.phoneNumber },
+          { email: request.body.email },
         ],
       },
     });
     if (existingUser?.isDeleted === true) {
       response.status(404).json({ message: "Sorry, this account is deleted" });
       return;
-    } else if (existingUser) {
+    }
+    else if (existingUser) {
       response.status(409).json({
         message: "User already exists with this phone number or email",
       });
-      return;
     } else {
       const secret_key = process.env.JSON_WEB_SECRET;
       if (!secret_key) {
@@ -75,7 +77,8 @@ export async function register(
           privateKey: request.body.privateKey,
           socketId: request.body.socketId,
           isLogin: true,
-          deviceId: request.body.deviceId,
+          deviceId:request.body.deviceId,
+          fcmToken: request.body.fcmToken ? request.body.fcmToken : null,
         };
         const newUser: DbUser = await createUser(userBody);
         const token = jwt.sign(
@@ -89,7 +92,7 @@ export async function register(
           request.body.phoneNumber,
           secret_key.toString()
         );
-
+        
         const user = {
           id: newUser.id,
           firstName: newUser.firstName,
@@ -102,7 +105,8 @@ export async function register(
           privateKey: newUser.privateKey,
           socketId: newUser.socketId,
           isLogin: newUser.isLogin,
-          deviceId: newUser.deviceId,
+          deviceId:newUser.deviceId,
+          fcmToken: newUser.fcmToken
         };
         response
           .status(200)
@@ -119,22 +123,19 @@ export async function login(
   response: Response
 ): Promise<void> {
   try {
-    const { phoneNumber, password, deviceId } = request.body;
+    const { phoneNumber, password, deviceId, fcmToken } = request.body;
+
     const existingUser = await User.findOne({
       where: { phoneNumber },
     });
-
-    if (!existingUser) {
-      response
-        .status(404)
-        .json({ message: "User doesn't exists with this phone number" });
+    if (existingUser?.isDeleted === true) {
+      response.status(404).json({ message: "Sorry, this account is deleted" });
       return;
     }
-
-    if (existingUser.isDeleted === true) {
+    else if (!existingUser) {
       response
         .status(404)
-        .json({ message: "This user doesn't exists on QuickChat anymore" });
+        .json({ message: "User doesn't exist with this phone number" });
       return;
     }
 
@@ -159,15 +160,20 @@ export async function login(
         "User was logged out from previous device and logged in on new device";
     }
 
+    if (fcmToken && existingUser.fcmToken !== fcmToken) {
+      existingUser.fcmToken = fcmToken;
+    }
+
+    existingUser.isLogin = true;
+    await existingUser.save();
+
     const accessToken = jwt.sign(
       { phoneNumber: existingUser.phoneNumber },
       secret_key,
       { expiresIn: "7d" }
     );
-    const refreshToken = jwt.sign(existingUser.phoneNumber, secret_key);
 
-    existingUser.isLogin = true;
-    await existingUser.save();
+    const refreshToken = jwt.sign(existingUser.phoneNumber, secret_key);
 
     const user = {
       id: existingUser.id,
@@ -182,6 +188,7 @@ export async function login(
       socketId: existingUser.socketId,
       isLogin: existingUser.isLogin,
       deviceId: existingUser.deviceId,
+      fcmToken: existingUser.fcmToken
     };
 
     const responseData = {
@@ -193,10 +200,12 @@ export async function login(
     };
 
     response.status(200).json(responseData);
+
   } catch (error) {
     response.status(500).send(`${(error as Error).message}`);
   }
 }
+
 
 export async function logout(
   request: Request,

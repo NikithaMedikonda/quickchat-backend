@@ -527,6 +527,7 @@ describe("User Account Deletion", () => {
       password: "Delete@1234",
       email: "deleteuser@test.com",
       deviceId: "qwertyuiop",
+      fcmToken:'sfghwafsdghvhg'
     };
     const user = await request(app)
       .post("/api/users")
@@ -550,6 +551,7 @@ describe("User Account Deletion", () => {
       password: "Delete@1234",
       email: "deleteuser1@test.com",
       deviceId: "poiuytrewq",
+      fcmToken:'fqtwfteufsygygwgg'
     };
     const user = await request(app)
       .post("/api/users")
@@ -642,6 +644,7 @@ describe("Check Authentication Test Suite", () => {
       socketId: "",
       isLogin: false,
       deviceId: "qwertyuiop",
+      fcmToken:'sfwstdftysfd'
     });
 
     const token = jwt.sign(
@@ -722,6 +725,7 @@ describe("Check Authentication Test Suite", () => {
       socketId: "",
       isLogin: false,
       deviceId: "qwertyuiop",
+      fcmToken:'wygdyfgiagdugd'
     });
 
     const expiredAccessToken = jwt.sign(
@@ -788,6 +792,7 @@ describe("Contacts Display Test Suite", () => {
       password: "tesT@1234",
       email: "test@gmail.com",
       deviceId: "qwermnacbxhjgvtyuiop",
+      fcmToken:'fhfadhsgfhgsdghg'
     };
 
     const responseLogin = await request(app)
@@ -806,6 +811,7 @@ describe("Contacts Display Test Suite", () => {
       password: "tesT@1234",
       email: "testOne@gmail.com",
       deviceId: "qwertyuiop",
+      fcmToken:'gvdghfsfjhgjed'
     };
 
     const userTwo = {

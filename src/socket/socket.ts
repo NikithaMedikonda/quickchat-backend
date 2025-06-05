@@ -1,6 +1,7 @@
 import { Server } from "socket.io";
 import { PrivateMessage } from "../types/message";
 import { User } from "../user/user.model";
+import {messaging} from '../../firebase'
 import {
   changeStatusToDelivered,
   disconnectUser,
@@ -62,7 +63,7 @@ socket.on("check_user_device", async (phoneNumber: string, deviceId: string) => 
 });
 
 
-    socket.on(
+socket.on(
       "send_private_message",
       async ({
         recipientPhoneNumber,
@@ -76,7 +77,10 @@ socket.on("check_user_device", async (phoneNumber: string, deviceId: string) => 
             senderPhoneNumber
           );
           const targetSocketId = await findUserSocketId(recipientPhoneNumber);
-          if (targetSocketId && !result) {
+           const recipient = await User.findOne({
+            where: { phoneNumber: recipientPhoneNumber },
+          });
+          if (targetSocketId &&!result) {
             await storeMessage({
               recipientPhoneNumber,
               senderPhoneNumber,
@@ -96,6 +100,20 @@ socket.on("check_user_device", async (phoneNumber: string, deviceId: string) => 
               status: "sent",
               timestamp,
             });
+            if (recipient?.fcmToken) {
+              await messaging.send({
+                token: recipient.fcmToken,
+                notification: {
+                  title: "New Message",
+                  body: `${senderPhoneNumber}: ${message}`,
+                },
+                data: {
+                  senderPhoneNumber,
+                  recipientPhoneNumber,
+                  timestamp: timestamp.toString(),
+                },
+              });
+            }
           }
         } catch (error) {
           throw new Error(

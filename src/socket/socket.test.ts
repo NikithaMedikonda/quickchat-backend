@@ -63,7 +63,8 @@ describe("Test for socket", () => {
       privateKey: "",
       socketId: null,
       isLogin:true,
-      deviceId:""
+      deviceId:"",
+      fcmToken: "fwqfefdjhjhfsh"
     };
 
     const user1 = await User.create(sender);
@@ -79,7 +80,8 @@ describe("Test for socket", () => {
       privateKey: "",
       socketId: null,
       isLogin:true,
-      deviceId:""
+      deviceId:"",
+      fcmToken: "fcmTokenBigagshdfvhgsv",
     };
 
     const user2 = await User.create(receiver);
@@ -105,6 +107,7 @@ describe("Test for socket", () => {
       socketId: null,
       isLogin: false,
       deviceId: "",
+      fcmToken: "basvdghvgasv"
     }).then(() => {
       clientA = Client(SERVER_URL);
       clientA.on("connect", () => {
@@ -146,6 +149,7 @@ describe("Test for socket", () => {
         socketId: null,
         isLogin: false,
         deviceId: "",
+        fcmToken: "fcmTokenSender",
       }),
       User.create({
         phoneNumber: recipientPhoneNumber,
@@ -159,6 +163,7 @@ describe("Test for socket", () => {
         socketId: null,
         isLogin: false,
         deviceId: "",
+        fcmToken: "fcmTokenRecipient",
       }),
     ])
       .then(async ([sender, recipient]) => {
@@ -229,6 +234,7 @@ describe("Test for socket", () => {
         socketId: null,
         isLogin: false,
         deviceId: "",
+        fcmToken: "fcmTokenSender",
       }),
       User.create({
         phoneNumber: recipientPhoneNumber,
@@ -242,6 +248,7 @@ describe("Test for socket", () => {
         socketId: null,
         isLogin: false,
         deviceId: "",
+        fcmToken: "fcmTokenRecipient",
       }),
     ]).then(async ([sender, recipient]) => {
       await findOrCreateChat(sender.id, recipient.id);
@@ -285,6 +292,7 @@ describe("Test for socket", () => {
         socketId: null,
         isLogin: false,
         deviceId: "",
+        fcmToken: "fcmTokenUser1",
       }),
       User.create({
         phoneNumber: user2PhoneNumber,
@@ -298,6 +306,7 @@ describe("Test for socket", () => {
         socketId: null,
         isLogin: false,
         deviceId: "",
+        fcmToken: "fcmTokenUser2",
       }),
     ]).then(() => {
       clientA = Client(SERVER_URL);
@@ -329,6 +338,8 @@ describe("Test for socket", () => {
         socketId: null,
         isLogin: false,
         deviceId: "",
+        fcmToken: "fcmTokenUser1",
+        
       }),
       User.create({
         phoneNumber: user2PhoneNumber,
@@ -342,6 +353,7 @@ describe("Test for socket", () => {
         socketId: null,
         isLogin: false,
         deviceId: "",
+        fcmToken: "fcmTokenUser2",
       }),
     ]).then(() => {
       clientA = Client(SERVER_URL);

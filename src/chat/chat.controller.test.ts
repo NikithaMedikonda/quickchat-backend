@@ -51,6 +51,7 @@ describe("Testing the functionality of retrieving the messages of two users", ()
       privateKey: "privateKey",
       isLogin: false,
       deviceId: "qwertyuiop",
+      fcmToken:'jhdshjcshjavh'
     });
     const receiver = await createUser({
       firstName: "Varun",
@@ -62,6 +63,7 @@ describe("Testing the functionality of retrieving the messages of two users", ()
       privateKey: "privateKey",
       isLogin: false,
       deviceId: "asghdv",
+      fcmToken:'gqhfasygiu'
     });
     await createUser({
       firstName: "Test",
@@ -73,6 +75,7 @@ describe("Testing the functionality of retrieving the messages of two users", ()
       privateKey: "privateKey",
       isLogin: false,
       deviceId: "jhUSGYGUYDF",
+      fcmToken:'gftwfdtFQYAGIGIG'
     });
     accessToken = jwt.sign(
       { phoneNumber: senderPhoneNumber },

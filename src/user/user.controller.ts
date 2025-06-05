@@ -27,7 +27,8 @@ export async function createUser(user: UserInfo) {
     privateKey: user.privateKey,
     socketId: user.socketId ? user.socketId : null,
     isLogin: true,
-    deviceId:user.deviceId
+    deviceId:user.deviceId,
+    fcmToken: user.fcmToken? user.fcmToken : null,
   };
   const createdUser: DbUser = await User.create(newUser);
   return createdUser;
@@ -72,6 +73,7 @@ export async function register(
           socketId: request.body.socketId,
           isLogin: true,
           deviceId:request.body.deviceId,
+          fcmToken: request.body.fcmToken ? request.body.fcmToken : null,
         };
         const newUser: DbUser = await createUser(userBody);
         const token = jwt.sign(
@@ -98,7 +100,8 @@ export async function register(
           privateKey: newUser.privateKey,
           socketId: newUser.socketId,
           isLogin: newUser.isLogin,
-          deviceId:newUser.deviceId
+          deviceId:newUser.deviceId,
+          fcmToken: newUser.fcmToken
         };
         response
           .status(200)
@@ -115,7 +118,8 @@ export async function login(
   response: Response
 ): Promise<void> {
   try {
-    const { phoneNumber, password, deviceId } = request.body;
+    const { phoneNumber, password, deviceId, fcmToken } = request.body;
+
     const existingUser = await User.findOne({
       where: { phoneNumber },
     });
@@ -123,7 +127,7 @@ export async function login(
     if (!existingUser) {
       response
         .status(404)
-        .json({ message: "User doesn't exists with this phone number" });
+        .json({ message: "User doesn't exist with this phone number" });
       return;
     }
 
@@ -144,18 +148,24 @@ export async function login(
 
     if (isDeviceChanged) {
       existingUser.deviceId = deviceId;
-      responseMessage = "User was logged out from previous device and logged in on new device";
+      responseMessage =
+        "User was logged out from previous device and logged in on new device";
     }
+
+    if (fcmToken && existingUser.fcmToken !== fcmToken) {
+      existingUser.fcmToken = fcmToken;
+    }
+
+    existingUser.isLogin = true;
+    await existingUser.save();
 
     const accessToken = jwt.sign(
       { phoneNumber: existingUser.phoneNumber },
       secret_key,
       { expiresIn: "7d" }
     );
-    const refreshToken = jwt.sign(existingUser.phoneNumber, secret_key);
 
-    existingUser.isLogin = true;
-    await existingUser.save();
+    const refreshToken = jwt.sign(existingUser.phoneNumber, secret_key);
 
     const user = {
       id: existingUser.id,
@@ -169,7 +179,8 @@ export async function login(
       privateKey: existingUser.privateKey,
       socketId: existingUser.socketId,
       isLogin: existingUser.isLogin,
-      deviceId: existingUser.deviceId
+      deviceId: existingUser.deviceId,
+      fcmToken: existingUser.fcmToken
     };
 
     const responseData = {
@@ -177,7 +188,7 @@ export async function login(
       refreshToken,
       user,
       deviceChanged: isDeviceChanged,
-      message:responseMessage
+      message: responseMessage,
     };
 
     response.status(200).json(responseData);
@@ -186,6 +197,7 @@ export async function login(
     response.status(500).send(`${(error as Error).message}`);
   }
 }
+
 
 export async function logout(
   request: Request,

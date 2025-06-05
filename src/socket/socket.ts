@@ -1,6 +1,7 @@
 import { Server } from "socket.io";
 import { PrivateMessage } from "../types/message";
 import { User } from "../user/user.model";
+import {messaging} from '../../firebase'
 import {
   changeStatusToDelivered,
   disconnectUser,
@@ -8,9 +9,21 @@ import {
   storeMessage,
   updateUserSocketId,
 } from "./socket.service";
-
 export const setupSocket = (io: Server) => {
   io.on("connection", (socket) => {
+
+    socket.on("register_fcm_token", async (data: { phoneNumber: string; fcmToken: string }) => {
+      try {
+        await User.update(
+          { fcmToken: data.fcmToken },
+          { where: { phoneNumber: data.phoneNumber } }
+        );
+        console.log(`FCM token registered for ${data.phoneNumber}`);
+      } catch (error) {
+        console.error('Error registering FCM token:', error);
+      }
+    });
+
     socket.on("join", async (phoneNumber: string) => {
       await changeStatusToDelivered(phoneNumber);
       await updateUserSocketId(phoneNumber, socket.id);
@@ -30,6 +43,9 @@ export const setupSocket = (io: Server) => {
       }: PrivateMessage) => {
         try {
           const targetSocketId = await findUserSocketId(recipientPhoneNumber);
+           const recipient = await User.findOne({
+            where: { phoneNumber: recipientPhoneNumber },
+          });
           if (targetSocketId) {
             await storeMessage({
               recipientPhoneNumber,
@@ -50,6 +66,20 @@ export const setupSocket = (io: Server) => {
               status: "sent",
               timestamp,
             });
+            if (recipient?.fcmToken) {
+              await messaging.send({
+                token: recipient.fcmToken,
+                notification: {
+                  title: "New Message",
+                  body: `${senderPhoneNumber}: ${message}`,
+                },
+                data: {
+                  senderPhoneNumber,
+                  recipientPhoneNumber,
+                  timestamp: timestamp.toString(),
+                },
+              });
+            }
           }
         } catch (error) {
           throw new Error(

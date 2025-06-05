@@ -25,7 +25,8 @@ describe("Tests for socket services", () => {
       privateKey: "",
       socketId: "socket12",
       isLogin:false,
-      deviceId:'qwertyuiop'
+      deviceId:'qwertyuiop',
+      fcmToken:'fwqfefdjhjhfsh'
     };
     user = await User.create(testUser);
     id = user.id;
@@ -78,7 +79,8 @@ describe("Tests for socket services", () => {
         privateKey: "",
         socketId: "socket1223",
         isLogin:false,
-        deviceId:'qwertyuiop'
+        deviceId:'qwertyuiop',
+        fcmToken:'fewtyfqfguydgquyg'
       });
 
       const result = await storeMessage({

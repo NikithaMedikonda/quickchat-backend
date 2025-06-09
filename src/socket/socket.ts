@@ -1,7 +1,7 @@
 import { Server } from "socket.io";
 import { PrivateMessage } from "../types/message";
 import { User } from "../user/user.model";
-import {messaging} from '../../firebase'
+import { messaging } from "../../firebase";
 import {
   changeStatusToDelivered,
   disconnectUser,
@@ -24,46 +24,48 @@ export const setupSocket = (io: Server) => {
       });
     });
 
-socket.on("check_user_device", async (phoneNumber: string, deviceId: string) => {
-  try {
-    const user = await User.findOne({
-      where: { phoneNumber },
-    });
+    socket.on(
+      "check_user_device",
+      async (phoneNumber: string, deviceId: string) => {
+        try {
+          const user = await User.findOne({
+            where: { phoneNumber },
+          });
 
-    if (!user) {
-      socket.emit("user_device_verified", { 
-        success: false, 
-        message: "User not found",
-        action: "logout" 
-      });
-      return;
-    }
+          if (!user) {
+            socket.emit("user_device_verified", {
+              success: false,
+              message: "User not found",
+              action: "logout",
+            });
+            return;
+          }
 
-    if (user.deviceId !== deviceId) {
-      socket.emit("user_device_verified", { 
-        success: false, 
-        message: "Device mismatch - logged in from another device",
-        action: "logout",
-        registeredDeviceId: user.deviceId 
-      });
-    } else {
-      socket.emit("user_device_verified", { 
-        success: true, 
-        message: "Device verified",
-        action: "continue" 
-      });
-    }
-  } catch {
-    socket.emit("user_device_verified", { 
-      success: false, 
-      message: "Server error during device verification",
-      action: "logout" 
-    });
-  }
-});
+          if (user.deviceId !== deviceId) {
+            socket.emit("user_device_verified", {
+              success: false,
+              message: "Device mismatch - logged in from another device",
+              action: "logout",
+              registeredDeviceId: user.deviceId,
+            });
+          } else {
+            socket.emit("user_device_verified", {
+              success: true,
+              message: "Device verified",
+              action: "continue",
+            });
+          }
+        } catch {
+          socket.emit("user_device_verified", {
+            success: false,
+            message: "Server error during device verification",
+            action: "logout",
+          });
+        }
+      }
+    );
 
-
-socket.on(
+    socket.on(
       "send_private_message",
       async ({
         recipientPhoneNumber,
@@ -77,10 +79,10 @@ socket.on(
             senderPhoneNumber
           );
           const targetSocketId = await findUserSocketId(recipientPhoneNumber);
-           const recipient = await User.findOne({
+          const recipient = await User.findOne({
             where: { phoneNumber: recipientPhoneNumber },
           });
-          if (targetSocketId &&!result) {
+          if (targetSocketId && !result) {
             await storeMessage({
               recipientPhoneNumber,
               senderPhoneNumber,
@@ -92,6 +94,18 @@ socket.on(
               `receive_private_message_${senderPhoneNumber}`,
               { recipientPhoneNumber, senderPhoneNumber, message, timestamp }
             );
+            if (recipient?.fcmToken) {
+              await messaging.send({
+                token: recipient.fcmToken,
+                data: {
+                  title: "New Message",
+                  body: senderPhoneNumber,
+                  senderPhoneNumber,
+                  recipientPhoneNumber,
+                  timestamp: timestamp.toString(),
+                },
+              });
+            }
           } else {
             await storeMessage({
               recipientPhoneNumber,
@@ -103,11 +117,9 @@ socket.on(
             if (recipient?.fcmToken) {
               await messaging.send({
                 token: recipient.fcmToken,
-                notification: {
-                  title: "New Message",
-                  body: `${senderPhoneNumber}: ${message}`,
-                },
                 data: {
+                  title: "New Message",
+                  body: senderPhoneNumber,
                   senderPhoneNumber,
                   recipientPhoneNumber,
                   timestamp: timestamp.toString(),

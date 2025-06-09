@@ -1,8 +1,10 @@
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
-import admin from "firebase-admin";
+import admin, { ServiceAccount } from "firebase-admin";
+import fs from "fs";
 import http from "http";
+import path from "path";
 import { Server } from "socket.io";
 import { syncAssociations } from "./src/associations/associations";
 import { chatRouter } from "./src/chat/chat.router";
@@ -11,8 +13,7 @@ import { userConversationRouter } from "./src/conversation/conversation.route";
 import { messageRouter } from "./src/message/message.router";
 import { setupSocket } from "./src/socket/socket";
 import { userRouter } from "./src/user/user.route";
-import { userRestrictionRouter } from "./src/userRestriction/userRestriction.router"; 
-import serviceAccountJson from "./serviceAccountKey.json";
+import { userRestrictionRouter } from "./src/userRestriction/userRestriction.router";
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` });
 
@@ -30,6 +31,17 @@ const server = http.createServer(app);
 const io = new Server(server);
 setupSocket(io);
 
+let serviceAccountJson: ServiceAccount;
+const keyPath = path.resolve(__dirname, "serviceAccountKey.json"); 
+
+if (fs.existsSync(keyPath)) {
+  const fileContents = fs.readFileSync(keyPath, "utf-8");
+  serviceAccountJson = JSON.parse(fileContents);
+} else if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+  serviceAccountJson = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+} else {
+  throw new Error("Firebase service account key not found.");
+}
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccountJson as admin.ServiceAccount),
 });

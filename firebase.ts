@@ -1,6 +1,12 @@
 import admin, { ServiceAccount } from "firebase-admin";
 
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON || '{}') as ServiceAccount;
+const rawServiceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON || '{}');
+
+const serviceAccount: ServiceAccount = {
+  ...rawServiceAccount,
+  privateKey: rawServiceAccount.private_key.replace(/\\n/g, '\n'),
+};
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });

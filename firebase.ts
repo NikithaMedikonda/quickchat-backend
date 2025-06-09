@@ -1,4 +1,5 @@
 import admin, { ServiceAccount } from "firebase-admin";
+import serviceAccountLocal from "./serviceAccountKey.json";
 
 let serviceAccount: ServiceAccount;
 
@@ -12,9 +13,7 @@ if (process.env.NODE_ENV === "production") {
     privateKey: rawServiceAccount.private_key.replace(/\\n/g, "\n"),
   };
 } else {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const serviceAccountLocal = require("./serviceAccountKey.json") as ServiceAccount;
-  serviceAccount = serviceAccountLocal;
+  serviceAccount = serviceAccountLocal as ServiceAccount;
 }
 
 admin.initializeApp({

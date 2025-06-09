@@ -15,10 +15,11 @@ jobs:
       DB_HOST: localhost
       DB_DIALECT: postgres
       JSON_WEB_SECRET: 'quick_chat_secret'
-      DATABASE_URL: postgresql://postgres.evgvsjlaibgfnjizjzyi:EKLs6PIPFfODQU2C@aws-0-ap-south-1.pooler.supabase.com:6543/postgres
-      SUPABASE_URL: "https://evgvsjlaibgfnjizjzyi.supabase.co"
-      SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2Z3ZzamxhaWJnZm5qaXpqenlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg1MTIzOTEsImV4cCI6MjA2NDA4ODM5MX0.14BAK2LXLfXLbZDp1RnWfgzUQJKVHQdG79f-KsN4cOU'
-      SERVICE_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2Z3ZzamxhaWJnZm5qaXpqenlpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0ODUxMjM5MSwiZXhwIjoyMDY0MDg4MzkxfQ.RgLASpMIr5C1aSuiV19cm4HYVH63gknrprxBanEn8fs"
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      SERVICE_KEY: ${{ secrets.SERVICE_KEY }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
       BUCKET_NAME: "quick-chat"
       
     steps:

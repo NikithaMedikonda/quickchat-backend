@@ -1,11 +1,20 @@
 import admin, { ServiceAccount } from "firebase-admin";
+import * as serviceAccountLocal from "./serviceAccountKey.json";
 
-const rawServiceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON || '{}');
+let serviceAccount: ServiceAccount;
 
-const serviceAccount: ServiceAccount = {
-  ...rawServiceAccount,
-  privateKey: rawServiceAccount.private_key.replace(/\\n/g, '\n'),
-};
+if (process.env.NODE_ENV === "production") {
+  const rawServiceAccount = JSON.parse(
+    process.env.FIREBASE_SERVICE_ACCOUNT_JSON || "{}"
+  );
+
+  serviceAccount = {
+    ...rawServiceAccount,
+    privateKey: rawServiceAccount.private_key.replace(/\\n/g, "\n"),
+  };
+} else {
+  serviceAccount = serviceAccountLocal as ServiceAccount;
+}
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),

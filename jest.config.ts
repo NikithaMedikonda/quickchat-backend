@@ -16,7 +16,4 @@ module.exports = {
       statements: 95,
     },
   },
-  moduleNameMapper: {
-    "./serviceAccountKey.json": "<rootDir>/__mocks__/serviceAccountKey.json",
-  }
 };

@@ -1,6 +1,7 @@
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
+import admin from "firebase-admin";
 import http from "http";
 import { Server } from "socket.io";
 import { syncAssociations } from "./src/associations/associations";
@@ -11,6 +12,7 @@ import { messageRouter } from "./src/message/message.router";
 import { setupSocket } from "./src/socket/socket";
 import { userRouter } from "./src/user/user.route";
 import { userRestrictionRouter } from "./src/userRestriction/userRestriction.router"; 
+import serviceAccountJson from "./serviceAccountKey.json";
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` });
 
@@ -27,6 +29,10 @@ app.use(userConversationRouter);
 const server = http.createServer(app);
 const io = new Server(server);
 setupSocket(io);
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccountJson as admin.ServiceAccount),
+});
 
 const startServer = async () => {
   try {

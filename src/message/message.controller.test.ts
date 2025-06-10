@@ -38,9 +38,9 @@ describe("Testing the functionality of storing message in data base", () => {
       privateKey: "",
       socketId: "",
       isLogin: false,
-      deviceId: 'qwertyuiop'
+      deviceId: "qwertyuiop",
     });
-    
+
     await createUser({
       phoneNumber: "+916303522765",
       firstName: "test",
@@ -52,9 +52,9 @@ describe("Testing the functionality of storing message in data base", () => {
       privateKey: "",
       socketId: "",
       isLogin: false,
-      deviceId: 'gasdfggs'
+      deviceId: "gasdfggs",
     });
-    
+
     const secret_key = process.env.JSON_WEB_SECRET || "quick_chat_secret";
     accessToken = jwt.sign(
       { phoneNumber: sender.phoneNumber },
@@ -116,7 +116,7 @@ describe("Testing the functionality of storing message in data base", () => {
 
   test("Should throw error if user is not there with provided phone number", async () => {
     const messagePayload = {
-      senderPhoneNumber: "+914567891234", 
+      senderPhoneNumber: "+914567891234",
       receiverPhoneNumber: receiverPhoneNumber,
       content: "Hello!",
       timeStamp: "2024-01-01T10:00:00Z",
@@ -178,11 +178,11 @@ describe("Testing the functionality of storing message in data base", () => {
 describe("Testing the functionality of updating the status of the message", () => {
   let testInstance: Sequelize;
   const originalEnv = process.env;
-  
+
   beforeEach(() => {
     process.env = { ...originalEnv };
   });
-  
+
   afterEach(() => {
     process.env = originalEnv;
   });
@@ -201,8 +201,8 @@ describe("Testing the functionality of updating the status of the message", () =
 
   const senderPhoneNumber = "+916303974914";
   const receiverPhoneNumber = "+916303552765";
-  let userAaccessToken = '';
-  let userBaccessToken = '';
+  let userAaccessToken = "";
+  let userBaccessToken = "";
 
   test("should create two users in the database to have chat", async () => {
     const sender = {
@@ -214,10 +214,10 @@ describe("Testing the functionality of updating the status of the message", () =
       publicKey: "publicKey",
       privateKey: "privateKey",
       isLogin: false,
-      deviceId: 'qwertyuiop',
-      email: "mammu@gmail.com" 
+      deviceId: "qwertyuiop",
+      email: "mammu@gmail.com",
     };
-    
+
     const receiver = {
       firstName: "Varun",
       lastName: "Martha",
@@ -227,12 +227,18 @@ describe("Testing the functionality of updating the status of the message", () =
       publicKey: "publicKey",
       privateKey: "privateKey",
       isLogin: false,
-      deviceId: 'ajhgdjagjsg',
-      email: "varun@gmail.com"
+      deviceId: "ajhgdjagjsg",
+      email: "varun@gmail.com",
     };
-    
-    const userA = await request(app).post("/api/users").send(sender).expect(200);
-    const userB = await request(app).post("/api/users").send(receiver).expect(200);
+
+    const userA = await request(app)
+      .post("/api/users")
+      .send(sender)
+      .expect(200);
+    const userB = await request(app)
+      .post("/api/users")
+      .send(receiver)
+      .expect(200);
     userAaccessToken = userA.body.accessToken;
     userBaccessToken = userB.body.accessToken;
   });
@@ -272,7 +278,9 @@ describe("Testing the functionality of updating the status of the message", () =
 
     expect(messageBResponse.body.messageDetails.senderId).toBeDefined();
     expect(messageBResponse.body.messageDetails.status).toBe("sent");
-    expect(messageBResponse.body.messageDetails.content).toBe("Hey Mamatha, Hi");
+    expect(messageBResponse.body.messageDetails.content).toBe(
+      "Hey Mamatha, Hi"
+    );
 
     const messagePayloadC = {
       senderPhoneNumber: senderPhoneNumber,
@@ -290,7 +298,9 @@ describe("Testing the functionality of updating the status of the message", () =
 
     expect(messageCResponse.body.messageDetails.senderId).toBeDefined();
     expect(messageCResponse.body.messageDetails.status).toBe("sent");
-    expect(messageCResponse.body.messageDetails.content).toBe("What are you doing?");
+    expect(messageCResponse.body.messageDetails.content).toBe(
+      "What are you doing?"
+    );
 
     const messagePayloadD = {
       senderPhoneNumber: receiverPhoneNumber,
@@ -308,10 +318,12 @@ describe("Testing the functionality of updating the status of the message", () =
 
     expect(messageDResponse.body.messageDetails.senderId).toBeDefined();
     expect(messageDResponse.body.messageDetails.status).toBe("sent");
-    expect(messageDResponse.body.messageDetails.content).toBe("I am chilling yar! What about you?");
+    expect(messageDResponse.body.messageDetails.content).toBe(
+      "I am chilling yar! What about you?"
+    );
 
     const messagePayloadE = {
-      senderPhoneNumber: senderPhoneNumber, 
+      senderPhoneNumber: senderPhoneNumber,
       receiverPhoneNumber: receiverPhoneNumber,
       content: "Cool! Nothing much😊",
       timeStamp: "2025-05-21T11:55:00Z",
@@ -326,17 +338,18 @@ describe("Testing the functionality of updating the status of the message", () =
 
     expect(messageEResponse.body.messageDetails.senderId).toBeDefined();
     expect(messageEResponse.body.messageDetails.status).toBe("sent");
-    expect(messageEResponse.body.messageDetails.content).toBe("Cool! Nothing much😊");
+    expect(messageEResponse.body.messageDetails.content).toBe(
+      "Cool! Nothing much😊"
+    );
   }, 10000);
 
   test("should throw error if required fields are not passed.", async () => {
     const payload = {
       senderPhoneNumber: senderPhoneNumber,
       receiverPhoneNumber: receiverPhoneNumber,
-      timestamp: "2025-05-21T11:52:00Z",
       currentStatus: "delivered",
     };
-    
+
     await request(app)
       .put("/api/messages/status")
       .set({ Authorization: `Bearer ${userAaccessToken}` })
@@ -344,15 +357,31 @@ describe("Testing the functionality of updating the status of the message", () =
       .expect(400);
   });
 
-  test("should return 204 code as there are no message before the timestamp.", async () => {
+  test("should return 204 code as there are no messages to update", async () => {
     const payload = {
       senderPhoneNumber: senderPhoneNumber,
       receiverPhoneNumber: receiverPhoneNumber,
-      timestamp: "2025-05-21T11:00:00Z", 
       previousStatus: "sent",
       currentStatus: "delivered",
     };
-    
+
+    const messageResponse = await request(app)
+      .put("/api/messages/status")
+      .set({ Authorization: `Bearer ${userAaccessToken}` })
+      .send(payload)
+      .expect(200);
+
+    expect(messageResponse.body.count).toBe(3);
+  });
+
+  test("should update the messages status", async () => {
+    const payload = {
+      senderPhoneNumber: senderPhoneNumber,
+      receiverPhoneNumber: receiverPhoneNumber,
+      previousStatus: "sent",
+      currentStatus: "delivered",
+    };
+
     await request(app)
       .put("/api/messages/status")
       .set({ Authorization: `Bearer ${userAaccessToken}` })
@@ -360,33 +389,14 @@ describe("Testing the functionality of updating the status of the message", () =
       .expect(204);
   });
 
-  test("should update the messages status before the provided timestamp", async () => {
-    const payload = {
-      senderPhoneNumber: senderPhoneNumber,
-      receiverPhoneNumber: receiverPhoneNumber,
-      timestamp: "2025-05-21T11:52:00Z",
-      previousStatus: "sent",
-      currentStatus: "delivered",
-    };
-    
-    const messageResponse = await request(app)
-      .put("/api/messages/status")
-      .set({ Authorization: `Bearer ${userAaccessToken}` })
-      .send(payload)
-      .expect(200);
-      
-    expect(messageResponse.body.count).toBe(2);
-  });
-
   test("should throw error if phone number provided is wrong", async () => {
     const payload = {
       senderPhoneNumber: senderPhoneNumber,
-      receiverPhoneNumber: "+918787878787", 
-      timestamp: "2025-05-21T11:52:00Z",
+      receiverPhoneNumber: "+918787878787",
       previousStatus: "sent",
       currentStatus: "delivered",
     };
-    
+
     await request(app)
       .put("/api/messages/status")
       .set({ Authorization: `Bearer ${userAaccessToken}` })

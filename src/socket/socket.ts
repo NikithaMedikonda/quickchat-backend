@@ -23,14 +23,16 @@ export const setupSocket = (io: Server) => {
         socketId: socket.id,
       });
     });
-
-    socket.on(
+    socket.emit("internet_connection", { response: true });
+        socket.on(
+      
       "check_user_device",
+     
       async (phoneNumber: string, deviceId: string) => {
-        try {
-          const user = await User.findOne({
-            where: { phoneNumber },
-          });
+              try {
+                const user = await User.findOne({
+                  where: { phoneNumber },
+                });
 
           if (!user) {
             socket.emit("user_device_verified", {
@@ -101,6 +103,9 @@ export const setupSocket = (io: Server) => {
               `receive_private_message_${senderPhoneNumber}`,
               { recipientPhoneNumber, senderPhoneNumber, message, timestamp }
             );
+            await io
+              .to(targetSocketId)
+              .emit("new_message", { newMessage: true });
             if (recipient?.fcmToken) {
               await messaging.send({
                 token: recipient.fcmToken,

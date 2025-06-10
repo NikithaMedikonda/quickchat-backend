@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import { Op } from "sequelize";
 import { Chat } from "../chat/chat.model";
 import { findOrCreateChat } from "../chat/chat.service";
 import { findByPhoneNumber } from "../utils/findByPhoneNumber";
@@ -51,14 +50,12 @@ export const updateMessageStatus = async (req: Request, res: Response) => {
     const {
       senderPhoneNumber,
       receiverPhoneNumber,
-      timestamp,
       previousStatus,
       currentStatus,
     } = req.body;
     const requiredFields = [
       senderPhoneNumber,
       receiverPhoneNumber,
-      timestamp,
       previousStatus,
       currentStatus,
     ];
@@ -73,7 +70,6 @@ export const updateMessageStatus = async (req: Request, res: Response) => {
 
     const senderId = await findByPhoneNumber(senderPhoneNumber);
     const receiverId = await findByPhoneNumber(receiverPhoneNumber);
-    const formattedTimestamp = new Date(timestamp);
     const [updatedCount] = await Message.update(
       { status: currentStatus as MessageStatus },
       {
@@ -81,9 +77,6 @@ export const updateMessageStatus = async (req: Request, res: Response) => {
           senderId: senderId,
           receiverId: receiverId,
           status: previousStatus as MessageStatus,
-          createdAt: {
-            [Op.lte]: formattedTimestamp,
-          },
         },
       }
     );

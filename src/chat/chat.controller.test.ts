@@ -429,7 +429,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
       .expect(200);
   });
 
-  test("Should create necessary messages from sender to receiverC succesfully", async () => {
+  test("Should create necessary messages from sender to receiverC successfully", async () => {
     const messageAPayload = {
       senderPhoneNumber: senderPhoneNumber,
       receiverPhoneNumber: receiverCPhoneNumber,
@@ -505,7 +505,6 @@ describe("Testing the functionality of retrieving all the messages of a user", (
     const payload = {
       senderPhoneNumber: receiverBPhoneNumber,
       receiverPhoneNumber: senderPhoneNumber,
-      timestamp: "2025-05-25T14:59:00Z",
       previousStatus: "sent",
       currentStatus: "read",
     };
@@ -515,7 +514,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
       .set({ Authorization: `Bearer ${accessToken}` })
       .send(payload)
       .expect(200);
-    expect(messageResponse.body.count).toBe(1);
+    expect(messageResponse.body.count).toBe(2);
   });
 
   test("should delete the chat with receiverC", async () => {
@@ -533,7 +532,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
     expect(response.body.count).toBe(1);
   });
 
-  test("Should create necessary messages from sender to sender succesfully", async () => {
+  test("Should create necessary messages from sender to sender successfully", async () => {
     const messageAPayload = {
       senderPhoneNumber: senderPhoneNumber,
       receiverPhoneNumber: senderPhoneNumber,
@@ -598,7 +597,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
     expect(receiverBChat.lastMessageType).toBe("receivedMessage");
     expect(receiverBChat.lastMessageStatus).toBeNull();
     expect(receiverBChat.lastMessageTimestamp).toBe("2025-05-25T15:05:00.000Z");
-    expect(receiverBChat.unreadCount).toBe(1);
+    expect(receiverBChat.unreadCount).toBe(0);
     expect(receiverBChat.publicKey).toBeTruthy();
 
     expect(receiverAChat).toBeDefined();

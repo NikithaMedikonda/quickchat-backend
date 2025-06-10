@@ -82,6 +82,13 @@ export const setupSocket = (io: Server) => {
           const recipient = await User.findOne({
             where: { phoneNumber: recipientPhoneNumber },
           });
+          const payload = {
+            title: "New Message",
+            body: senderPhoneNumber,
+            senderPhoneNumber,
+            recipientPhoneNumber,
+            timestamp: timestamp.toString(),
+          };
           if (targetSocketId && !result) {
             await storeMessage({
               recipientPhoneNumber,
@@ -97,13 +104,7 @@ export const setupSocket = (io: Server) => {
             if (recipient?.fcmToken) {
               await messaging.send({
                 token: recipient.fcmToken,
-                data: {
-                  title: "New Message",
-                  body: senderPhoneNumber,
-                  senderPhoneNumber,
-                  recipientPhoneNumber,
-                  timestamp: timestamp.toString(),
-                },
+                data: payload,
               });
             }
           } else {
@@ -117,13 +118,7 @@ export const setupSocket = (io: Server) => {
             if (recipient?.fcmToken) {
               await messaging.send({
                 token: recipient.fcmToken,
-                data: {
-                  title: "New Message",
-                  body: senderPhoneNumber,
-                  senderPhoneNumber,
-                  recipientPhoneNumber,
-                  timestamp: timestamp.toString(),
-                },
+                data: payload,
               });
             }
           }

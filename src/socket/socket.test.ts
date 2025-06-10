@@ -90,73 +90,62 @@ describe("Test for socket", () => {
     expect(chat).toBeDefined();
   });
 
-  test("should verify device for check_user_device event", (done) => {
-    const phoneNumber = "+919440058888";
-    const correctDeviceId = "device123";
-    const incorrectDeviceId = "wrongDevice";
+test("should verify device for check_user_device event", (done) => {
+  const phoneNumber = "+919440058888";
+  const correctDeviceId = "device123";
+  const incorrectDeviceId = "wrongDevice";
 
-    User.create({
-      phoneNumber,
-      firstName: "Device",
-      lastName: "Checker",
-      email: "devicechecker@gmail.com",
-      password: "Test@123",
-      isDeleted: false,
-      publicKey: "",
-      privateKey: "",
-      socketId: null,
-      isLogin: false,
-      deviceId: correctDeviceId,
-    }).then(() => {
-      clientA = Client(SERVER_URL);
+  User.create({
+    phoneNumber,
+    firstName: "Device",
+    lastName: "Checker",
+    email: "devicechecker@gmail.com",
+    password: "Test@123",
+    isDeleted: false,
+    publicKey: "",
+    privateKey: "",
+    socketId: null,
+    isLogin: false,
+    deviceId: correctDeviceId,
+  }).then(() => {
+    clientA = Client(SERVER_URL);
 
-      clientA.on("connect", () => {
-        clientA.emit("check_user_device", phoneNumber, correctDeviceId);
+    clientA.on("connect", () => {
+      clientA.emit("check_user_device", phoneNumber, correctDeviceId);
 
-        clientA.once("user_device_verified", (response1) => {
-          try {
-            expect(response1).toEqual({
-              success: true,
-              message: "Device verified",
-              action: "continue",
+      clientA.once("user_device_verified", (response1) => {
+        expect(response1).toEqual({
+          success: true,
+          message: "Device verified",
+          action: "continue",
+        });
+
+        clientA.emit("check_user_device", phoneNumber, incorrectDeviceId);
+
+        clientA.once("user_device_verified", (response2) => {
+          expect(response2).toEqual({
+            success: false,
+            message: "Device mismatch - logged in from another device",
+            action: "logout",
+            registeredDeviceId: correctDeviceId,
+          });
+
+          clientA.emit("check_user_device", "+0000000000", "anyDevice");
+
+          clientA.once("user_device_verified", (response3) => {
+            expect(response3).toEqual({
+              success: false,
+              message: "User not found",
+              action: "logout",
             });
-
-            clientA.emit("check_user_device", phoneNumber, incorrectDeviceId);
-
-            clientA.once("user_device_verified", (response2) => {
-              try {
-                expect(response2).toEqual({
-                  success: false,
-                  message: "Device mismatch - logged in from another device",
-                  action: "logout",
-                  registeredDeviceId: correctDeviceId,
-                });
-
-                clientA.emit("check_user_device", "+0000000000", "anyDevice");
-
-                clientA.once("user_device_verified", (response3) => {
-                  try {
-                    expect(response3).toEqual({
-                      success: false,
-                      message: "User not found",
-                      action: "logout",
-                    });
-                    done();
-                  } catch (error) {
-                    done(error);
-                  }
-                });
-              } catch (error) {
-                done(error);
-              }
-            });
-          } catch (error) {
-            done(error);
-          }
+            done();
+          });
         });
       });
     });
-  }, 15000);
+  }).catch(done);
+}, 15000);
+
 
   test("should handle join event, update socket ID and broadcast to other users", (done) => {
     const phoneNumber = "+919440058803";

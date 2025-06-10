@@ -1,6 +1,7 @@
 import { Server } from "socket.io";
 import { PrivateMessage } from "../types/message";
 import { User } from "../user/user.model";
+import { messaging } from "../../firebase";
 import {
   changeStatusToDelivered,
   disconnectUser,
@@ -23,13 +24,15 @@ export const setupSocket = (io: Server) => {
       });
     });
     socket.emit("internet_connection", { response: true });
-    socket.on(
+        socket.on(
+      
       "check_user_device",
+     
       async (phoneNumber: string, deviceId: string) => {
-        try {
-          const user = await User.findOne({
-            where: { phoneNumber },
-          });
+              try {
+                const user = await User.findOne({
+                  where: { phoneNumber },
+                });
 
           if (!user) {
             socket.emit("user_device_verified", {
@@ -78,6 +81,16 @@ export const setupSocket = (io: Server) => {
             senderPhoneNumber
           );
           const targetSocketId = await findUserSocketId(recipientPhoneNumber);
+          const recipient = await User.findOne({
+            where: { phoneNumber: recipientPhoneNumber },
+          });
+          const payload = {
+            title: "New Message",
+            body: senderPhoneNumber,
+            senderPhoneNumber,
+            recipientPhoneNumber,
+            timestamp: timestamp.toString(),
+          };
           if (targetSocketId && !result) {
             await storeMessage({
               recipientPhoneNumber,
@@ -93,6 +106,12 @@ export const setupSocket = (io: Server) => {
             await io
               .to(targetSocketId)
               .emit("new_message", { newMessage: true });
+            if (recipient?.fcmToken) {
+              await messaging.send({
+                token: recipient.fcmToken,
+                data: payload,
+              });
+            }
           } else {
             await storeMessage({
               recipientPhoneNumber,
@@ -101,6 +120,12 @@ export const setupSocket = (io: Server) => {
               status: "sent",
               timestamp,
             });
+            if (recipient?.fcmToken) {
+              await messaging.send({
+                token: recipient.fcmToken,
+                data: payload,
+              });
+            }
           }
         } catch (error) {
           throw new Error(

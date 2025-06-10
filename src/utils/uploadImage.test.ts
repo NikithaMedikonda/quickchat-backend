@@ -1,13 +1,10 @@
 import dotenv from "dotenv";
 dotenv.config({ path: ".env.test" });
-
-// import { Sequelize } from "sequelize";
 import { SequelizeConnection } from "../connection/dbconnection";
 import { getProfileImageLink } from "./uploadImage";
 import { base64 } from "../constants/example.base64";
 
 describe("getProfileImageUrl", () => {
-  // let testInstance: Sequelize;
   const originalEnv = process.env;
   beforeEach(() => {
     process.env = { ...originalEnv };

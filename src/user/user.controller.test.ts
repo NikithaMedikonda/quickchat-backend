@@ -141,7 +141,7 @@ describe("User controller Registration", () => {
       .expect(500);
     expect(response2.error).toBeTruthy();
   });
-  
+
   test("should return secret_key missing error when the secret_key is missing", async () => {
     delete process.env.JSON_WEB_SECRET;
     const newResource3 = {
@@ -153,6 +153,28 @@ describe("User controller Registration", () => {
       deviceId: "qwertyuiop",
     };
     await request(app).post("/api/users").send(newResource3).expect(412);
+  });
+
+  test("should create a user and upload profile picture successfully", async () => {
+    const newResource = {
+      phoneNumber: "9999988777",
+      firstName: "Profile",
+      lastName: "Picture",
+      password: "Anu@1234",
+      email: "profilepicture@test.com",
+      profilePicture: base64,
+      deviceId: "device123",
+    };
+
+    const response = await request(app)
+      .post("/api/users")
+      .send(newResource)
+      .expect(200);
+
+    expect(response.body.user.profilePicture).toBeTruthy();
+    expect(response.body.user.profilePicture).toMatch(/^https?:\/\//);
+    expect(response.body.accessToken).toBeTruthy();
+    expect(response.body.refreshToken).toBeTruthy();
   });
 
   test("should return this account is deleted when account with that phone number is already deleted", async () => {
@@ -232,8 +254,8 @@ describe("User controller Login", () => {
     expect(response.body.refreshToken).toBeTruthy();
   });
 
-   test("should return un authorised message whenever the deleted user tries to login", async () => {
-     const newUser = {
+  test("should return un authorised message whenever the deleted user tries to login", async () => {
+    const newUser = {
       phoneNumber: "6303522765",
       firstName: "Delete",
       lastName: "User",
@@ -319,6 +341,30 @@ describe("User controller Login", () => {
       "User was logged out from previous device and logged in on new device"
     );
   });
+  test("should update fcmToken if a new fcmToken is provided", async () => {
+    const newResource = {
+      phoneNumber: "8888888888",
+      firstName: "FCM",
+      lastName: "TokenTest",
+      password: "Fcm@1234",
+      email: "fcmtest@test.com",
+      deviceId: "deviceFCMTest",
+    };
+    await request(app).post("/api/users").send(newResource).expect(200);
+    const loginPayload = {
+      phoneNumber: "8888888888",
+      password: "Fcm@1234",
+      deviceId: "deviceFCMTest",
+      fcmToken: "newFCMToken123",
+    };
+
+    const loginResponse = await request(app)
+      .post("/api/user")
+      .send(loginPayload)
+      .expect(200);
+
+    expect(loginResponse.body.user.fcmToken).toEqual("newFCMToken123");
+  });
 });
 
 describe("User controller Logout", () => {
@@ -329,6 +375,7 @@ describe("User controller Logout", () => {
   });
   afterEach(async () => {
     process.env = originalEnv;
+    jest.restoreAllMocks();
   });
   beforeAll(() => {
     testInstance = SequelizeConnection()!;
@@ -429,6 +476,24 @@ describe("User controller Logout", () => {
       phoneNumber: "9440058809",
     };
     await request(app).post("/api/logout").send(resource).expect(409);
+  });
+  test("should return 500 when an unexpected error occurs", async () => {
+    jest
+      .spyOn(User, "findOne")
+      .mockRejectedValue(new Error("Unexpected DB Error"));
+    process.env.SERVICE_KEY = "unknown-service_key";
+    const accessToken = "wsfdhgvqgdsgusghwgdv";
+    const resource = {
+      phoneNumber: "9440053459",
+    };
+
+    const response = await request(app)
+      .post("/api/logout")
+      .set({ Authorization: `Bearer ${accessToken}` })
+      .send(resource)
+      .expect(500);
+
+    expect(response.text).toContain("Unexpected DB Error");
   });
 });
 
@@ -562,6 +627,7 @@ describe("User Account Deletion", () => {
 
   afterEach(() => {
     process.env = originalEnv;
+     jest.restoreAllMocks();
   });
 
   beforeAll(async () => {
@@ -618,9 +684,33 @@ describe("User Account Deletion", () => {
     expect(deleteResponse.body.message).toBe("Account deleted successfully");
 
     const userInDb = await User.findOne({
-      where: { phoneNumber: '6303522765' },
+      where: { phoneNumber: "6303522765" },
     });
     expect(userInDb?.isDeleted).toBe(true);
+  });
+  test("should return 500 if any error occured", async () => {
+    const newUser1 = {
+      phoneNumber: "6303522762",
+      firstName: "Delete",
+      lastName: "User",
+      password: "Delete@1234",
+      email: "deleteuser3@test.com",
+      deviceId: "poiuytrewq",
+    };
+    const user = await request(app)
+      .post("/api/users")
+      .send(newUser1)
+      .expect(200);
+
+    try {
+      await request(app)
+        .put("/api/deleteAccoun")
+        .set("authorization", `Bearer ${user.body.accessToken}`)
+        .send({ phoneNumber: { newUser: newUser1.phoneNumber } })
+        .expect(500);
+    } catch (error) {
+      expect(error).toBeDefined();
+    }
   });
 });
 
@@ -863,7 +953,7 @@ describe("Contacts Display Test Suite", () => {
       password: "tesT@1234",
       email: "testOne@gmail.com",
       deviceId: "qwertyuiop",
-      publicKey:"abc"
+      publicKey: "abc",
     };
 
     const userTwo = {
@@ -873,7 +963,7 @@ describe("Contacts Display Test Suite", () => {
       password: "tesT@1234",
       email: "testTwo@gmail.com",
       deviceId: "hagsdfhgdfvjga",
-      publicKey:"xyz"
+      publicKey: "xyz",
     };
 
     await request(app).post("/api/users").send(userOne).expect(200);

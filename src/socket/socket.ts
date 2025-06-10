@@ -90,6 +90,9 @@ export const setupSocket = (io: Server) => {
               `receive_private_message_${senderPhoneNumber}`,
               { recipientPhoneNumber, senderPhoneNumber, message, timestamp }
             );
+            await io
+              .to(targetSocketId)
+              .emit("new_message", { newMessage: true });
           } else {
             await storeMessage({
               recipientPhoneNumber,

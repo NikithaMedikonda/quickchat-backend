@@ -41,9 +41,7 @@ export async function register(
   try {
     const existingUser = await User.findOne({
       where: {
-        [Op.or]: [
-          { phoneNumber: request.body.phoneNumber },
-        ],
+        [Op.or]: [{ phoneNumber: request.body.phoneNumber }],
       },
     });
     if (existingUser?.isDeleted === true) {
@@ -287,11 +285,6 @@ export async function deleteAccount(
       await User.update(
         {
           isDeleted: true,
-          publicKey: "deletedPublicKey",
-          privateKey: "deletedPrivateKey",
-          socketId: "deletedSocketId",
-          isLogin: false,
-          deviceId: `deviceId${existingUser.id}`,
         },
         { where: { phoneNumber } }
       );
@@ -457,10 +450,10 @@ export async function checkStatus(
       response.status(203).json({ data });
       return;
     }
-    const data =  {
+    const data = {
       socketId: existingUser.socketId,
-    };;
-    response.status(200).json({  data });
+    };
+    response.status(200).json({ data });
   } catch (error) {
     response.status(500).json({ error: error });
   }
@@ -487,7 +480,7 @@ export async function checkDeleteStatus(
       });
       return;
     }
- 
+
     response.status(200).json({ isDeleted: existingUser.isDeleted });
   } catch (error) {
     response.status(500).json({ error: error });

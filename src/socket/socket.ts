@@ -113,6 +113,7 @@ export const setupSocket = (io: Server) => {
               });
             }
           } else {
+            if(!result){
             await storeMessage({
               recipientPhoneNumber,
               senderPhoneNumber,
@@ -126,6 +127,7 @@ export const setupSocket = (io: Server) => {
                 data: payload,
               });
             }
+          }
           }
         } catch (error) {
           throw new Error(

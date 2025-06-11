@@ -87,7 +87,7 @@ export const setupSocket = (io: Server) => {
           await storeMessage({ ...msgData, status: "sent" });
         }
 
-        if (recipient?.fcmToken) {
+        if (recipient?.fcmToken && !isBlocked) {
             await messaging.send({
               token: recipient.fcmToken,
               notification: {

@@ -1,13 +1,11 @@
-import { Op } from "sequelize";
 import { Chat } from "../chat/chat.model";
 import { findOrCreateChat } from "../chat/chat.service";
 import { Message, MessageStatus } from "../message/message.model";
 import { createMessage } from "../message/message.service";
 import { PrivateMessage } from "../types/message";
 import { User } from "../user/user.model";
-import { getAllBlockedContacts } from "../userRestriction/userRestriction.service";
-import { findByPhoneNumber } from "../utils/findByPhoneNumber";
 import { UserRestriction } from "../userRestriction/userRestriction.model";
+import { findByPhoneNumber } from "../utils/findByPhoneNumber";
 
 export const updateUserSocketId = async (
   phoneNumber: string,
@@ -77,15 +75,12 @@ export const disconnectUser = async (socketId: string) => {
 export const changeStatusToDelivered = async (phoneNumber: string) => {
   const recipientId = await findByPhoneNumber(phoneNumber);
   const status = "delivered";
-  const blockedContacts = await getAllBlockedContacts(phoneNumber);
-  const blockedContactsIds = blockedContacts.map((contact) => contact.blocked);
   const messages = await Message.update(
     { status: status as MessageStatus },
     {
       where: {
         receiverId: recipientId,
         status: "sent",
-        senderId: { [Op.notIn]: blockedContactsIds },
       },
     }
   );

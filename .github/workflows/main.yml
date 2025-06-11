@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - push-notification
+      - update-push-notifications
 
 jobs:
   QuickChat-backend:

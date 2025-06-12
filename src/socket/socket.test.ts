@@ -500,4 +500,111 @@ describe("Test for socket", () => {
       });
     });
   }, 50000);
+
+  test("should notify online status to target user if online", (done) => {
+    const user1Phone = "+919440058830";
+    const user2Phone = "+919440058831";
+
+    Promise.all([
+      User.create({
+        phoneNumber: user1Phone,
+        firstName: "Notifier",
+        lastName: "A",
+        email: "a@gmail.com",
+        password: "Test@123",
+        isDeleted: false,
+        publicKey: "",
+        privateKey: "",
+        socketId: null,
+        isLogin: true,
+        deviceId: "",
+      }),
+      User.create({
+        phoneNumber: user2Phone,
+        firstName: "Notifier",
+        lastName: "B",
+        email: "b@gmail.com",
+        password: "Test@123",
+        isDeleted: false,
+        publicKey: "",
+        privateKey: "",
+        socketId: null,
+        isLogin: true,
+        deviceId: "",
+      }),
+    ]).then(() => {
+      clientA = Client(SERVER_URL);
+      clientA.on("connect", () => {
+        clientA.emit("join", user1Phone); // join A
+
+        setTimeout(() => {
+          clientB = Client(SERVER_URL);
+          clientB.on("connect", () => {
+            clientB.emit("join", user2Phone); // join B
+
+            clientB.on(`isOnline_with_${user2Phone}`, (data) => {
+              expect(data).toEqual({ isOnline: true });
+              done();
+            });
+
+            setTimeout(() => {
+              clientA.emit("online_with", user2Phone); // A checks if B is online
+            }, 500);
+          });
+        }, 500);
+      });
+    });
+  }, 15000);
+
+  test("should emit offline_with_<phone> to the target user if online", (done) => {
+    const user1Phone = "+919440058832";
+    const user2Phone = "+919440058833";
+
+    Promise.all([
+      User.create({
+        phoneNumber: user1Phone,
+        firstName: "Offline",
+        lastName: "Sender",
+        email: "offline_sender@example.com",
+        password: "Test@123",
+        isDeleted: false,
+        socketId: null,
+        isLogin: true,
+        deviceId: "",
+        publicKey: "",
+        privateKey: "",
+      }),
+      User.create({
+        phoneNumber: user2Phone,
+        firstName: "Offline",
+        lastName: "Receiver",
+        email: "offline_receiver@example.com",
+        password: "Test@123",
+        isDeleted: false,
+        socketId: null,
+        isLogin: true,
+        deviceId: "",
+        publicKey: "",
+        privateKey: "",
+      }),
+    ]).then(() => {
+      clientB = Client(SERVER_URL);
+      clientB.on("connect", () => {
+        clientB.emit("join", user2Phone);
+
+        clientB.on(`offline_with_${user2Phone}`, (data) => {
+          expect(data).toEqual({ isOnline: false });
+          done();
+        });
+
+        clientA = Client(SERVER_URL);
+        clientA.on("connect", () => {
+          clientA.emit("join", user1Phone);
+          setTimeout(() => {
+            clientA.emit("offline_with", user2Phone);
+          }, 500);
+        });
+      });
+    });
+  }, 15000);
 });

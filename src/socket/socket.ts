@@ -66,43 +66,81 @@ export const setupSocket = (io: Server) => {
       }
     );
 
-    socket.on("send_private_message", async ({ recipientPhoneNumber, senderPhoneNumber, message, timestamp }: PrivateMessage) => {
-        const isBlocked = await getBlockStatus(recipientPhoneNumber, senderPhoneNumber);
-        const targetSocketId = await findUserSocketId(recipientPhoneNumber);
-        const recipient = await User.findOne({ where: { phoneNumber: recipientPhoneNumber } });
-        const sender = await User.findOne({ where: { phoneNumber: senderPhoneNumber } });
-
-        const msgData = {
-          recipientPhoneNumber,
-          senderPhoneNumber,
-          message,
-          timestamp,
-        };
-
-        if (targetSocketId && !isBlocked) {
-          await storeMessage({ ...msgData, status: "delivered" });
-          io.to(targetSocketId).emit(`receive_private_message_${senderPhoneNumber}`, msgData);
-          io.to(targetSocketId).emit("new_message", { newMessage: true });
-        } else {
-          await storeMessage({ ...msgData, status: "sent" });
-        }
-
-        if (recipient?.fcmToken && !isBlocked) {
-            await messaging.send({
-              token: recipient.fcmToken,
-              notification: {
-                title: "New Message",
-                body: `You have received new message from ${sender?.firstName}`,
-              },
-              data: {
-                senderPhoneNumber,
-                recipientPhoneNumber,
-                timestamp: timestamp.toString(),
-              },
+    socket.on(
+      "send_private_message",
+      async ({
+        recipientPhoneNumber,
+        senderPhoneNumber,
+        message,
+        timestamp,
+      }: PrivateMessage) => {
+        try {
+          const result = await getBlockStatus(
+            recipientPhoneNumber,
+            senderPhoneNumber
+          );
+          const targetSocketId = await findUserSocketId(recipientPhoneNumber);
+          const recipient = await User.findOne({
+            where: { phoneNumber: recipientPhoneNumber },
+          });
+          const payload = {
+            title: "New Message",
+            body: senderPhoneNumber,
+            senderPhoneNumber,
+            recipientPhoneNumber,
+            timestamp: timestamp.toString(),
+          };
+          if (senderPhoneNumber === recipientPhoneNumber) {
+            await storeMessage({
+              recipientPhoneNumber,
+              senderPhoneNumber,
+              message,
+              status: "read",
+              timestamp,
             });
-
+          } else if (targetSocketId && !result) {
+            await storeMessage({
+              recipientPhoneNumber,
+              senderPhoneNumber,
+              message,
+              status: "delivered",
+              timestamp,
+            });
+            io.to(targetSocketId).emit(
+              `receive_private_message_${senderPhoneNumber}`,
+              { recipientPhoneNumber, senderPhoneNumber, message, timestamp }
+            );
+            await io
+              .to(targetSocketId)
+              .emit("new_message", { newMessage: true });
+            if (recipient?.fcmToken) {
+              await messaging.send({
+                token: recipient.fcmToken,
+                data: payload,
+              });
+            }
+          } else {
+            await storeMessage({
+              recipientPhoneNumber,
+              senderPhoneNumber,
+              message,
+              status: "sent",
+              timestamp,
+            });
+            if (recipient?.fcmToken) {
+              await messaging.send({
+                token: recipient.fcmToken,
+                data: payload,
+              });
+            }
+          }
+        } catch (error) {
+          throw new Error(
+            `Failed to store or send message: ${(error as Error).message}`
+          );
         }
-    });
+      }
+    );
     socket.on("offline_with", async (withChattingPhoneNumber: string) => {
       try {
         const targetSocketId = await findUserSocketId(withChattingPhoneNumber);

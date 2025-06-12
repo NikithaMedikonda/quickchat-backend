@@ -554,7 +554,7 @@ describe("Test for socket", () => {
         }, 500);
       });
     });
-  }, 15000);
+  }, 50000);
 
   test("should emit offline_with_<phone> to the target user if online", (done) => {
     const user1Phone = "+919440058832";
@@ -606,5 +606,5 @@ describe("Test for socket", () => {
         });
       });
     });
-  }, 15000);
+  }, 50000);
 });

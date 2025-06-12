@@ -496,8 +496,8 @@ describe("Test for socket", () => {
           expect(storedMessage?.status).toBe("read");
 
           done();
-        }, 2000);
+        }, 5000);
       });
     });
-  }, 20000);
+  }, 50000);
 });

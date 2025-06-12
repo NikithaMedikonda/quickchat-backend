@@ -26,4 +26,5 @@ export const findByUserId = async (userId: string) => {
       `Error while fetching the user ${(error as Error).message}`
     );
   }
+  
 };

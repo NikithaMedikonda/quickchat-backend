@@ -9,6 +9,7 @@ import { SequelizeConnection } from "../connection/dbconnection";
 import { Message } from "../message/message.model";
 import { User } from "../user/user.model";
 import { setupSocket } from "./socket";
+import { findByPhoneNumber } from "../utils/findByPhoneNumber";
 
 let io: SocketIOServer;
 let httpServer: HttpServer;
@@ -90,10 +91,10 @@ describe("Test for socket", () => {
     expect(chat).toBeDefined();
   });
 
-test("should verify device for check_user_device event", (done) => {
-  const phoneNumber = "+919440058888";
-  const correctDeviceId = "device123";
-  const incorrectDeviceId = "wrongDevice";
+  test("should verify device for check_user_device event", (done) => {
+    const phoneNumber = "+919440058888";
+    const correctDeviceId = "device123";
+    const incorrectDeviceId = "wrongDevice";
 
     User.create({
       phoneNumber,
@@ -107,45 +108,46 @@ test("should verify device for check_user_device event", (done) => {
       socketId: null,
       isLogin: false,
       deviceId: correctDeviceId,
-    }).then(() => {
-      clientA = Client(SERVER_URL);
+    })
+      .then(() => {
+        clientA = Client(SERVER_URL);
 
-      clientA.on("connect", () => {
-        clientA.emit("check_user_device", phoneNumber, correctDeviceId);
+        clientA.on("connect", () => {
+          clientA.emit("check_user_device", phoneNumber, correctDeviceId);
 
-
-      clientA.once("user_device_verified", (response1) => {
-        expect(response1).toEqual({
-          success: true,
-          message: "Device verified",
-          action: "continue",
-        });
-
-        clientA.emit("check_user_device", phoneNumber, incorrectDeviceId);
-
-        clientA.once("user_device_verified", (response2) => {
-          expect(response2).toEqual({
-            success: false,
-            message: "Device mismatch - logged in from another device",
-            action: "logout",
-            registeredDeviceId: correctDeviceId,
-          });
-
-          clientA.emit("check_user_device", "+0000000000", "anyDevice");
-
-          clientA.once("user_device_verified", (response3) => {
-            expect(response3).toEqual({
-              success: false,
-              message: "User not found",
-              action: "logout",
+          clientA.once("user_device_verified", (response1) => {
+            expect(response1).toEqual({
+              success: true,
+              message: "Device verified",
+              action: "continue",
             });
-            done();
+
+            clientA.emit("check_user_device", phoneNumber, incorrectDeviceId);
+
+            clientA.once("user_device_verified", (response2) => {
+              expect(response2).toEqual({
+                success: false,
+                message: "Device mismatch - logged in from another device",
+                action: "logout",
+                registeredDeviceId: correctDeviceId,
+              });
+
+              clientA.emit("check_user_device", "+0000000000", "anyDevice");
+
+              clientA.once("user_device_verified", (response3) => {
+                expect(response3).toEqual({
+                  success: false,
+                  message: "User not found",
+                  action: "logout",
+                });
+                done();
+              });
+            });
           });
         });
-      });
-    });
-  }).catch(done);
-}, 15000);
+      })
+      .catch(done);
+  }, 15000);
 
   test("should handle join event, update socket ID and broadcast to other users", (done) => {
     const phoneNumber = "+919440058803";
@@ -450,6 +452,54 @@ test("should verify device for check_user_device event", (done) => {
             done();
           }, 1000);
         }, 500);
+      });
+    });
+  }, 10000);
+  test("should store message with status 'read' when sender and recipient are the same", (done) => {
+    const senderPhoneNumber = "+919440058816";
+    const message = "Self message test";
+    const timestamp = Date.now();
+    const recipientPhoneNumber = "+919440058816";
+    User.create({
+      phoneNumber: senderPhoneNumber,
+      firstName: "Self",
+      lastName: "User",
+      email: "selfuser@gmail.com",
+      password: "Test@123",
+      isDeleted: false,
+      publicKey: "",
+      privateKey: "",
+      socketId: null,
+      isLogin: false,
+      deviceId: "",
+    }).then(() => {
+      clientA = Client(SERVER_URL);
+      clientA.on("connect", () => {
+        clientA.emit("join", senderPhoneNumber);
+        clientA.emit("send_private_message", {
+          recipientPhoneNumber,
+          senderPhoneNumber,
+          message,
+          timestamp,
+        });
+
+        setTimeout(async () => {
+          const userId = await findByPhoneNumber(senderPhoneNumber);
+          console.log("USer id:", userId);
+          const storedMessage = await Message.findOne({
+            where: {
+              senderId: userId,
+              receiverId: userId,
+            },
+          });
+          console.log("Stored message", storedMessage);
+          expect(storedMessage).toBeTruthy();
+          expect(storedMessage?.content).toBe(message);
+          expect(storedMessage?.status).toBe("read");
+
+          done();
+         
+        }, 2000);
       });
     });
   }, 10000);

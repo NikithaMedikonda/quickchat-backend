@@ -24,15 +24,14 @@ export const setupSocket = (io: Server) => {
       });
     });
     socket.emit("internet_connection", { response: true });
-        socket.on(
-      
+    socket.on(
       "check_user_device",
-     
+
       async (phoneNumber: string, deviceId: string) => {
-              try {
-                const user = await User.findOne({
-                  where: { phoneNumber },
-                });
+        try {
+          const user = await User.findOne({
+            where: { phoneNumber },
+          });
 
           if (!user) {
             socket.emit("user_device_verified", {
@@ -91,7 +90,15 @@ export const setupSocket = (io: Server) => {
             recipientPhoneNumber,
             timestamp: timestamp.toString(),
           };
-          if (targetSocketId && !result) {
+          if (senderPhoneNumber === recipientPhoneNumber) {
+            await storeMessage({
+              recipientPhoneNumber,
+              senderPhoneNumber,
+              message,
+              status: "read",
+              timestamp,
+            });
+          } else if (targetSocketId && !result) {
             await storeMessage({
               recipientPhoneNumber,
               senderPhoneNumber,

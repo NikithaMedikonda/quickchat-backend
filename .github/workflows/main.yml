@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - handle-self-chat
 
 jobs:
   QuickChat-backend:

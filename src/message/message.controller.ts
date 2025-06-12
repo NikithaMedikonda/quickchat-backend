@@ -84,7 +84,6 @@ export const updateMessageStatus = async (req: Request, res: Response) => {
       res.status(204).end();
       return;
     }
-    console.log("updatedCount", updatedCount);
     res
       .status(200)
       .json({ count: updatedCount, message: "Updated status of messages" });

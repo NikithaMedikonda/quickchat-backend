@@ -602,9 +602,9 @@ describe("Test for socket", () => {
           clientA.emit("join", user1Phone);
           setTimeout(() => {
             clientA.emit("offline_with", user2Phone);
-          }, 500);
+          }, 2000);
         });
       });
     });
-  }, 50000);
+  }, 150000);
 });

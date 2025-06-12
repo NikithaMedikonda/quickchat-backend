@@ -5,7 +5,7 @@ import { Conversation } from "../conversation/conversation.model";
 import { Message, MessageStatus } from "../message/message.model";
 import { ChatsOfUser } from "../types/chats";
 import { User } from "../user/user.model";
-import { findByPhoneNumber } from "../utils/findByPhoneNumber";
+import { findByPhoneNumber, findByUserId } from "../utils/findByPhoneNumber";
 
 export const userChats = async (req: Request, res: Response) => {
   try {
@@ -188,6 +188,72 @@ export const getChatsOfUser = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({
       error: `Error getting chats of user ${(error as Error).message}`,
+    });
+  }
+};
+
+export const getMessagesForSync = async (req: Request, res: Response) => {
+  try {
+    const { userPhoneNumber, lastSyncedAt } = req.body;
+
+    if (!userPhoneNumber) {
+      res.status(400).json({ message: "Phone number is required." });
+      return;
+    }
+
+    const userId = await findByPhoneNumber(userPhoneNumber);
+
+    const conversations = await Conversation.findAll({
+      where: { userId },
+    });
+
+    const allMessagesToSync = [];
+
+    for (const conversation of conversations) {
+      const { chatId, lastClearedAt } = conversation;
+
+      let filteredTimestamp = lastSyncedAt;
+
+      if (lastClearedAt) {
+        filteredTimestamp =
+          lastClearedAt > lastSyncedAt ? lastClearedAt : lastSyncedAt;
+      }
+      const chat = await Chat.findByPk(chatId);
+      if (!chat) {
+        res.status(404).json({ message: "Chat not found." });
+        return;
+      }
+      const chatParticipants = [
+        findByUserId(chat.userAId),
+        findByUserId(chat.userBId),
+      ];
+
+      const senderPhoneNumber = (await Promise.all(chatParticipants)).find(
+        (phoneNumber) => phoneNumber !== userPhoneNumber
+      );
+
+      const messages = await Message.findAll({
+        where: {
+          chatId: chatId,
+          createdAt: {
+            [Op.gte]: filteredTimestamp || new Date(0),
+          },
+          receiverId: userId,
+        },
+        order: [["createdAt", "ASC"]],
+      });
+
+      allMessagesToSync.push({
+        chatId,
+        senderPhoneNumber,
+        messages,
+      });
+    }
+
+    res.status(200).json({ data: allMessagesToSync });
+  } catch (error) {
+    res.status(500).json({
+      error: `Failed to fetch messages for sync: ${(error as Error).message}`,
     });
   }
 };

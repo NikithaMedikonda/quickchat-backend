@@ -494,3 +494,24 @@ export async function checkDeleteStatus(
     response.status(500).json({ error: error });
   }
 }
+
+export const getUserByPhoneNumber = async (
+  request: Request,
+  response: Response
+) => {
+  const user = await User.findOne({
+    where: { phoneNumber: request.params.phoneNumber },
+    attributes: ["phoneNumber", "profilePicture", "publicKey"],
+  });
+  if (!user) {
+    response.status(404).json({ message: "User not found" });
+    return;
+  }
+  const userData = {
+    phoneNumber: user.phoneNumber,
+    profilePicture: user.profilePicture,
+    publicKey: user.publicKey
+  }
+  console.log(userData)
+  response.status(200).json({ user: userData });
+};

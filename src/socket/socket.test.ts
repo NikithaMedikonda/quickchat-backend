@@ -535,12 +535,12 @@ describe("Test for socket", () => {
     ]).then(() => {
       clientA = Client(SERVER_URL);
       clientA.on("connect", () => {
-        clientA.emit("join", user1Phone); // join A
+        clientA.emit("join", user1Phone); 
 
         setTimeout(() => {
           clientB = Client(SERVER_URL);
           clientB.on("connect", () => {
-            clientB.emit("join", user2Phone); // join B
+            clientB.emit("join", user2Phone); 
 
             clientB.on(`isOnline_with_${user2Phone}`, (data) => {
               expect(data).toEqual({ isOnline: true });
@@ -548,7 +548,7 @@ describe("Test for socket", () => {
             });
 
             setTimeout(() => {
-              clientA.emit("online_with", user2Phone); // A checks if B is online
+              clientA.emit("online_with", user2Phone); 
             }, 2000);
           });
         }, 2000);

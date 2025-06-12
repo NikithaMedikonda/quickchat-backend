@@ -219,13 +219,9 @@ export const getMessagesForSync = async (req: Request, res: Response) => {
           lastClearedAt > lastSyncedAt ? lastClearedAt : lastSyncedAt;
       }
       const chat = await Chat.findByPk(chatId);
-      if (!chat) {
-        res.status(404).json({ message: "Chat not found." });
-        return;
-      }
       const chatParticipants = [
-        findByUserId(chat.userAId),
-        findByUserId(chat.userBId),
+        findByUserId(chat!.userAId),
+        findByUserId(chat!.userBId),
       ];
 
       const senderPhoneNumber = (await Promise.all(chatParticipants)).find(
@@ -256,4 +252,5 @@ export const getMessagesForSync = async (req: Request, res: Response) => {
       error: `Failed to fetch messages for sync: ${(error as Error).message}`,
     });
   }
+
 };

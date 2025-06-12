@@ -485,20 +485,17 @@ describe("Test for socket", () => {
 
         setTimeout(async () => {
           const userId = await findByPhoneNumber(senderPhoneNumber);
-          console.log("USer id:", userId);
           const storedMessage = await Message.findOne({
             where: {
               senderId: userId,
               receiverId: userId,
             },
           });
-          console.log("Stored message", storedMessage);
           expect(storedMessage).toBeTruthy();
           expect(storedMessage?.content).toBe(message);
           expect(storedMessage?.status).toBe("read");
 
           done();
-         
         }, 2000);
       });
     });

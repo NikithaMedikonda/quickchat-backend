@@ -5,7 +5,7 @@ export const userRouter = express.Router();
 
 userRouter.post("/api/users", validateInputFields, register);
 userRouter.post("/api/user", validateLoginInputFields, login);
-userRouter.get("/api/user/:phoneNumber", authenticateToken, getUserByPhoneNumber);
+userRouter.get("/api/user/:phoneNumber", authenticateToken,  getUserByPhoneNumber);
 userRouter.post("/api/logout", validateLogOutInputFields, logout);
 userRouter.post("/api/auth/validate", refreshOrValidateAuth);
 userRouter.put("/api/user", authenticateToken, update);

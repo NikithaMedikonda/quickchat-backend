@@ -106,7 +106,7 @@ export const setupSocket = (io: Server) => {
               status: "delivered",
               timestamp,
             });
-            io.to(targetSocketId).emit(
+            io.to(targetSocketId).emit( 
               `receive_private_message_${senderPhoneNumber}`,
               { recipientPhoneNumber, senderPhoneNumber, message, timestamp }
             );

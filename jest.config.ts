@@ -1,7 +1,4 @@
 module.exports = {
-  "jest.autoRun": {
-  "watch": false,
-  "onSave": "off"},
   preset: "ts-jest",
   testEnvironment: "node",
   testTimeout: 20000,

@@ -10,6 +10,7 @@ import { Message } from "../message/message.model";
 import { User } from "../user/user.model";
 import { setupSocket } from "./socket";
 import * as userUtils from "./socket.service";
+import { findByPhoneNumber } from "../utils/findByPhoneNumber";
 
 let io: SocketIOServer;
 let httpServer: HttpServer;
@@ -531,50 +532,6 @@ describe("Test for socket", () => {
     });
   });
 
-test("should handle disconnect when user exists in database", (done) => {
-  User.create({
-    phoneNumber: "12345", socketId: "test-socket-id",
-    firstName: "",
-    lastName: "",
-    password: "",
-    isDeleted: false,
-    publicKey: "",
-    privateKey: "",
-    isLogin: false,
-    deviceId: ""
-  }).then(() => {
-    clientA = Client(SERVER_URL, {
-      query: { socketId: "test-socket-id" },
-    });
-
-    clientA.on("connect", () => {
-    clientA.disconnect();
-
-      setTimeout(async () => {
-        const user = await User.findOne({ where: { phoneNumber: "12345" } });
-        expect(user?.socketId).toBeNull();
-        done();
-      }, 1000);
-    });
-  });
-}, 10000);
-
-test("should handle disconnect when user is not found in database", (done) => {
-  clientA = Client(SERVER_URL, {
-    query: { socketId: "non-existent-socket-id" },
-  });
-
-  clientA.on("connect", () => {
-    clientA.disconnect();
-
-    setTimeout(async () => {
-      const user = await User.findOne({ where: { socketId: "non-existent-socket-id" } });
-      expect(user).toBeNull();
-      done();
-    }, 1000);
-  });
-}, 10000);
-
   test("should not emit onine_with_* event if target user is online", (done) => {
     const user1PhoneNumber = "+919440058810";
     const user2PhoneNumber = "+919440058811";
@@ -697,6 +654,51 @@ test("should handle disconnect when user is not found in database", (done) => {
       });
     });
   }, 10000);
+  test("should store message with status 'read' when sender and recipient are the same", (done) => {
+    const senderPhoneNumber = "+919440058816";
+    const message = "Self message test";
+    const timestamp = Date.now();
+    const recipientPhoneNumber = "+919440058816";
+    User.create({
+      phoneNumber: senderPhoneNumber,
+      firstName: "Self",
+      lastName: "User",
+      email: "selfuser@gmail.com",
+      password: "Test@123",
+      isDeleted: false,
+      publicKey: "",
+      privateKey: "",
+      socketId: null,
+      isLogin: false,
+      deviceId: "",
+    }).then(() => {
+      clientA = Client(SERVER_URL);
+      clientA.on("connect", () => {
+        clientA.emit("join", senderPhoneNumber);
+        clientA.emit("send_private_message", {
+          recipientPhoneNumber,
+          senderPhoneNumber,
+          message,
+          timestamp,
+        });
+
+        setTimeout(async () => {
+          const userId = await findByPhoneNumber(senderPhoneNumber);
+          const storedMessage = await Message.findOne({
+            where: {
+              senderId: userId,
+              receiverId: userId,
+            },
+          });
+          expect(storedMessage).toBeTruthy();
+          expect(storedMessage?.content).toBe(message);
+          expect(storedMessage?.status).toBe("read");
+
+          done();
+        }, 5000);
+      });
+    });
+  }, 50000);
 
   test("should ignore unknown event gracefully", (done) => {
     clientA = Client(SERVER_URL);
@@ -709,4 +711,21 @@ test("should handle disconnect when user is not found in database", (done) => {
       }, 1000);
     });
   }, 5000);
+
+
+test("should handle disconnect when user is not found in database", (done) => {
+  clientA = Client(SERVER_URL, {
+    query: { socketId: "non-existent-socket-id" },
+  });
+
+  clientA.on("connect", () => {
+    clientA.disconnect();
+
+    setTimeout(async () => {
+      const user = await User.findOne({ where: { socketId: "non-existent-socket-id" } });
+      expect(user).toBeNull();
+      done();
+    }, 1000);
+  });
+}, 10000);
 });

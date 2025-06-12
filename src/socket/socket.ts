@@ -74,37 +74,43 @@ export const setupSocket = (io: Server) => {
         message,
         timestamp,
       }: PrivateMessage) => {
-        const isBlocked = await getBlockStatus(
-          recipientPhoneNumber,
-          senderPhoneNumber
-        );
-        const targetSocketId = await findUserSocketId(recipientPhoneNumber);
-        const recipient = await User.findOne({
-          where: { phoneNumber: recipientPhoneNumber },
-        });
-        const sender = await User.findOne({
-          where: { phoneNumber: senderPhoneNumber },
-        });
-
-        const msgData = {
-          recipientPhoneNumber,
-          senderPhoneNumber,
-          message,
-          timestamp,
-        };
-
-        if (targetSocketId && !isBlocked) {
-          await storeMessage({ ...msgData, status: "delivered" });
-          io.to(targetSocketId).emit(
-            `receive_private_message_${senderPhoneNumber}`,
-            msgData
+        try {
+          const result = await getBlockStatus(
+            recipientPhoneNumber,
+            senderPhoneNumber
           );
-          io.to(targetSocketId).emit("new_message", { newMessage: true });
-        } else {
-          await storeMessage({ ...msgData, status: "sent" });
-        }
-        if (recipient?.fcmToken && !isBlocked) {
-          await messaging.send({
+          const targetSocketId = await findUserSocketId(recipientPhoneNumber);
+          const recipient = await User.findOne({
+            where: { phoneNumber: recipientPhoneNumber },
+          });
+          const sender = await User.findOne({
+            where: { phoneNumber: senderPhoneNumber },
+          });
+          if (senderPhoneNumber === recipientPhoneNumber) {
+            await storeMessage({
+              recipientPhoneNumber,
+              senderPhoneNumber,
+              message,
+              status: "read",
+              timestamp,
+            });
+          } else if (targetSocketId && !result) {
+            await storeMessage({
+              recipientPhoneNumber,
+              senderPhoneNumber,
+              message,
+              status: "delivered",
+              timestamp,
+            });
+            io.to(targetSocketId).emit(
+              `receive_private_message_${senderPhoneNumber}`,
+              { recipientPhoneNumber, senderPhoneNumber, message, timestamp }
+            );
+            await io
+              .to(targetSocketId)
+              .emit("new_message", { newMessage: true });
+            if (recipient?.fcmToken) {
+                        await messaging.send({
             token: recipient.fcmToken,
             data: {
               title: `New message from ${sender?.firstName}`,
@@ -116,6 +122,34 @@ export const setupSocket = (io: Server) => {
               type: "private_message",
             },
           });
+            }
+          } else {
+            await storeMessage({
+              recipientPhoneNumber,
+              senderPhoneNumber,
+              message,
+              status: "sent",
+              timestamp,
+            });
+            if (recipient?.fcmToken) {
+            await messaging.send({
+            token: recipient.fcmToken,
+            data: {
+              title: `New message from ${sender?.firstName}`,
+              body: message,
+              profilePicture: sender?.profilePicture || "",
+              senderPhoneNumber:senderPhoneNumber,
+              recipientPhoneNumber,
+              timestamp: timestamp.toString(),
+              type: "private_message",
+            },
+          });
+            }
+          }
+        } catch (error) {
+          throw new Error(
+            `Failed to store or send message: ${(error as Error).message}`
+          );
         }
       }
     );

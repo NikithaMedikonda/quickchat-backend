@@ -8,6 +8,7 @@ import {
   updateUserSocketId,
 } from "../socket/socket.service";
 import { User } from "../user/user.model";
+import { UserRestriction } from "../userRestriction/userRestriction.model";
 
 describe("Tests for socket services", () => {
   let testInstance: Sequelize;
@@ -111,11 +112,37 @@ describe("Tests for socket services", () => {
       expect(result).toEqual({ message: "No user exist with this socket id" });
     });
   });
-  describe("Test for function getBlockedSocketIds",()=>{
-  
-    it("should give the array of the socketIds that blocked by this user", async()=>{
-        const result=await getBlockedSocketIds('+919440058809');
-        expect(result).toEqual([]);
-    })
-  })
+describe("Test for function getBlockedSocketIds", () => {
+  beforeEach(async () => {
+    await UserRestriction.truncate({ cascade: true });
+  });
+  it("should give the array of the socketIds that blocked by this user", async () => {
+    const blockedUser = await User.create({
+      phoneNumber: "+919440058802",
+      firstName: "Blocked",
+      lastName: "User",
+      email: "blocked@gmail.com",
+      password: "Anu@1234",
+      isDeleted: false,
+      publicKey: "",
+      privateKey: "",
+      socketId: "blockedSocket123",
+      isLogin: false,
+      deviceId: "blockedDevice"
+    });
+    await UserRestriction.create({
+      blocker: user.id, 
+      blocked: blockedUser.id,
+    });
+
+    const result = await getBlockedSocketIds(user.phoneNumber);
+
+    expect(result).toContain("blockedSocket123");
+  });
+
+  it("should return an empty array if no blocked users", async () => {
+    const result = await getBlockedSocketIds(user.phoneNumber);
+    expect(result).toEqual([]);
+  });
+});
 });

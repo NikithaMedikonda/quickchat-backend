@@ -549,9 +549,9 @@ describe("Test for socket", () => {
 
             setTimeout(() => {
               clientA.emit("online_with", user2Phone); // A checks if B is online
-            }, 500);
+            }, 2000);
           });
-        }, 500);
+        }, 2000);
       });
     });
   }, 150000);

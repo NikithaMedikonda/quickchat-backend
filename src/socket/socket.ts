@@ -11,7 +11,6 @@ import {
   updateUserSocketId,
 } from "./socket.service";
 import { getBlockStatus } from "../userRestriction/userRestriction.controller";
-
 export const setupSocket = (io: Server) => {
   io.on("connection", (socket) => {
     socket.on("join", async (phoneNumber: string) => {
@@ -102,7 +101,7 @@ export const setupSocket = (io: Server) => {
               status: "delivered",
               timestamp,
             });
-            io.to(targetSocketId).emit( 
+            io.to(targetSocketId).emit(
               `receive_private_message_${senderPhoneNumber}`,
               { recipientPhoneNumber, senderPhoneNumber, message, timestamp }
             );
@@ -110,43 +109,48 @@ export const setupSocket = (io: Server) => {
               .to(targetSocketId)
               .emit("new_message", { newMessage: true });
             if (recipient?.fcmToken) {
-                        await messaging.send({
-            token: recipient.fcmToken,
-            data: {
-              title: `New message from ${sender?.firstName}`,
-              body: message,
-              profilePicture: sender?.profilePicture || "",
-              senderPhoneNumber:senderPhoneNumber,
-              recipientPhoneNumber,
-              timestamp: timestamp.toString(),
-              type: "private_message",
-            },
-          });
+      
+              await messaging.send({
+                token: recipient.fcmToken,
+                data: {
+                  title: `New message from ${sender?.firstName}`,
+                  body: message,
+                  profilePicture: sender?.profilePicture || "",
+                  senderPhoneNumber: senderPhoneNumber,
+                  recipientPhoneNumber,
+                  timestamp: timestamp.toString(),
+                  type: "private_message",
+                },
+              });
+            
             }
           } else {
-            await storeMessage({
-              recipientPhoneNumber,
-              senderPhoneNumber,
-              message,
-              status: "sent",
-              timestamp,
-            });
-            if (recipient?.fcmToken) {
-            await messaging.send({
-            token: recipient.fcmToken,
-            data: {
-              title: `New message from ${sender?.firstName}`,
-              body: message,
-              profilePicture: sender?.profilePicture || "",
-              senderPhoneNumber:senderPhoneNumber,
-              recipientPhoneNumber,
-              timestamp: timestamp.toString(),
-              type: "private_message",
-            },
-          });
+            if (!result) {
+              await storeMessage({
+                recipientPhoneNumber,
+                senderPhoneNumber,
+                message,
+                status: "sent",
+                timestamp,
+              });
+              if (recipient?.fcmToken) {
+                await messaging.send({
+                  token: recipient.fcmToken,
+                  data: {
+                    title: `New message from ${sender?.firstName}`,
+                    body: message,
+                    profilePicture: sender?.profilePicture || "",
+                    senderPhoneNumber: senderPhoneNumber,
+                    recipientPhoneNumber,
+                    timestamp: timestamp.toString(),
+                    type: "private_message",
+                  },
+                });
+              }
             }
           }
         } catch (error) {
+          console.error(`Failed to store or send message: ${(error as Error).message}`)
           throw new Error(
             `Failed to store or send message: ${(error as Error).message}`
           );
@@ -165,7 +169,9 @@ export const setupSocket = (io: Server) => {
           );
         }
       } catch (error) {
-         console.error(`Error while fetching the user: ${(error as Error).message}`);
+        console.error(
+          `Error while fetching the user: ${(error as Error).message}`
+        );
       }
     });
 
@@ -181,7 +187,9 @@ export const setupSocket = (io: Server) => {
           );
         }
       } catch (error) {
-        console.error(`Error while fetching the user: ${(error as Error).message}`);
+        console.error(
+          `Error while fetching the user: ${(error as Error).message}`
+        );
       }
     });
     socket.on("disconnect", async () => {

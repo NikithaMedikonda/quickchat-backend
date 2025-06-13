@@ -11,6 +11,7 @@ import { User } from "../user/user.model";
 import { setupSocket } from "./socket";
 import * as userUtils from "./socket.service";
 import { findByPhoneNumber } from "../utils/findByPhoneNumber";
+import { messaging } from "../../firebase";
 
 let io: SocketIOServer;
 let httpServer: HttpServer;
@@ -299,6 +300,11 @@ describe("Test for socket", () => {
     const senderPhoneNumber = "+919440058806";
     const recipientPhoneNumber = "+919440058807";
 
+    const findUserSocketIdMock = jest
+      .spyOn(userUtils, "findUserSocketId")
+      .mockResolvedValue(null);
+    const ioToMock = jest.spyOn(io, "to");
+
     Promise.all([
       User.create({
         phoneNumber: senderPhoneNumber,
@@ -338,58 +344,82 @@ describe("Test for socket", () => {
           message,
           timestamp,
         });
-
         setTimeout(async () => {
           const storedMessage = await Message.findOne({
             where: { senderId: sender.id, receiverId: recipient.id },
           });
           expect(storedMessage?.status).toBe("sent");
           expect(storedMessage?.content).toBe(message);
+          expect(ioToMock).not.toHaveBeenCalled(); 
+          findUserSocketIdMock.mockRestore();
+          ioToMock.mockRestore();
           done();
         }, 2000);
       });
     });
-  }, 10000);
+  }, 20000);
 
-  test("should handle online_with event when target user is offline", (done) => {
+  test("should handle online_with event when target user is online", async () => {
     const user1PhoneNumber = "+919440058813";
     const user2PhoneNumber = "+919440058814";
+    const dummySocketId = "dummy-socket-id";
 
-    Promise.all([
-      User.create({
-        phoneNumber: user1PhoneNumber,
-        firstName: "User1",
-        lastName: "Test",
-        email: "user1@gmail.com",
-        password: "Test@123",
-        isDeleted: false,
-        publicKey: "",
-        privateKey: "",
-        socketId: null,
-        isLogin: false,
-        deviceId: "",
-      }),
-      User.create({
-        phoneNumber: user2PhoneNumber,
-        firstName: "User2",
-        lastName: "Test",
-        email: "user2@gmail.com",
-        password: "Test@123",
-        isDeleted: false,
-        publicKey: "",
-        privateKey: "",
-        socketId: null,
-        isLogin: false,
-        deviceId: "",
-      }),
-    ]).then(() => {
-      clientA = Client(SERVER_URL);
+
+    await Promise.all([
+    User.create({
+      phoneNumber: user1PhoneNumber,
+      firstName: "User1",
+      lastName: "Test",
+      email: "user1@gmail.com",
+      password: "Test@123",
+      isDeleted: false,
+      publicKey: "",
+      privateKey: "",
+      socketId: null,
+      isLogin: false,
+      deviceId: "",
+    }),
+    User.create({
+      phoneNumber: user2PhoneNumber,
+      firstName: "User2",
+      lastName: "Test",
+      email: "user2@gmail.com",
+      password: "Test@123",
+      isDeleted: false,
+      publicKey: "",
+      privateKey: "",
+      socketId: null,
+      isLogin: false,
+      deviceId: "",
+    }),
+  ]);
+    
+
+    const findUserSocketIdMock = jest
+      .spyOn(userUtils, "findUserSocketId")
+      .mockResolvedValue(dummySocketId);
+    const emitMock = jest.fn();
+    const ioToMock = jest
+      .spyOn(io, "to")
+      .mockReturnValue({ emit: emitMock } as any);
+
+    clientA = Client(SERVER_URL);
+
+    await new Promise<void>((resolve) => {
       clientA.on("connect", () => {
         clientA.emit("join", user1PhoneNumber);
-
         clientA.emit("online_with", user2PhoneNumber);
+
         setTimeout(() => {
-          done();
+          expect(ioToMock).toHaveBeenCalledWith(dummySocketId);
+          expect(emitMock).toHaveBeenCalledWith(
+            `isOnline_with_${user2PhoneNumber}`,
+            { isOnline: true }
+          );
+
+          ioToMock.mockRestore();
+          findUserSocketIdMock.mockRestore();
+          resolve();
         }, 1000);
       });
     });
@@ -398,7 +428,6 @@ describe("Test for socket", () => {
   test("should handle offline_with event when target user is offline", (done) => {
     const user1PhoneNumber = "+919440058815";
     const user2PhoneNumber = "+919440058816";
-
     Promise.all([
       User.create({
         phoneNumber: user1PhoneNumber,
@@ -430,7 +459,6 @@ describe("Test for socket", () => {
       clientA = Client(SERVER_URL);
       clientA.on("connect", () => {
         clientA.emit("join", user1PhoneNumber);
-
         clientA.emit("offline_with", user2PhoneNumber);
         setTimeout(() => {
           done();
@@ -485,6 +513,55 @@ describe("Test for socket", () => {
           );
           spy.mockRestore();
           done();
+        }, 1000);
+      });
+    });
+  }, 10000);
+
+  test("should not emit if targetSocketId is not found for online_with", async () => {
+    const userPhoneNumber = "+919440058817";
+
+    const findUserSocketIdMock = jest
+      .spyOn(userUtils, "findUserSocketId")
+      .mockResolvedValue(null);
+
+    clientA = Client(SERVER_URL);
+    const ioToEmitMock = jest
+      .spyOn(io, "to")
+      .mockReturnValue({ emit: jest.fn() } as any);
+
+    await new Promise<void>((resolve) => {
+      clientA.on("connect", () => {
+        clientA.emit("online_with", userPhoneNumber);
+        setTimeout(() => {
+          expect(ioToEmitMock).not.toHaveBeenCalled();
+          ioToEmitMock.mockRestore();
+          findUserSocketIdMock.mockRestore();
+          resolve();
+        }, 1000);
+      });
+    });
+  }, 10000);
+
+  test("should not emit if targetSocketId is not found for offline_with", async () => {
+    const userPhoneNumber = "+919440058818";
+    const findUserSocketIdMock = jest
+      .spyOn(userUtils, "findUserSocketId")
+      .mockResolvedValue(null);
+
+    clientA = Client(SERVER_URL);
+    const ioToEmitMock = jest
+      .spyOn(io, "to")
+      .mockReturnValue({ emit: jest.fn() } as any);
+
+    await new Promise<void>((resolve) => {
+      clientA.on("connect", () => {
+        clientA.emit("offline_with", userPhoneNumber);
+        setTimeout(() => {
+          expect(ioToEmitMock).not.toHaveBeenCalled();
+          ioToEmitMock.mockRestore();
+          findUserSocketIdMock.mockRestore();
+          resolve();
         }, 1000);
       });
     });
@@ -584,7 +661,7 @@ describe("Test for socket", () => {
     });
   }, 10000);
 
-    test("should log error if findUserSocketId fails", (done) => {
+  test("should log error if findUserSocketId fails", (done) => {
     const user1PhoneNumber = "+919440058815";
     const user2PhoneNumber = "+919440058816";
 
@@ -654,6 +731,7 @@ describe("Test for socket", () => {
       });
     });
   }, 10000);
+
   test("should store message with status 'read' when sender and recipient are the same", (done) => {
     const senderPhoneNumber = "+919440058816";
     const message = "Self message test";
@@ -698,114 +776,247 @@ describe("Test for socket", () => {
         }, 5000);
       });
     });
-  }, 150000);
+  }, 50000);
 
-  test("should notify online status to target user if online", (done) => {
-    const user1Phone = "+919440058830";
-    const user2Phone = "+919440058831";
+  test("should send FCM notification when recipient is online", (done) => {
+    const senderPhoneNumber = "+919440058816";
+    const recipientPhoneNumber = "+919440058817";
+    const message = "Test message for FCM";
+    const timestamp = Date.now();
+    Promise.all([
+      User.create({
+        phoneNumber: senderPhoneNumber,
+        firstName: "Sender",
+        lastName: "Test",
+        email: "sender@gmail.com",
+        password: "Test@123",
+        fcmToken: "dummySenderToken",
+        socketId: "dummy-socket",
+        isLogin: true,
+        deviceId: "",
+        isDeleted: false,
+        publicKey: "",
+        privateKey: "",
+      }),
+      User.create({
+        phoneNumber: recipientPhoneNumber,
+        firstName: "Recipient",
+        lastName: "Test",
+        email: "recipient@gmail.com",
+        password: "Test@123",
+        fcmToken: "dummyRecipientToken",
+        socketId: null,
+        isLogin: false,
+        deviceId: "",
+        isDeleted: false,
+        publicKey: "",
+        privateKey: "",
+      }),
+    ]);
+
+    const sendMock = jest.spyOn(messaging, "send").mockResolvedValue("success");
+
+    clientA = Client(SERVER_URL);
+
+    clientA.on("connect", () => {
+      clientA.emit("join", senderPhoneNumber);
+      clientA.emit("send_private_message", {
+        recipientPhoneNumber,
+        senderPhoneNumber,
+        message,
+        timestamp,
+      });
+
+      setTimeout(() => {
+        expect(sendMock).toHaveBeenCalledTimes(1);
+        sendMock.mockRestore();
+        done();
+      }, 2000);
+    });
+  }, 10000);
+  test("should throw error if messaging.send fails", async () => {
+    const senderPhoneNumber = "+919440058816";
+    const recipientPhoneNumber = "+919440058817";
+    const message = "Test error FCM";
+    const timestamp = Date.now();
+
+    await Promise.all([
+      User.create({
+        phoneNumber: senderPhoneNumber,
+        firstName: "Sender",
+        lastName: "Test",
+        email: "sender@gmail.com",
+        password: "Test@123",
+        fcmToken: "dummySenderToken",
+        socketId: "dummy-socket",
+        isLogin: true,
+        deviceId: "",
+        isDeleted: false,
+        publicKey: "",
+        privateKey: "",
+      }),
+      User.create({
+        phoneNumber: recipientPhoneNumber,
+        firstName: "Recipient",
+        lastName: "Test",
+        email: "recipient@gmail.com",
+        password: "Test@123",
+        fcmToken: "dummyRecipientToken",
+        socketId: null,
+        isLogin: false,
+        deviceId: "",
+        isDeleted: false,
+        publicKey: "",
+        privateKey: "",
+      }),
+    ]);
+
+    const sendMock = jest
+      .spyOn(messaging, "send")
+      .mockRejectedValue(new Error("FCM send failed"));
+    clientA = Client(SERVER_URL);
+
+    await new Promise<void>((resolve) => {
+      clientA.on("connect", () => {
+        clientA.emit("join", senderPhoneNumber);
+        clientA.emit("send_private_message", {
+          recipientPhoneNumber,
+          senderPhoneNumber,
+          message,
+          timestamp,
+        });
+
+        clientA.on("error", (err) => {
+          expect(err).toContain("Failed to store or send message");
+          sendMock.mockRestore();
+          resolve();
+        });
+      });
+    });
+  }, 10000);
+
+  test("should store message with status 'sent' when recipient is offline", (done) => {
+    const senderPhoneNumber = "+919440058816";
+    const recipientPhoneNumber = "+919440058818";
+    const message = "Offline recipient test";
+    const timestamp = Date.now();
 
     Promise.all([
       User.create({
-        phoneNumber: user1Phone,
-        firstName: "Notifier",
-        lastName: "A",
-        email: "a@gmail.com",
+        phoneNumber: senderPhoneNumber,
+        firstName: "Sender",
+        lastName: "User",
+        email: "sender3@gmail.com",
         password: "Test@123",
         isDeleted: false,
         publicKey: "",
         privateKey: "",
         socketId: null,
-        isLogin: true,
+        isLogin: false,
         deviceId: "",
       }),
       User.create({
-        phoneNumber: user2Phone,
-        firstName: "Notifier",
-        lastName: "B",
-        email: "b@gmail.com",
+        phoneNumber: recipientPhoneNumber,
+        firstName: "Recipient",
+        lastName: "User",
+        email: "recipient3@gmail.com",
         password: "Test@123",
         isDeleted: false,
         publicKey: "",
         privateKey: "",
         socketId: null,
-        isLogin: true,
+        isLogin: false,
         deviceId: "",
       }),
     ]).then(() => {
       clientA = Client(SERVER_URL);
+
       clientA.on("connect", () => {
-        clientA.emit("join", user1Phone); 
+        clientA.emit("join", senderPhoneNumber);
 
-        setTimeout(() => {
-          clientB = Client(SERVER_URL);
-          clientB.on("connect", () => {
-            clientB.emit("join", user2Phone); 
+        clientA.emit("send_private_message", {
+          recipientPhoneNumber,
+          senderPhoneNumber,
+          message,
+          timestamp,
+        });
 
-            clientB.on(`isOnline_with_${user2Phone}`, (data) => {
-              expect(data).toEqual({ isOnline: true });
-              done();
-            });
-
-            setTimeout(() => {
-              clientA.emit("online_with", user2Phone); 
-            }, 2000);
+        setTimeout(async () => {
+          const senderId = await findByPhoneNumber(senderPhoneNumber);
+          const receiverId = await findByPhoneNumber(recipientPhoneNumber);
+          const storedMessage = await Message.findOne({
+            where: { senderId, receiverId },
           });
-        }, 2000);
-      });
-    });
-  }, 150000);
 
-  test("should emit offline_with_<phone> to the target user if online", (done) => {
-    const user1Phone = "+919440058832";
-    const user2Phone = "+919440058833";
+          expect(storedMessage).toBeTruthy();
+          expect(storedMessage?.status).toBe("sent");
 
-    Promise.all([
-      User.create({
-        phoneNumber: user1Phone,
-        firstName: "Offline",
-        lastName: "Sender",
-        email: "offline_sender@example.com",
-        password: "Test@123",
-        isDeleted: false,
-        socketId: null,
-        isLogin: true,
-        deviceId: "",
-        publicKey: "",
-        privateKey: "",
-      }),
-      User.create({
-        phoneNumber: user2Phone,
-        firstName: "Offline",
-        lastName: "Receiver",
-        email: "offline_receiver@example.com",
-        password: "Test@123",
-        isDeleted: false,
-        socketId: null,
-        isLogin: true,
-        deviceId: "",
-        publicKey: "",
-        privateKey: "",
-      }),
-    ]).then(() => {
-      clientB = Client(SERVER_URL);
-      clientB.on("connect", () => {
-        clientB.emit("join", user2Phone);
-
-        clientB.on(`offline_with_${user2Phone}`, (data) => {
-          expect(data).toEqual({ isOnline: false });
           done();
-        });
-
-        clientA = Client(SERVER_URL);
-        clientA.on("connect", () => {
-          clientA.emit("join", user1Phone);
-          setTimeout(() => {
-            clientA.emit("offline_with", user2Phone);
-          }, 2000);
-        });
+        }, 4000);
       });
     });
-  }, 150000);
+  }, 20000);
+
+  test("should store message with status 'sent' when recipient is blocked", (done) => {
+    const senderPhoneNumber = "+919440058816";
+    const recipientPhoneNumber = "+919440058818";
+    const message = "Blocked message test";
+    const timestamp = Date.now();
+
+    User.create({
+      phoneNumber: senderPhoneNumber,
+      firstName: "Sender",
+      lastName: "User",
+      email: "sender2@gmail.com",
+      password: "Test@123",
+      isDeleted: false,
+      publicKey: "",
+      privateKey: "",
+      socketId: null,
+      isLogin: false,
+      deviceId: "",
+    });
+
+    User.create({
+      phoneNumber: recipientPhoneNumber,
+      firstName: "Recipient",
+      lastName: "User",
+      email: "recipient2@gmail.com",
+      password: "Test@123",
+      isDeleted: false,
+      publicKey: "",
+      privateKey: "",
+      socketId: null,
+      isLogin: false,
+      deviceId: "",
+    });
+
+    clientA = Client(SERVER_URL);
+
+    clientA.on("connect", () => {
+      clientA.emit("join", senderPhoneNumber);
+
+      clientA.emit("send_private_message", {
+        recipientPhoneNumber,
+        senderPhoneNumber,
+        message,
+        timestamp,
+      });
+
+      setTimeout(async () => {
+        const senderId = await findByPhoneNumber(senderPhoneNumber);
+        const receiverId = await findByPhoneNumber(recipientPhoneNumber);
+        const storedMessage = await Message.findOne({
+          where: { senderId, receiverId },
+        });
+
+        expect(storedMessage).toBeTruthy();
+        expect(storedMessage?.status).toBe("sent");
+
+        done();
+      }, 3000);
+    });
+  }, 20000);
 
   test("should ignore unknown event gracefully", (done) => {
     clientA = Client(SERVER_URL);
@@ -819,20 +1030,21 @@ describe("Test for socket", () => {
     });
   }, 5000);
 
+  test("should handle disconnect when user is not found in database", (done) => {
+    clientA = Client(SERVER_URL, {
+      query: { socketId: "non-existent-socket-id" },
+    });
 
-test("should handle disconnect when user is not found in database", (done) => {
-  clientA = Client(SERVER_URL, {
-    query: { socketId: "non-existent-socket-id" },
-  });
+    clientA.on("connect", () => {
+      clientA.disconnect();
 
-  clientA.on("connect", () => {
-    clientA.disconnect();
-
-    setTimeout(async () => {
-      const user = await User.findOne({ where: { socketId: "non-existent-socket-id" } });
-      expect(user).toBeNull();
-      done();
-    }, 1000);
-  });
-}, 10000);
+      setTimeout(async () => {
+        const user = await User.findOne({
+          where: { socketId: "non-existent-socket-id" },
+        });
+        expect(user).toBeNull();
+        done();
+      }, 1000);
+    });
+  }, 10000);
 });

@@ -9,6 +9,7 @@ import { Message } from "../message/message.model";
 import { createUser } from "../user/user.controller";
 import { User } from "../user/user.model";
 import { findByPhoneNumber } from "../utils/findByPhoneNumber";
+import { findByUserId } from "../utils/findByPhoneNumber";
 
 describe("Testing the functionality of retrieving the messages of two users", () => {
   let testInstance: Sequelize;
@@ -672,5 +673,245 @@ describe("Testing the functionality of retrieving all the messages of a user", (
       .set({ Authorization: `Bearer ${accessToken}` })
       .send({ userPhoneNumber: "+919876543210" })
       .expect(500);
+  });
+});
+
+describe("Testing the functionality of syncing messages", () => {
+  let testInstance: Sequelize;
+  const originalEnv = process.env;
+  const secret_key = process.env.JSON_WEB_SECRET || "quick_chat_secret";
+
+  const senderPhoneNumber = "+919999999999";
+  const receiverPhoneNumber = "+918888888888";
+  let accessToken = "";
+  let chatId: string = "";
+
+  beforeEach(() => {
+    process.env = { ...originalEnv };
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
+  beforeAll(async () => {
+    testInstance = SequelizeConnection()!;
+    await Message.truncate({ cascade: true });
+    await Conversation.truncate({ cascade: true });
+    await Chat.truncate({ cascade: true });
+    await User.truncate({ cascade: true });
+
+    const sender = {
+      firstName: "Mammu",
+      lastName: "Niyal",
+      phoneNumber: senderPhoneNumber,
+      password: "Pass@word1",
+      isDeleted: false,
+      publicKey: "publicKey",
+      privateKey: "privateKey",
+      isLogin: false,
+      deviceId: "qwertyuiop",
+      email: "mammu@gmail.com",
+    };
+
+    const receiver = {
+      firstName: "Varun",
+      lastName: "Martha",
+      phoneNumber: receiverPhoneNumber,
+      password: "Pass@word2",
+      isDeleted: false,
+      publicKey: "publicKey",
+      privateKey: "privateKey",
+      isLogin: false,
+      deviceId: "ajhgdjagjsg",
+      email: "varun@gmail.com",
+    };
+
+    const userA = await request(app)
+      .post("/api/users")
+      .send(sender)
+      .expect(200);
+
+    const userB = await request(app)
+      .post("/api/users")
+      .send(receiver)
+      .expect(200);
+
+    accessToken = jwt.sign({ phoneNumber: senderPhoneNumber }, secret_key, {
+      expiresIn: "7d",
+    });
+
+    if (!userA.body.user.id || !userB.body.user.id) {
+      throw new Error("User ID not returned in /api/users response.");
+    }
+
+    const chat = await Chat.create({
+      userAId: userA.body.user.id,
+      userBId: userB.body.user.id,
+    });
+    chatId = chat.id;
+
+    await Conversation.create({
+      chatId,
+      userId: userA.body.user.id,
+      isDeleted: false,
+    });
+    await Conversation.create({
+      chatId,
+      userId: userB.body.user.id,
+      isDeleted: false,
+    });
+
+    const messages = [
+      {
+        senderPhoneNumber,
+        receiverPhoneNumber,
+        content: "Hey Man! Wasup",
+        timeStamp: "2025-05-21T11:44:00Z",
+        status: "sent",
+      },
+      {
+        senderPhoneNumber: receiverPhoneNumber,
+        receiverPhoneNumber: senderPhoneNumber,
+        content: "Hey Mamatha, Hi",
+        timeStamp: "2025-05-21T11:48:00Z",
+        status: "sent",
+      },
+      {
+        senderPhoneNumber,
+        receiverPhoneNumber,
+        content: "What are you doing?",
+        timeStamp: "2025-05-21T11:50:00Z",
+        status: "sent",
+      },
+    ];
+
+    for (const msg of messages) {
+      const token =
+        msg.senderPhoneNumber === senderPhoneNumber
+          ? accessToken
+          : jwt.sign({ phoneNumber: receiverPhoneNumber }, secret_key, {
+              expiresIn: "7d",
+            });
+
+      await request(app)
+        .post("/api/message")
+        .set("Authorization", `Bearer ${token}`)
+        .send(msg)
+        .expect(200);
+    }
+  }, 10000);
+
+  afterAll(async () => {
+    await Message.truncate({ cascade: true });
+    await Conversation.truncate({ cascade: true });
+    await Chat.truncate({ cascade: true });
+    await User.truncate({ cascade: true });
+    await testInstance.close();
+  });
+
+  test("should return messages for sync after lastSyncedAt", async () => {
+    const response = await request(app)
+      .post("/api/sync")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        userPhoneNumber: senderPhoneNumber,
+        lastSyncedAt: "2024-06-01T09:00:00Z",
+      })
+      .expect(200);
+
+    const data = response.body.data;
+    expect(Array.isArray(data)).toBe(true);
+    expect(data.length).toBeGreaterThan(0);
+
+    const messageSync = data.find((d: Message) => d.chatId === chatId);
+    expect(messageSync.senderPhoneNumber).toBe(receiverPhoneNumber);
+    expect(messageSync.messages.length).toBe(1);
+    expect(messageSync.messages[0].content).toBe("Hey Mamatha, Hi");
+  });
+
+  test("should return empty messages if lastSyncedAt is newer than all messages", async () => {
+    const response = await request(app)
+      .post("/api/sync")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        userPhoneNumber: senderPhoneNumber,
+        lastSyncedAt: "2025-06-01T00:00:00Z",
+      })
+      .expect(200);
+
+    const data = response.body.data;
+    expect(Array.isArray(data)).toBe(true);
+    expect(data.length).toBeGreaterThan(0);
+    expect(data[0].messages.length).toBe(0);
+  });
+
+  test("should return 400 for missing userPhoneNumber", async () => {
+    const response = await request(app)
+      .post("/api/sync")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ lastSyncedAt: "2024-06-01T00:00:00Z" })
+      .expect(400);
+
+    expect(response.body.message).toBe("Phone number is required.");
+  });
+
+  test("should prioritize lastClearedAt over lastSyncedAt when lastClearedAt is newer", async () => {
+    const sender = await User.findOne({
+      where: { phoneNumber: senderPhoneNumber },
+    });
+    const convo = await Conversation.findOne({ where: { userId: sender?.id } });
+
+    await convo?.update({ lastClearedAt: new Date("2025-06-10T00:00:00Z") });
+
+    const response = await request(app)
+      .post("/api/sync")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        userPhoneNumber: senderPhoneNumber,
+        lastSyncedAt: "2025-06-01T00:00:00Z",
+      })
+      .expect(200);
+
+    expect(response.body.data).toBeDefined();
+    expect(response.body.data[0].messages.length).toBeLessThanOrEqual(3);
+  });
+
+  test("should return 500 for non-existing userPhoneNumber", async () => {
+    const response = await request(app)
+      .post("/api/sync")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        userPhoneNumber: "+911111111111",
+        lastSyncedAt: "2024-06-01T00:00:00Z",
+      });
+
+    expect(response.status).toBe(500);
+    expect(response.body.error).toMatch(/Failed to fetch messages/i);
+  });
+  
+
+  test("should return phoneNumber when valid userId is passed", async () => {
+    const user = await User.findOne({
+      where: { phoneNumber: senderPhoneNumber },
+    });
+    expect(user).toBeTruthy();
+
+    const phoneNumber = await findByUserId(user!.id);
+    expect(phoneNumber).toBe(senderPhoneNumber);
+  });
+
+  test("should throw error when invalid userId is passed", async () => {
+    const invalidUserId = "29be6ac2-8ec3-4663-abf7-84fc2092a2a4";
+
+    await expect(findByUserId(invalidUserId)).rejects.toThrow(
+      "User not found with the Id"
+    );
+  });
+
+  test("should throw error if User.findOne fails", async () => {
+    await expect(findByUserId("some-id")).rejects.toThrow(
+      "Error while fetching the user invalid input syntax for type uuid: \"some-id\""
+    );
   });
 });

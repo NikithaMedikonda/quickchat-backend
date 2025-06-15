@@ -24,15 +24,14 @@ export const setupSocket = (io: Server) => {
       });
     });
     socket.emit("internet_connection", { response: true });
-        socket.on(
-      
+    socket.on(
       "check_user_device",
-     
+
       async (phoneNumber: string, deviceId: string) => {
-              try {
-                const user = await User.findOne({
-                  where: { phoneNumber },
-                });
+        try {
+          const user = await User.findOne({
+            where: { phoneNumber },
+          });
 
           if (!user) {
             socket.emit("user_device_verified", {
@@ -84,14 +83,18 @@ export const setupSocket = (io: Server) => {
           const recipient = await User.findOne({
             where: { phoneNumber: recipientPhoneNumber },
           });
-          const payload = {
-            title: "New Message",
-            body: senderPhoneNumber,
-            senderPhoneNumber,
-            recipientPhoneNumber,
-            timestamp: timestamp.toString(),
-          };
-          if (targetSocketId && !result) {
+          const sender = await User.findOne({
+            where: { phoneNumber: senderPhoneNumber },
+          });
+          if (senderPhoneNumber === recipientPhoneNumber) {
+            await storeMessage({
+              recipientPhoneNumber,
+              senderPhoneNumber,
+              message,
+              status: "read",
+              timestamp,
+            });
+          } else if (targetSocketId && !result) {
             await storeMessage({
               recipientPhoneNumber,
               senderPhoneNumber,
@@ -107,10 +110,18 @@ export const setupSocket = (io: Server) => {
               .to(targetSocketId)
               .emit("new_message", { newMessage: true });
             if (recipient?.fcmToken) {
-              await messaging.send({
-                token: recipient.fcmToken,
-                data: payload,
-              });
+                        await messaging.send({
+            token: recipient.fcmToken,
+            data: {
+              title: `New message from ${sender?.firstName}`,
+              body: message,
+              profilePicture: sender?.profilePicture || "",
+              senderPhoneNumber:senderPhoneNumber,
+              recipientPhoneNumber,
+              timestamp: timestamp.toString(),
+              type: "private_message",
+            },
+          });
             }
           } else {
             await storeMessage({
@@ -121,10 +132,18 @@ export const setupSocket = (io: Server) => {
               timestamp,
             });
             if (recipient?.fcmToken) {
-              await messaging.send({
-                token: recipient.fcmToken,
-                data: payload,
-              });
+            await messaging.send({
+            token: recipient.fcmToken,
+            data: {
+              title: `New message from ${sender?.firstName}`,
+              body: message,
+              profilePicture: sender?.profilePicture || "",
+              senderPhoneNumber:senderPhoneNumber,
+              recipientPhoneNumber,
+              timestamp: timestamp.toString(),
+              type: "private_message",
+            },
+          });
             }
           }
         } catch (error) {
@@ -146,9 +165,7 @@ export const setupSocket = (io: Server) => {
           );
         }
       } catch (error) {
-        throw new Error(
-          `Error while fetching the user ${(error as Error).message}`
-        );
+         console.error(`Error while fetching the user: ${(error as Error).message}`);
       }
     });
 
@@ -164,9 +181,7 @@ export const setupSocket = (io: Server) => {
           );
         }
       } catch (error) {
-        throw new Error(
-          `Error while fetching the user ${(error as Error).message}`
-        );
+        console.error(`Error while fetching the user: ${(error as Error).message}`);
       }
     });
     socket.on("disconnect", async () => {

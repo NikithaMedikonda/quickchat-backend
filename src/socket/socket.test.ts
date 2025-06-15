@@ -9,6 +9,8 @@ import { SequelizeConnection } from "../connection/dbconnection";
 import { Message } from "../message/message.model";
 import { User } from "../user/user.model";
 import { setupSocket } from "./socket";
+import * as userUtils from "./socket.service";
+import { findByPhoneNumber } from "../utils/findByPhoneNumber";
 
 let io: SocketIOServer;
 let httpServer: HttpServer;
@@ -90,10 +92,10 @@ describe("Test for socket", () => {
     expect(chat).toBeDefined();
   });
 
-test("should verify device for check_user_device event", (done) => {
-  const phoneNumber = "+919440058888";
-  const correctDeviceId = "device123";
-  const incorrectDeviceId = "wrongDevice";
+  test("should verify device for check_user_device event", (done) => {
+    const phoneNumber = "+919440058888";
+    const correctDeviceId = "device123";
+    const incorrectDeviceId = "wrongDevice";
 
     User.create({
       phoneNumber,
@@ -107,45 +109,69 @@ test("should verify device for check_user_device event", (done) => {
       socketId: null,
       isLogin: false,
       deviceId: correctDeviceId,
-    }).then(() => {
-      clientA = Client(SERVER_URL);
+    })
+      .then(() => {
+        clientA = Client(SERVER_URL);
 
-      clientA.on("connect", () => {
-        clientA.emit("check_user_device", phoneNumber, correctDeviceId);
+        clientA.on("connect", () => {
+          clientA.emit("check_user_device", phoneNumber, correctDeviceId);
 
-
-      clientA.once("user_device_verified", (response1) => {
-        expect(response1).toEqual({
-          success: true,
-          message: "Device verified",
-          action: "continue",
-        });
-
-        clientA.emit("check_user_device", phoneNumber, incorrectDeviceId);
-
-        clientA.once("user_device_verified", (response2) => {
-          expect(response2).toEqual({
-            success: false,
-            message: "Device mismatch - logged in from another device",
-            action: "logout",
-            registeredDeviceId: correctDeviceId,
-          });
-
-          clientA.emit("check_user_device", "+0000000000", "anyDevice");
-
-          clientA.once("user_device_verified", (response3) => {
-            expect(response3).toEqual({
-              success: false,
-              message: "User not found",
-              action: "logout",
+          clientA.once("user_device_verified", (response1) => {
+            expect(response1).toEqual({
+              success: true,
+              message: "Device verified",
+              action: "continue",
             });
-            done();
+
+            clientA.emit("check_user_device", phoneNumber, incorrectDeviceId);
+
+            clientA.once("user_device_verified", (response2) => {
+              expect(response2).toEqual({
+                success: false,
+                message: "Device mismatch - logged in from another device",
+                action: "logout",
+                registeredDeviceId: correctDeviceId,
+              });
+
+              clientA.emit("check_user_device", "+0000000000", "anyDevice");
+
+              clientA.once("user_device_verified", (response3) => {
+                expect(response3).toEqual({
+                  success: false,
+                  message: "User not found",
+                  action: "logout",
+                });
+                done();
+              });
+            });
           });
         });
+      })
+      .catch(done);
+  }, 15000);
+
+  test("should handle error during device verification and emit server error message", (done) => {
+    const phoneNumber = "+919440058888";
+    const deviceId = "device123";
+    const mockFindOne = jest
+      .spyOn(User, "findOne")
+      .mockRejectedValue(new Error("DB Error"));
+
+    clientA = Client(SERVER_URL);
+    clientA.on("connect", () => {
+      clientA.emit("check_user_device", phoneNumber, deviceId);
+
+      clientA.once("user_device_verified", (response) => {
+        expect(response).toEqual({
+          success: false,
+          message: "Server error during device verification",
+          action: "logout",
+        });
+        mockFindOne.mockRestore();
+        done();
       });
     });
-  }).catch(done);
-}, 15000);
+  }, 15000);
 
   test("should handle join event, update socket ID and broadcast to other users", (done) => {
     const phoneNumber = "+919440058803";
@@ -412,26 +438,75 @@ test("should verify device for check_user_device event", (done) => {
       });
     });
   }, 10000);
+  test("should not emit offline_with_* event if target user is offline", (done) => {
+    const user1PhoneNumber = "+919440058815";
+    const user2PhoneNumber = "+919440058816";
 
-  test("should handle disconnect when user is not found in database", (done) => {
-    clientA = Client(SERVER_URL);
-    clientA.on("connect", () => {
-      clientA.disconnect();
+    Promise.all([
+      User.create({
+        phoneNumber: user1PhoneNumber,
+        firstName: "User1",
+        lastName: "Test",
+        email: "user1@gmail.com",
+        password: "Test@123",
+        isDeleted: false,
+        publicKey: "",
+        privateKey: "",
+        socketId: null,
+        isLogin: false,
+        deviceId: "",
+      }),
+      User.create({
+        phoneNumber: user2PhoneNumber,
+        firstName: "User2",
+        lastName: "Test",
+        email: "user2@gmail.com",
+        password: "Test@123",
+        isDeleted: false,
+        publicKey: "",
+        privateKey: "",
+        socketId: null,
+        isLogin: false,
+        deviceId: "",
+      }),
+    ]).then(() => {
+      clientA = Client(SERVER_URL);
 
-      setTimeout(() => {
-        done();
-      }, 1000);
+      const spy = jest.spyOn(clientA.io, "emit");
+
+      clientA.on("connect", () => {
+        clientA.emit("join", user1PhoneNumber);
+        clientA.emit("offline_with", user2PhoneNumber);
+
+        setTimeout(() => {
+          expect(spy).not.toHaveBeenCalledWith(
+            `offline_with_${user2PhoneNumber}`,
+            expect.anything()
+          );
+          spy.mockRestore();
+          done();
+        }, 1000);
+      });
     });
   }, 10000);
 
-  test("should handle internet_connection event", (done) => {
-    const phoneNumber = "+919440058820";
+  test("should log error if findUserSocketId fails", (done) => {
+    const user1PhoneNumber = "+919440058815";
+    const user2PhoneNumber = "+919440058816";
+
+    jest.spyOn(userUtils, "findUserSocketId").mockImplementationOnce(() => {
+      throw new Error("DB failure");
+    });
+
+    const consoleSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
 
     User.create({
-      phoneNumber,
-      firstName: "Connection",
+      phoneNumber: user1PhoneNumber,
+      firstName: "User1",
       lastName: "Test",
-      email: "connection@gmail.com",
+      email: "user1@gmail.com",
       password: "Test@123",
       isDeleted: false,
       publicKey: "",
@@ -443,14 +518,214 @@ test("should verify device for check_user_device event", (done) => {
       clientA = Client(SERVER_URL);
 
       clientA.on("connect", () => {
-        clientA.emit("join", phoneNumber);
+        clientA.emit("join", user1PhoneNumber);
+        clientA.emit("offline_with", user2PhoneNumber);
+
         setTimeout(() => {
-          clientA.emit("internet_connection", { response: true });
-          setTimeout(() => {
-            done();
-          }, 1000);
+          expect(consoleSpy).toHaveBeenCalledWith(
+            "Error while fetching the user: DB failure"
+          );
+          consoleSpy.mockRestore();
+          done();
         }, 500);
       });
     });
+  });
+
+  test("should not emit onine_with_* event if target user is online", (done) => {
+    const user1PhoneNumber = "+919440058810";
+    const user2PhoneNumber = "+919440058811";
+
+    Promise.all([
+      User.create({
+        phoneNumber: user1PhoneNumber,
+        firstName: "User1",
+        lastName: "Test",
+        email: "user3@gmail.com",
+        password: "Test@123",
+        isDeleted: false,
+        publicKey: "",
+        privateKey: "",
+        socketId: null,
+        isLogin: false,
+        deviceId: "",
+      }),
+      User.create({
+        phoneNumber: user2PhoneNumber,
+        firstName: "User2",
+        lastName: "Test",
+        email: "user4@gmail.com",
+        password: "Test@123",
+        isDeleted: false,
+        publicKey: "",
+        privateKey: "",
+        socketId: null,
+        isLogin: false,
+        deviceId: "",
+      }),
+    ]).then(() => {
+      clientA = Client(SERVER_URL);
+
+      const spy = jest.spyOn(clientA.io, "emit");
+
+      clientA.on("connect", () => {
+        clientA.emit("join", user1PhoneNumber);
+        clientA.emit("isOnline_with_", user2PhoneNumber);
+
+        setTimeout(() => {
+          expect(spy).not.toHaveBeenCalledWith(
+            `isOnline_with_${user2PhoneNumber}`,
+            expect.anything()
+          );
+          spy.mockRestore();
+          done();
+        }, 1000);
+      });
+    });
   }, 10000);
+
+    test("should log error if findUserSocketId fails", (done) => {
+    const user1PhoneNumber = "+919440058815";
+    const user2PhoneNumber = "+919440058816";
+
+    jest.spyOn(userUtils, "findUserSocketId").mockImplementationOnce(() => {
+      throw new Error("DB failure");
+    });
+
+    const consoleSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    User.create({
+      phoneNumber: user1PhoneNumber,
+      firstName: "User1",
+      lastName: "Test",
+      email: "user1@gmail.com",
+      password: "Test@123",
+      isDeleted: false,
+      publicKey: "",
+      privateKey: "",
+      socketId: null,
+      isLogin: false,
+      deviceId: "",
+    }).then(() => {
+      clientA = Client(SERVER_URL);
+
+      clientA.on("connect", () => {
+        clientA.emit("join", user1PhoneNumber);
+        clientA.emit("online_with", user2PhoneNumber);
+        setTimeout(() => {
+          expect(consoleSpy).toHaveBeenCalledWith(
+            "Error while fetching the user: DB failure"
+          );
+          consoleSpy.mockRestore();
+          done();
+        }, 500);
+      });
+    });
+  });
+
+  test("should handle duplicate join event gracefully", (done) => {
+    const phoneNumber = "+919440058850";
+
+    User.create({
+      phoneNumber,
+      firstName: "Duplicate",
+      lastName: "Join",
+      email: "duplicate@gmail.com",
+      password: "Test@123",
+      isDeleted: false,
+      publicKey: "",
+      privateKey: "",
+      socketId: null,
+      isLogin: false,
+      deviceId: "",
+    }).then(() => {
+      clientA = Client(SERVER_URL);
+      clientA.on("connect", () => {
+        clientA.emit("join", phoneNumber);
+        clientA.emit("join", phoneNumber);
+
+        setTimeout(async () => {
+          const user = await User.findOne({ where: { phoneNumber } });
+          expect(user?.socketId).toBeDefined();
+          done();
+        }, 1000);
+      });
+    });
+  }, 10000);
+  test("should store message with status 'read' when sender and recipient are the same", (done) => {
+    const senderPhoneNumber = "+919440058816";
+    const message = "Self message test";
+    const timestamp = Date.now();
+    const recipientPhoneNumber = "+919440058816";
+    User.create({
+      phoneNumber: senderPhoneNumber,
+      firstName: "Self",
+      lastName: "User",
+      email: "selfuser@gmail.com",
+      password: "Test@123",
+      isDeleted: false,
+      publicKey: "",
+      privateKey: "",
+      socketId: null,
+      isLogin: false,
+      deviceId: "",
+    }).then(() => {
+      clientA = Client(SERVER_URL);
+      clientA.on("connect", () => {
+        clientA.emit("join", senderPhoneNumber);
+        clientA.emit("send_private_message", {
+          recipientPhoneNumber,
+          senderPhoneNumber,
+          message,
+          timestamp,
+        });
+
+        setTimeout(async () => {
+          const userId = await findByPhoneNumber(senderPhoneNumber);
+          const storedMessage = await Message.findOne({
+            where: {
+              senderId: userId,
+              receiverId: userId,
+            },
+          });
+          expect(storedMessage).toBeTruthy();
+          expect(storedMessage?.content).toBe(message);
+          expect(storedMessage?.status).toBe("read");
+
+          done();
+        }, 5000);
+      });
+    });
+  }, 50000);
+
+  test("should ignore unknown event gracefully", (done) => {
+    clientA = Client(SERVER_URL);
+    clientA.on("connect", () => {
+      clientA.emit("unknown_event", { data: "some data" });
+
+      setTimeout(() => {
+        expect(clientA.connected).toBeTruthy();
+        done();
+      }, 1000);
+    });
+  }, 5000);
+
+
+test("should handle disconnect when user is not found in database", (done) => {
+  clientA = Client(SERVER_URL, {
+    query: { socketId: "non-existent-socket-id" },
+  });
+
+  clientA.on("connect", () => {
+    clientA.disconnect();
+
+    setTimeout(async () => {
+      const user = await User.findOne({ where: { socketId: "non-existent-socket-id" } });
+      expect(user).toBeNull();
+      done();
+    }, 1000);
+  });
+}, 10000);
 });

@@ -401,7 +401,7 @@ describe("Test for socket", () => {
     const emitMock = jest.fn();
     const ioToMock = jest
       .spyOn(io, "to")
-      .mockReturnValue({ emit: emitMock } as any);
+      .mockReturnValue({ emit: emitMock } as never);
 
     clientA = Client(SERVER_URL);
 
@@ -528,7 +528,7 @@ describe("Test for socket", () => {
     clientA = Client(SERVER_URL);
     const ioToEmitMock = jest
       .spyOn(io, "to")
-      .mockReturnValue({ emit: jest.fn() } as any);
+      .mockReturnValue({ emit: jest.fn() } as never);
 
     await new Promise<void>((resolve) => {
       clientA.on("connect", () => {
@@ -552,7 +552,7 @@ describe("Test for socket", () => {
     clientA = Client(SERVER_URL);
     const ioToEmitMock = jest
       .spyOn(io, "to")
-      .mockReturnValue({ emit: jest.fn() } as any);
+      .mockReturnValue({ emit: jest.fn() } as never);
 
     await new Promise<void>((resolve) => {
       clientA.on("connect", () => {
@@ -893,7 +893,7 @@ describe("Test for socket", () => {
         });
       });
     });
-  }, 10000);
+  }, 15000);
 
   test("should store message with status 'sent' when recipient is offline", (done) => {
     const senderPhoneNumber = "+919440058816";

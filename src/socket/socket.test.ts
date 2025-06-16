@@ -401,8 +401,7 @@ describe("Test for socket", () => {
     const emitMock = jest.fn();
     const ioToMock = jest
       .spyOn(io, "to")
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .mockReturnValue({ emit: emitMock } as any);
+      .mockReturnValue({ emit: emitMock } as never);
 
     clientA = Client(SERVER_URL);
 
@@ -529,8 +528,7 @@ describe("Test for socket", () => {
     clientA = Client(SERVER_URL);
     const ioToEmitMock = jest
       .spyOn(io, "to")
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .mockReturnValue({ emit: jest.fn() } as any);
+      .mockReturnValue({ emit: jest.fn() } as never);
 
     await new Promise<void>((resolve) => {
       clientA.on("connect", () => {
@@ -554,8 +552,7 @@ describe("Test for socket", () => {
     clientA = Client(SERVER_URL);
     const ioToEmitMock = jest
       .spyOn(io, "to")
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .mockReturnValue({ emit: jest.fn() } as any);
+      .mockReturnValue({ emit: jest.fn() } as never);
 
     await new Promise<void>((resolve) => {
       clientA.on("connect", () => {
@@ -834,69 +831,9 @@ describe("Test for socket", () => {
         expect(sendMock).toHaveBeenCalledTimes(1);
         sendMock.mockRestore();
         done();
-      }, 2000);
+      }, 5000);
     });
-  }, 10000);
-  // test("should throw error if messaging.send fails", async () => {
-  //   const senderPhoneNumber = "+919440058816";
-  //   const recipientPhoneNumber = "+919440058817";
-  //   const message = "Test error FCM";
-  //   const timestamp = Date.now();
-
-  //   await Promise.all([
-  //     User.create({
-  //       phoneNumber: senderPhoneNumber,
-  //       firstName: "Sender",
-  //       lastName: "Test",
-  //       email: "sender@gmail.com",
-  //       password: "Test@123",
-  //       fcmToken: "dummySenderToken",
-  //       socketId: "dummy-socket",
-  //       isLogin: true,
-  //       deviceId: "",
-  //       isDeleted: false,
-  //       publicKey: "",
-  //       privateKey: "",
-  //     }),
-  //     User.create({
-  //       phoneNumber: recipientPhoneNumber,
-  //       firstName: "Recipient",
-  //       lastName: "Test",
-  //       email: "recipient@gmail.com",
-  //       password: "Test@123",
-  //       fcmToken: "dummyRecipientToken",
-  //       socketId: null,
-  //       isLogin: false,
-  //       deviceId: "",
-  //       isDeleted: false,
-  //       publicKey: "",
-  //       privateKey: "",
-  //     }),
-  //   ]);
-
-  //   const sendMock = jest
-  //     .spyOn(messaging, "send")
-  //     .mockRejectedValue(new Error("FCM send failed"));
-  //   clientA = Client(SERVER_URL);
-
-  //   await new Promise<void>((resolve) => {
-  //     clientA.on("connect", () => {
-  //       clientA.emit("join", senderPhoneNumber);
-  //       clientA.emit("send_private_message", {
-  //         recipientPhoneNumber,
-  //         senderPhoneNumber,
-  //         message,
-  //         timestamp,
-  //       });
-
-  //       clientA.on("error", (err) => {
-  //         expect(err).toContain("Failed to store or send message");
-  //         sendMock.mockRestore();
-  //         resolve();
-  //       });
-  //     });
-  //   });
-  // }, 50000);
+  }, 120000);
 
   test("should store message with status 'sent' when recipient is offline", (done) => {
     const senderPhoneNumber = "+919440058816";

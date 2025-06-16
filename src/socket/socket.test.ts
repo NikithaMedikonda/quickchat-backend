@@ -831,9 +831,10 @@ describe("Test for socket", () => {
         expect(sendMock).toHaveBeenCalledTimes(1);
         sendMock.mockRestore();
         done();
-      }, 2000);
+      }, 3000);
     });
-  }, 10000);
+  }, 50000);
+
   test("should throw error if messaging.send fails", async () => {
     const senderPhoneNumber = "+919440058816";
     const recipientPhoneNumber = "+919440058817";

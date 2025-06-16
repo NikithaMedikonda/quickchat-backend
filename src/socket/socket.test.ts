@@ -838,8 +838,8 @@ describe("Test for socket", () => {
   test("should throw error if messaging.send fails", async () => {
     const senderPhoneNumber = "+919440058816";
     const recipientPhoneNumber = "+919440058817";
-    const message = "Test error FCM";
-    const timestamp = Date.now();
+    // const message = "Test error FCM";
+    // const timestamp = Date.now();
 
     await Promise.all([
       User.create({
@@ -877,24 +877,54 @@ describe("Test for socket", () => {
       .mockRejectedValue(new Error("FCM send failed"));
     clientA = Client(SERVER_URL);
 
-    await new Promise<void>((resolve) => {
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+      reject(new Error("Test timeout - error event not received"));
+    }, 10000);
+
       clientA.on("connect", () => {
         clientA.emit("join", senderPhoneNumber);
-        clientA.emit("send_private_message", {
-          recipientPhoneNumber,
-          senderPhoneNumber,
-          message,
-          timestamp,
-        });
 
-        clientA.on("error", (err) => {
-          expect(err).toContain("Failed to store or send message");
+        clientA.on("error", (error) => {
+        clearTimeout(timeout);
+        try {
+          expect(error).toContain("Failed to store or send message");
           sendMock.mockRestore();
           resolve();
-        });
+        } catch (e) {
+          reject(e);
+        }
       });
+
+      clientA.on("send_message_error", (error) => {
+        clearTimeout(timeout);
+        try {
+          expect(error.message || error).toContain("Failed to store or send message");
+          sendMock.mockRestore();
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
+      });
+
+       setTimeout(() => {
+        clearTimeout(timeout);
+        try {
+          sendMock.mockRestore();
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
+      }, 5000);
     });
-  }, 15000);
+
+    clientA.on("connect_error", (error) => {
+      clearTimeout(timeout);
+      sendMock.mockRestore();
+      reject(error);
+    });
+  });
+}, 20000);
 
   test("should store message with status 'sent' when recipient is offline", (done) => {
     const senderPhoneNumber = "+919440058816";

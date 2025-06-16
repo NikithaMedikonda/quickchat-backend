@@ -334,6 +334,7 @@ export async function refreshOrValidateAuth(
         return;
       }
       response.status(200).json({ message: "Access token valid" });
+      
     } catch (error) {
       if ((error as Error).name === "TokenExpiredError") {
         try {
@@ -494,3 +495,23 @@ export async function checkDeleteStatus(
     response.status(500).json({ error: error });
   }
 }
+
+export const getUserByPhoneNumber = async (
+  request: Request,
+  response: Response
+) => {
+  const user = await User.findOne({
+    where: { phoneNumber: request.params.phoneNumber },
+    attributes: ["phoneNumber", "profilePicture", "publicKey"],
+  });
+  if (!user) {
+    response.status(404).json({ message: "User not found" });
+    return;
+  }
+  const userData = {
+    phoneNumber: user.phoneNumber,
+    profilePicture: user.profilePicture,
+    publicKey: user.publicKey
+  };
+  response.status(200).json({ user: userData });
+};

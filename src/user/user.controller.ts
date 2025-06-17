@@ -512,7 +512,6 @@ export const getUserByPhoneNumber = async (
     phoneNumber: user.phoneNumber,
     profilePicture: user.profilePicture,
     publicKey: user.publicKey
-  }
-  console.log(userData)
+  };
   response.status(200).json({ user: userData });
 };

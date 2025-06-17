@@ -1161,7 +1161,7 @@ describe("Test for socket", () => {
           });
           expect(storedMessage?.status).toBe("sent");
           expect(storedMessage?.content).toBe(message);
-          expect(ioToMock).not.toHaveBeenCalled();
+          expect(ioToMock).not.toHaveBeenCalled(); 
           findUserSocketIdMock.mockRestore();
           ioToMock.mockRestore();
           done();
@@ -1175,34 +1175,36 @@ describe("Test for socket", () => {
     const user2PhoneNumber = "+919440058814";
     const dummySocketId = "dummy-socket-id";
 
+
     await Promise.all([
-      User.create({
-        phoneNumber: user1PhoneNumber,
-        firstName: "User1",
-        lastName: "Test",
-        email: "user1@gmail.com",
-        password: "Test@123",
-        isDeleted: false,
-        publicKey: "",
-        privateKey: "",
-        socketId: null,
-        isLogin: false,
-        deviceId: "",
-      }),
-      User.create({
-        phoneNumber: user2PhoneNumber,
-        firstName: "User2",
-        lastName: "Test",
-        email: "user2@gmail.com",
-        password: "Test@123",
-        isDeleted: false,
-        publicKey: "",
-        privateKey: "",
-        socketId: null,
-        isLogin: false,
-        deviceId: "",
-      }),
-    ]);
+    User.create({
+      phoneNumber: user1PhoneNumber,
+      firstName: "User1",
+      lastName: "Test",
+      email: "user1@gmail.com",
+      password: "Test@123",
+      isDeleted: false,
+      publicKey: "",
+      privateKey: "",
+      socketId: null,
+      isLogin: false,
+      deviceId: "",
+    }),
+    User.create({
+      phoneNumber: user2PhoneNumber,
+      firstName: "User2",
+      lastName: "Test",
+      email: "user2@gmail.com",
+      password: "Test@123",
+      isDeleted: false,
+      publicKey: "",
+      privateKey: "",
+      socketId: null,
+      isLogin: false,
+      deviceId: "",
+    }),
+  ]);
+    
 
     const findUserSocketIdMock = jest
       .spyOn(userUtils, "findUserSocketId")
@@ -1643,6 +1645,97 @@ describe("Test for socket", () => {
       }, 5000);
     });
   }, 120000);
+
+  test("should throw error if messaging.send fails", async () => {
+    const senderPhoneNumber = "+919440058816";
+    const recipientPhoneNumber = "+919440058817";
+    // const message = "Test error FCM";
+    // const timestamp = Date.now();
+
+    await Promise.all([
+      User.create({
+        phoneNumber: senderPhoneNumber,
+        firstName: "Sender",
+        lastName: "Test",
+        email: "sender@gmail.com",
+        password: "Test@123",
+        fcmToken: "dummySenderToken",
+        socketId: "dummy-socket",
+        isLogin: true,
+        deviceId: "",
+        isDeleted: false,
+        publicKey: "",
+        privateKey: "",
+      }),
+      User.create({
+        phoneNumber: recipientPhoneNumber,
+        firstName: "Recipient",
+        lastName: "Test",
+        email: "recipient@gmail.com",
+        password: "Test@123",
+        fcmToken: "dummyRecipientToken",
+        socketId: null,
+        isLogin: false,
+        deviceId: "",
+        isDeleted: false,
+        publicKey: "",
+        privateKey: "",
+      }),
+    ]);
+
+    const sendMock = jest
+      .spyOn(messaging, "send")
+      .mockRejectedValue(new Error("FCM send failed"));
+    clientA = Client(SERVER_URL);
+
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+      reject(new Error("Test timeout - error event not received"));
+    }, 10000);
+
+      clientA.on("connect", () => {
+        clientA.emit("join", senderPhoneNumber);
+
+        clientA.on("error", (error) => {
+        clearTimeout(timeout);
+        try {
+          expect(error).toContain("Failed to store or send message");
+          sendMock.mockRestore();
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
+      });
+
+      clientA.on("send_message_error", (error) => {
+        clearTimeout(timeout);
+        try {
+          expect(error.message || error).toContain("Failed to store or send message");
+          sendMock.mockRestore();
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
+      });
+
+       setTimeout(() => {
+        clearTimeout(timeout);
+        try {
+          sendMock.mockRestore();
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
+      }, 5000);
+    });
+
+    clientA.on("connect_error", (error) => {
+      clearTimeout(timeout);
+      sendMock.mockRestore();
+      reject(error);
+    });
+  });
+}, 20000);
 
   test("should store message with status 'sent' when recipient is offline", (done) => {
     const senderPhoneNumber = "+919440058816";

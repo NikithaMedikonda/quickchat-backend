@@ -1,7 +1,8 @@
 import { Server } from "socket.io";
-import { PrivateMessage } from "../types/message";
-import { User } from "../user/user.model";
 import { messaging } from "../../firebase";
+import { PrivateMessage, updateMessageDetails } from "../types/message";
+import { User } from "../user/user.model";
+import { getBlockStatus } from "../userRestriction/userRestriction.controller";
 import {
   changeStatusToDelivered,
   disconnectUser,
@@ -10,11 +11,15 @@ import {
   storeMessage,
   updateUserSocketId,
 } from "./socket.service";
-import { getBlockStatus } from "../userRestriction/userRestriction.controller";
 export const setupSocket = (io: Server) => {
   io.on("connection", (socket) => {
     socket.on("join", async (phoneNumber: string) => {
-      await changeStatusToDelivered(phoneNumber);
+      const messages = await changeStatusToDelivered(phoneNumber);
+      messages.forEach(async (msg) => {
+        const sender = await User.findOne({ where: { id: msg.senderId } });
+        const senderPhoneNumber = await sender?.dataValues.phoneNumber;
+        io.emit(`delivered_status_${senderPhoneNumber}`, msg.message);
+      });
       await updateUserSocketId(phoneNumber, socket.id);
       const exceptSocketIds = await getBlockedSocketIds(phoneNumber);
       socket.broadcast.except(exceptSocketIds).emit("I-joined", {
@@ -101,6 +106,7 @@ export const setupSocket = (io: Server) => {
               status: "delivered",
               timestamp,
             });
+
             io.to(targetSocketId).emit(
               `receive_private_message_${senderPhoneNumber}`,
               { recipientPhoneNumber, senderPhoneNumber, message, timestamp }
@@ -109,7 +115,6 @@ export const setupSocket = (io: Server) => {
               .to(targetSocketId)
               .emit("new_message", { newMessage: true });
             if (recipient?.fcmToken) {
-      
               await messaging.send({
                 token: recipient.fcmToken,
                 data: {
@@ -122,7 +127,6 @@ export const setupSocket = (io: Server) => {
                   type: "private_message",
                 },
               });
-            
             }
           } else {
             if (!result) {
@@ -150,7 +154,9 @@ export const setupSocket = (io: Server) => {
             }
           }
         } catch (error) {
-          console.error(`Failed to store or send message: ${(error as Error).message}`)
+          console.error(
+            `Failed to store or send message: ${(error as Error).message}`
+          );
           throw new Error(
             `Failed to store or send message: ${(error as Error).message}`
           );
@@ -191,6 +197,10 @@ export const setupSocket = (io: Server) => {
           `Error while fetching the user: ${(error as Error).message}`
         );
       }
+    });
+    socket.on("read", async (data: updateMessageDetails) => {
+      const receiverPhoneNumber = data.receiverPhoneNumber;
+      io.emit(`status_${receiverPhoneNumber}`, data.messages);
     });
     socket.on("disconnect", async () => {
       const user = await User.findOne({ where: { socketId: socket.id } });

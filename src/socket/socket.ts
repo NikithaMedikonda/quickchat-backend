@@ -110,18 +110,18 @@ export const setupSocket = (io: Server) => {
               .to(targetSocketId)
               .emit("new_message", { newMessage: true });
             if (recipient?.fcmToken) {
-                        await messaging.send({
-            token: recipient.fcmToken,
-            data: {
-              title: `New message from ${sender?.firstName}`,
-              body: message,
-              profilePicture: sender?.profilePicture || "",
-              senderPhoneNumber:senderPhoneNumber,
-              recipientPhoneNumber,
-              timestamp: timestamp.toString(),
-              type: "private_message",
-            },
-          });
+              await messaging.send({
+                token: recipient.fcmToken,
+                data: {
+                  title: `New message from ${sender?.firstName}`,
+                  body: message,
+                  profilePicture: sender?.profilePicture || "",
+                  senderPhoneNumber: senderPhoneNumber,
+                  recipientPhoneNumber,
+                  timestamp: timestamp.toString(),
+                  type: "private_message",
+                },
+              });
             }
           } else {
             if (!result) {
@@ -135,7 +135,15 @@ export const setupSocket = (io: Server) => {
               if (recipient?.fcmToken) {
                 await messaging.send({
                   token: recipient.fcmToken,
-                  data: payload,
+                  data: {
+                    title: `New message from ${sender?.firstName}`,
+                    body: message,
+                    profilePicture: sender?.profilePicture || "",
+                    senderPhoneNumber: senderPhoneNumber,
+                    recipientPhoneNumber,
+                    timestamp: timestamp.toString(),
+                    type: "private_message",
+                  },
                 });
               }
             }
@@ -176,6 +184,40 @@ export const setupSocket = (io: Server) => {
         }
       } catch (error) {
         console.error(`Error while fetching the user: ${(error as Error).message}`);
+      }
+    });
+    socket.on("online", async (phoneNumber: string) => {
+      try {
+        const targetSocketId = await findUserSocketId(phoneNumber);
+        if (targetSocketId) {
+          io.to(targetSocketId).emit(
+            `isOnline_${phoneNumber}`,
+            {
+              isOnline: true,
+            }
+          );
+        }
+      } catch (error) {
+        throw new Error(
+          `Error while fetching the user ${(error as Error).message}`
+        );
+      }
+    });
+    socket.on("offline", async (phoneNumber: string) => {
+      try {
+        const targetSocketId = await findUserSocketId(phoneNumber);
+        if (targetSocketId) {
+          io.to(targetSocketId).emit(
+            `isOffline_${phoneNumber}`,
+            {
+              isOnline: false,
+            }
+          );
+        }
+      } catch (error) {
+        throw new Error(
+          `Error while fetching the user ${(error as Error).message}`
+        );
       }
     });
     socket.on("disconnect", async () => {

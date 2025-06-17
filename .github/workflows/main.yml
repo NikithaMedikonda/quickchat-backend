@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - custom-notification
+      - test-coverage
 
 jobs:
   QuickChat-backend:

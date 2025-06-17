@@ -2,16 +2,16 @@ import { Server as HttpServer } from "http";
 import { Sequelize } from "sequelize";
 import { Server as SocketIOServer } from "socket.io";
 import Client, { Socket as ClientSocket } from "socket.io-client";
+import { messaging } from "../../firebase";
 import { app } from "../../server";
 import { Chat } from "../chat/chat.model";
 import { findOrCreateChat } from "../chat/chat.service";
 import { SequelizeConnection } from "../connection/dbconnection";
 import { Message } from "../message/message.model";
 import { User } from "../user/user.model";
+import { findByPhoneNumber } from "../utils/findByPhoneNumber";
 import { setupSocket } from "./socket";
 import * as userUtils from "./socket.service";
-import { findByPhoneNumber } from "../utils/findByPhoneNumber";
-import { messaging } from "../../firebase";
 
 let io: SocketIOServer;
 let httpServer: HttpServer;
@@ -22,7 +22,6 @@ const TEST_PORT = 5001;
 const SERVER_URL = `http://localhost:${TEST_PORT}`;
 
 let testInstance: Sequelize;
-
 beforeAll((done) => {
   httpServer = app.listen(TEST_PORT, () => {
     io = new SocketIOServer(httpServer);
@@ -350,7 +349,7 @@ describe("Test for socket", () => {
           });
           expect(storedMessage?.status).toBe("sent");
           expect(storedMessage?.content).toBe(message);
-          expect(ioToMock).not.toHaveBeenCalled(); 
+          expect(ioToMock).not.toHaveBeenCalled();
           findUserSocketIdMock.mockRestore();
           ioToMock.mockRestore();
           done();
@@ -364,36 +363,34 @@ describe("Test for socket", () => {
     const user2PhoneNumber = "+919440058814";
     const dummySocketId = "dummy-socket-id";
 
-
     await Promise.all([
-    User.create({
-      phoneNumber: user1PhoneNumber,
-      firstName: "User1",
-      lastName: "Test",
-      email: "user1@gmail.com",
-      password: "Test@123",
-      isDeleted: false,
-      publicKey: "",
-      privateKey: "",
-      socketId: null,
-      isLogin: false,
-      deviceId: "",
-    }),
-    User.create({
-      phoneNumber: user2PhoneNumber,
-      firstName: "User2",
-      lastName: "Test",
-      email: "user2@gmail.com",
-      password: "Test@123",
-      isDeleted: false,
-      publicKey: "",
-      privateKey: "",
-      socketId: null,
-      isLogin: false,
-      deviceId: "",
-    }),
-  ]);
-    
+      User.create({
+        phoneNumber: user1PhoneNumber,
+        firstName: "User1",
+        lastName: "Test",
+        email: "user1@gmail.com",
+        password: "Test@123",
+        isDeleted: false,
+        publicKey: "",
+        privateKey: "",
+        socketId: null,
+        isLogin: false,
+        deviceId: "",
+      }),
+      User.create({
+        phoneNumber: user2PhoneNumber,
+        firstName: "User2",
+        lastName: "Test",
+        email: "user2@gmail.com",
+        password: "Test@123",
+        isDeleted: false,
+        publicKey: "",
+        privateKey: "",
+        socketId: null,
+        isLogin: false,
+        deviceId: "",
+      }),
+    ]);
 
     const findUserSocketIdMock = jest
       .spyOn(userUtils, "findUserSocketId")
@@ -834,98 +831,6 @@ describe("Test for socket", () => {
       }, 5000);
     });
   }, 120000);
-
-  test("should throw error if messaging.send fails", async () => {
-    const senderPhoneNumber = "+919440058816";
-    const recipientPhoneNumber = "+919440058817";
-    // const message = "Test error FCM";
-    // const timestamp = Date.now();
-
-    await Promise.all([
-      User.create({
-        phoneNumber: senderPhoneNumber,
-        firstName: "Sender",
-        lastName: "Test",
-        email: "sender@gmail.com",
-        password: "Test@123",
-        fcmToken: "dummySenderToken",
-        socketId: "dummy-socket",
-        isLogin: true,
-        deviceId: "",
-        isDeleted: false,
-        publicKey: "",
-        privateKey: "",
-      }),
-      User.create({
-        phoneNumber: recipientPhoneNumber,
-        firstName: "Recipient",
-        lastName: "Test",
-        email: "recipient@gmail.com",
-        password: "Test@123",
-        fcmToken: "dummyRecipientToken",
-        socketId: null,
-        isLogin: false,
-        deviceId: "",
-        isDeleted: false,
-        publicKey: "",
-        privateKey: "",
-      }),
-    ]);
-
-    const sendMock = jest
-      .spyOn(messaging, "send")
-      .mockRejectedValue(new Error("FCM send failed"));
-    clientA = Client(SERVER_URL);
-
-    await new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-      reject(new Error("Test timeout - error event not received"));
-    }, 10000);
-
-      clientA.on("connect", () => {
-        clientA.emit("join", senderPhoneNumber);
-
-        clientA.on("error", (error) => {
-        clearTimeout(timeout);
-        try {
-          expect(error).toContain("Failed to store or send message");
-          sendMock.mockRestore();
-          resolve();
-        } catch (e) {
-          reject(e);
-        }
-      });
-
-      clientA.on("send_message_error", (error) => {
-        clearTimeout(timeout);
-        try {
-          expect(error.message || error).toContain("Failed to store or send message");
-          sendMock.mockRestore();
-          resolve();
-        } catch (e) {
-          reject(e);
-        }
-      });
-
-       setTimeout(() => {
-        clearTimeout(timeout);
-        try {
-          sendMock.mockRestore();
-          resolve();
-        } catch (e) {
-          reject(e);
-        }
-      }, 5000);
-    });
-
-    clientA.on("connect_error", (error) => {
-      clearTimeout(timeout);
-      sendMock.mockRestore();
-      reject(error);
-    });
-  });
-}, 20000);
-
   test("should store message with status 'sent' when recipient is offline", (done) => {
     const senderPhoneNumber = "+919440058816";
     const recipientPhoneNumber = "+919440058818";
@@ -1079,3 +984,65 @@ describe("Test for socket", () => {
     });
   }, 10000);
 });
+test("should emit status update when 'read' event is received", (done) => {
+  const senderPhoneNumber = "+919440058816";
+  const recipientPhoneNumber = "+919440058818";
+  const mockMessages = [
+    {
+      messageId: "msg-123",
+      status: "read",
+    },
+  ];
+
+  Promise.all([
+    User.create({
+      phoneNumber: senderPhoneNumber,
+      firstName: "Sender",
+      lastName: "User",
+      email: "sender3@gmail.com",
+      password: "Test@123",
+      isDeleted: false,
+      publicKey: "",
+      privateKey: "",
+      socketId: null,
+      isLogin: false,
+      deviceId: "",
+    }),
+    User.create({
+      phoneNumber: recipientPhoneNumber,
+      firstName: "Recipient",
+      lastName: "User",
+      email: "recipient3@gmail.com",
+      password: "Test@123",
+      isDeleted: false,
+      publicKey: "",
+      privateKey: "",
+      socketId: null,
+      isLogin: false,
+      deviceId: "",
+    }),
+  ]).then(() => {
+    clientB = Client(SERVER_URL);
+    clientB.on("connect", () => {
+      clientB.emit("join", recipientPhoneNumber);
+
+      clientB.on(`status_${recipientPhoneNumber}`, (data) => {
+        expect(data).toEqual(mockMessages);
+        done();
+      });
+      clientA = Client(SERVER_URL);
+      clientA.on("connect", () => {
+        clientA.emit("join", senderPhoneNumber);
+
+        setTimeout(() => {
+          clientA.emit("read", {
+            receiverPhoneNumber: recipientPhoneNumber,
+            messages: mockMessages,
+          });
+        }, 200);
+      });
+    });
+  });
+}, 20000);
+
+

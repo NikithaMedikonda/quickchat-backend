@@ -102,7 +102,7 @@ export const setupSocket = (io: Server) => {
               status: "delivered",
               timestamp,
             });
-            io.to(targetSocketId).emit( 
+            io.to(targetSocketId).emit(
               `receive_private_message_${senderPhoneNumber}`,
               { recipientPhoneNumber, senderPhoneNumber, message, timestamp }
             );
@@ -124,26 +124,20 @@ export const setupSocket = (io: Server) => {
           });
             }
           } else {
-            await storeMessage({
-              recipientPhoneNumber,
-              senderPhoneNumber,
-              message,
-              status: "sent",
-              timestamp,
-            });
-            if (recipient?.fcmToken) {
-            await messaging.send({
-            token: recipient.fcmToken,
-            data: {
-              title: `New message from ${sender?.firstName}`,
-              body: message,
-              profilePicture: sender?.profilePicture || "",
-              senderPhoneNumber:senderPhoneNumber,
-              recipientPhoneNumber,
-              timestamp: timestamp.toString(),
-              type: "private_message",
-            },
-          });
+            if (!result) {
+              await storeMessage({
+                recipientPhoneNumber,
+                senderPhoneNumber,
+                message,
+                status: "sent",
+                timestamp,
+              });
+              if (recipient?.fcmToken) {
+                await messaging.send({
+                  token: recipient.fcmToken,
+                  data: payload,
+                });
+              }
             }
           }
         } catch (error) {

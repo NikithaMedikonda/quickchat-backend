@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      -  message-status-update-offline
+      - disconnect-socket-fix
 
 jobs:
   QuickChat-backend:

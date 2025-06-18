@@ -529,9 +529,6 @@ export async function getProfileUrlsForPhoneNumbers(
       });
       return;
     }
-    console.log("Hello1")
-     console.log("phoneNumbersList >>> ", phoneNumbersList);
-
     const users = await User.findAll({
       where: {
         phoneNumber: {
@@ -540,17 +537,13 @@ export async function getProfileUrlsForPhoneNumbers(
       },
       attributes: ["phoneNumber", "profilePicture"],
     });
-        console.log("hello I am user ",users)
 
     const result = users.map((user) => ({
       phoneNumber: user.phoneNumber,
       profilePicture: user.profilePicture,
     }));
-        console.log("Hello3")
-
     response.status(200).json({ data: result });
   } catch (error) {
-    console.log(error)
     response.status(500).json({ message: `${(error as Error).message}` });
   }
 }

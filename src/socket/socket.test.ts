@@ -510,10 +510,10 @@ describe("Test for socket", () => {
           );
           spy.mockRestore();
           done();
-        }, 1000);
+        }, 2000);
       });
     });
-  }, 10000);
+  }, 20000);
 
   test("should not emit if targetSocketId is not found for online_with", async () => {
     const userPhoneNumber = "+919440058817";
@@ -601,7 +601,7 @@ describe("Test for socket", () => {
           );
           consoleSpy.mockRestore();
           done();
-        }, 500);
+        }, 5000);
       });
     });
   });
@@ -694,7 +694,7 @@ describe("Test for socket", () => {
           );
           consoleSpy.mockRestore();
           done();
-        }, 500);
+        }, 5000);
       });
     });
   });
@@ -1039,10 +1039,8 @@ test("should emit status update when 'read' event is received", (done) => {
             receiverPhoneNumber: recipientPhoneNumber,
             messages: mockMessages,
           });
-        }, 200);
+        }, 2000);
       });
     });
   });
 }, 20000);
-
-

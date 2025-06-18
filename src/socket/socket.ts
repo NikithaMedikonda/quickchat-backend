@@ -1,7 +1,8 @@
 import { Server } from "socket.io";
-import { PrivateMessage } from "../types/message";
-import { User } from "../user/user.model";
 import { messaging } from "../../firebase";
+import { PrivateMessage, updateMessageDetails } from "../types/message";
+import { User } from "../user/user.model";
+import { getBlockStatus } from "../userRestriction/userRestriction.controller";
 import {
   changeStatusToDelivered,
   disconnectUser,
@@ -10,7 +11,7 @@ import {
   storeMessage,
   updateUserSocketId,
 } from "./socket.service";
-import { getBlockStatus } from "../userRestriction/userRestriction.controller";
+
 
 export const setupSocket = (io: Server) => {
   const chattingWithMap = new Map<string, string>();
@@ -22,7 +23,12 @@ export const setupSocket = (io: Server) => {
     });
 
     socket.on("join", async (phoneNumber: string) => {
-      await changeStatusToDelivered(phoneNumber);
+      const messages = await changeStatusToDelivered(phoneNumber);
+      messages.forEach(async (msg) => {
+        const sender = await User.findOne({ where: { id: msg.senderId } });
+        const senderPhoneNumber = await sender?.dataValues.phoneNumber;
+        io.emit(`delivered_status_${senderPhoneNumber}`, msg.message);
+      });
       await updateUserSocketId(phoneNumber, socket.id);
       const exceptSocketIds = await getBlockedSocketIds(phoneNumber);
       socket.broadcast.except(exceptSocketIds).emit("I-joined", {
@@ -174,12 +180,51 @@ export const setupSocket = (io: Server) => {
           });
         }
       } catch (error) {
-        console.error(`Error while fetching the user: ${(error as Error).message}`);
+      console.error(
+          `Error while fetching the user: ${(error as Error).message}`
+        );
       }
     });
-
+    socket.on("online", async (phoneNumber: string) => {
+      try {
+        const targetSocketId = await findUserSocketId(phoneNumber);
+        if (targetSocketId) {
+          io.to(targetSocketId).emit(
+            `isOnline_${phoneNumber}`,
+            {
+              isOnline: true,
+            }
+          );
+        }
+      } catch (error) {
+        throw new Error(
+          `Error while fetching the user ${(error as Error).message}`
+        );
+      }
+    });
+    socket.on("offline", async (phoneNumber: string) => {
+      try {
+        const targetSocketId = await findUserSocketId(phoneNumber);
+        if (targetSocketId) {
+          io.to(targetSocketId).emit(
+            `isOffline_${phoneNumber}`,
+            {
+              isOnline: false,
+            }
+          );
+        }
+      } catch (error) {
+        throw new Error(
+          `Error while fetching the user ${(error as Error).message}`
+        );
+      }
+    });
+    socket.on("read", async (data: updateMessageDetails) => {
+      const receiverPhoneNumber = data.receiverPhoneNumber;
+      io.emit(`status_${receiverPhoneNumber}`, data.messages);
+    });
     socket.on("disconnect", async () => {
-      chattingWithMap.delete(socket.id); // Cleanup the map
+      chattingWithMap.delete(socket.id);
       const user = await User.findOne({ where: { socketId: socket.id } });
       if (user) {
         await updateUserSocketId(user.phoneNumber, null);

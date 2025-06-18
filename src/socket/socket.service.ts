@@ -2,7 +2,7 @@ import { Chat } from "../chat/chat.model";
 import { findOrCreateChat } from "../chat/chat.service";
 import { Message, MessageStatus } from "../message/message.model";
 import { createMessage } from "../message/message.service";
-import { PrivateMessage } from "../types/message";
+import { DeliveredMessageDetails, PrivateMessage } from "../types/message";
 import { User } from "../user/user.model";
 import { UserRestriction } from "../userRestriction/userRestriction.model";
 import { findByPhoneNumber } from "../utils/findByPhoneNumber";
@@ -75,7 +75,22 @@ export const disconnectUser = async (socketId: string) => {
 export const changeStatusToDelivered = async (phoneNumber: string) => {
   const recipientId = await findByPhoneNumber(phoneNumber);
   const status = "delivered";
-  const messages = await Message.update(
+  const updatingMessages = await Message.findAll({
+    where: {
+      status: "sent",
+      receiverId: recipientId,
+    },
+  });
+
+  const messageMap: Record<string, string[]> = {};
+
+  updatingMessages.forEach((msg) => {
+    if (!messageMap[msg.senderId]) {
+      messageMap[msg.senderId] = [];
+    }
+    messageMap[msg.senderId].push(msg.content);
+  });
+  await Message.update(
     { status: status as MessageStatus },
     {
       where: {
@@ -84,7 +99,14 @@ export const changeStatusToDelivered = async (phoneNumber: string) => {
       },
     }
   );
-  return messages;
+  const finalMessages: DeliveredMessageDetails[] = Object.entries(
+    messageMap
+  ).map(([senderId, message]) => ({
+    senderId,
+    message,
+  }));
+
+  return finalMessages;
 };
 export async function getBlockedSocketIds(userPhoneNumber: string) {
   const userId = await findByPhoneNumber(userPhoneNumber);

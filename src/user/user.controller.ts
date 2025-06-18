@@ -29,7 +29,7 @@ export async function createUser(user: UserInfo) {
     socketId: user.socketId ? user.socketId : null,
     isLogin: true,
     deviceId: user.deviceId,
-    fcmToken: user.fcmToken? user.fcmToken : null,
+    fcmToken: user.fcmToken ? user.fcmToken : null,
   };
   const createdUser: DbUser = await User.create(newUser);
   return createdUser;
@@ -48,8 +48,7 @@ export async function register(
     if (existingUser?.isDeleted === true) {
       response.status(404).json({ message: "Sorry, this account is deleted" });
       return;
-    }
-    else if (existingUser) {
+    } else if (existingUser) {
       response.status(409).json({
         message: "User already exists with this phone number or email",
       });
@@ -74,7 +73,7 @@ export async function register(
           privateKey: request.body.privateKey,
           socketId: request.body.socketId,
           isLogin: true,
-          deviceId:request.body.deviceId,
+          deviceId: request.body.deviceId,
           fcmToken: request.body.fcmToken ? request.body.fcmToken : null,
         };
         const newUser: DbUser = await createUser(userBody);
@@ -89,7 +88,7 @@ export async function register(
           request.body.phoneNumber,
           secret_key.toString()
         );
-        
+
         const user = {
           id: newUser.id,
           firstName: newUser.firstName,
@@ -102,8 +101,8 @@ export async function register(
           privateKey: newUser.privateKey,
           socketId: newUser.socketId,
           isLogin: newUser.isLogin,
-          deviceId:newUser.deviceId,
-          fcmToken: newUser.fcmToken
+          deviceId: newUser.deviceId,
+          fcmToken: newUser.fcmToken,
         };
         response
           .status(200)
@@ -128,8 +127,7 @@ export async function login(
     if (existingUser?.isDeleted === true) {
       response.status(404).json({ message: "Sorry, this account is deleted" });
       return;
-    }
-    else if (!existingUser) {
+    } else if (!existingUser) {
       response
         .status(404)
         .json({ message: "User doesn't exist with this phone number" });
@@ -185,7 +183,7 @@ export async function login(
       socketId: existingUser.socketId,
       isLogin: existingUser.isLogin,
       deviceId: existingUser.deviceId,
-      fcmToken: existingUser.fcmToken
+      fcmToken: existingUser.fcmToken,
     };
 
     const responseData = {
@@ -197,12 +195,10 @@ export async function login(
     };
 
     response.status(200).json(responseData);
-
   } catch (error) {
     response.status(500).send(`${(error as Error).message}`);
   }
 }
-
 
 export async function logout(
   request: Request,
@@ -229,6 +225,7 @@ export async function logout(
       return;
     }
     existingUser.isLogin = false;
+    existingUser.fcmToken = null;
     await existingUser.save();
     response.status(200).json({ message: "Successfully logout" });
   } catch (error) {
@@ -334,7 +331,6 @@ export async function refreshOrValidateAuth(
         return;
       }
       response.status(200).json({ message: "Access token valid" });
-      
     } catch (error) {
       if ((error as Error).name === "TokenExpiredError") {
         try {
@@ -511,7 +507,7 @@ export const getUserByPhoneNumber = async (
   const userData = {
     phoneNumber: user.phoneNumber,
     profilePicture: user.profilePicture,
-    publicKey: user.publicKey
+    publicKey: user.publicKey,
   };
   response.status(200).json({ user: userData });
 };

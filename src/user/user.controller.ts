@@ -515,3 +515,42 @@ export const getUserByPhoneNumber = async (
   };
   response.status(200).json({ user: userData });
 };
+
+export async function getProfileUrlsForPhoneNumbers(
+  request: Request,
+  response: Response
+): Promise<void> {
+  try {
+    const phoneNumbersList: string[] = request.body.phoneNumbers;
+
+    if (!phoneNumbersList || !Array.isArray(phoneNumbersList)) {
+      response.status(400).json({
+        message: "Invalid request. 'phoneNumbers' array is required in the body.",
+      });
+      return;
+    }
+    console.log("Hello1")
+     console.log("phoneNumbersList >>> ", phoneNumbersList);
+
+    const users = await User.findAll({
+      where: {
+        phoneNumber: {
+          [Op.in]: phoneNumbersList,
+        },
+      },
+      attributes: ["phoneNumber", "profilePicture"],
+    });
+        console.log("hello I am user ",users)
+
+    const result = users.map((user) => ({
+      phoneNumber: user.phoneNumber,
+      profilePicture: user.profilePicture,
+    }));
+        console.log("Hello3")
+
+    response.status(200).json({ data: result });
+  } catch (error) {
+    console.log(error)
+    response.status(500).json({ message: `${(error as Error).message}` });
+  }
+}

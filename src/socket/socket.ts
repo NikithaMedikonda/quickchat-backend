@@ -11,7 +11,7 @@ import {
   storeMessage,
   updateUserSocketId,
 } from "./socket.service";
-import { getBlockStatus } from "../userRestriction/userRestriction.controller";
+
 
 export const setupSocket = (io: Server) => {
   const chattingWithMap = new Map<string, string>();

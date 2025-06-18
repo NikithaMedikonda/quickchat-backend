@@ -12,16 +12,10 @@ import {
   updateUserSocketId,
 } from "./socket.service";
 
-
 export const setupSocket = (io: Server) => {
   const chattingWithMap = new Map<string, string>();
 
   io.on("connection", (socket) => {
-
-    socket.on("online_with", (withChattingPhoneNumber: string) => {
-      chattingWithMap.set(socket.id, withChattingPhoneNumber);
-    });
-
     socket.on("join", async (phoneNumber: string) => {
       const messages = await changeStatusToDelivered(phoneNumber);
       messages.forEach(async (msg) => {
@@ -39,148 +33,182 @@ export const setupSocket = (io: Server) => {
 
     socket.emit("internet_connection", { response: true });
 
-    socket.on("check_user_device", async (phoneNumber: string, deviceId: string) => {
-      try {
-        const user = await User.findOne({ where: { phoneNumber } });
+    socket.on(
+      "check_user_device",
+      async (phoneNumber: string, deviceId: string) => {
+        try {
+          const user = await User.findOne({ where: { phoneNumber } });
 
-        if (!user) {
-          socket.emit("user_device_verified", {
-            success: false,
-            message: "User not found",
-            action: "logout",
-          });
-          return;
-        }
-
-        if (user.deviceId !== deviceId) {
-          socket.emit("user_device_verified", {
-            success: false,
-            message: "Device mismatch - logged in from another device",
-            action: "logout",
-            registeredDeviceId: user.deviceId,
-          });
-        } else {
-          socket.emit("user_device_verified", {
-            success: true,
-            message: "Device verified",
-            action: "continue",
-          });
-        }
-      } catch {
-        socket.emit("user_device_verified", {
-          success: false,
-          message: "Server error during device verification",
-          action: "logout",
-        });
-      }
-    });
-
-    socket.on("send_private_message", async ({ recipientPhoneNumber, senderPhoneNumber, message, timestamp }: PrivateMessage) => {
-      try {
-        const result = await getBlockStatus(recipientPhoneNumber, senderPhoneNumber);
-
-        const targetSocketId = await findUserSocketId(recipientPhoneNumber);
-        const chattingWith = targetSocketId ? chattingWithMap.get(targetSocketId) : null;
-
-        const recipient = await User.findOne({ where: { phoneNumber: recipientPhoneNumber } });
-        const sender = await User.findOne({ where: { phoneNumber: senderPhoneNumber } });
-
-        if (senderPhoneNumber === recipientPhoneNumber) {
-          await storeMessage({
-            recipientPhoneNumber,
-            senderPhoneNumber,
-            message,
-            status: "read",
-            timestamp,
-          });
-        } else if (targetSocketId && !result) {
-          await storeMessage({
-            recipientPhoneNumber,
-            senderPhoneNumber,
-            message,
-            status: "delivered",
-            timestamp,
-          });
-
-          io.to(targetSocketId).emit(`receive_private_message_${senderPhoneNumber}`, {
-            recipientPhoneNumber,
-            senderPhoneNumber,
-            message,
-            timestamp,
-          });
-
-          io.to(targetSocketId).emit("new_message", { newMessage: true });
-
-          if (recipient?.fcmToken) {
-            if (chattingWith !== senderPhoneNumber) {
-              await messaging.send({
-                token: recipient.fcmToken,
-                data: {
-                  title: `New message from ${sender?.firstName}`,
-                  body: message,
-                  profilePicture: sender?.profilePicture || "",
-                  senderPhoneNumber,
-                  recipientPhoneNumber,
-                  timestamp: timestamp.toString(),
-                  type: "private_message",
-                },
-              });
-            }
+          if (!user) {
+            socket.emit("user_device_verified", {
+              success: false,
+              message: "User not found",
+              action: "logout",
+            });
+            return;
           }
-        } else {
-          if (!result) {
+
+          if (user.deviceId !== deviceId) {
+            socket.emit("user_device_verified", {
+              success: false,
+              message: "Device mismatch - logged in from another device",
+              action: "logout",
+              registeredDeviceId: user.deviceId,
+            });
+          } else {
+            socket.emit("user_device_verified", {
+              success: true,
+              message: "Device verified",
+              action: "continue",
+            });
+          }
+        } catch {
+          socket.emit("user_device_verified", {
+            success: false,
+            message: "Server error during device verification",
+            action: "logout",
+          });
+        }
+      }
+    );
+
+    socket.on(
+      "send_private_message",
+      async ({
+        recipientPhoneNumber,
+        senderPhoneNumber,
+        message,
+        timestamp,
+      }: PrivateMessage) => {
+        try {
+          const result = await getBlockStatus(
+            recipientPhoneNumber,
+            senderPhoneNumber
+          );
+
+          const targetSocketId = await findUserSocketId(recipientPhoneNumber);
+          const chattingWith = targetSocketId
+            ? chattingWithMap.get(targetSocketId)
+            : null;
+
+          const recipient = await User.findOne({
+            where: { phoneNumber: recipientPhoneNumber },
+          });
+          const sender = await User.findOne({
+            where: { phoneNumber: senderPhoneNumber },
+          });
+
+          if (senderPhoneNumber === recipientPhoneNumber) {
             await storeMessage({
               recipientPhoneNumber,
               senderPhoneNumber,
               message,
-              status: "sent",
+              status: "read",
+              timestamp,
+            });
+          } else if (targetSocketId && !result) {
+            await storeMessage({
+              recipientPhoneNumber,
+              senderPhoneNumber,
+              message,
+              status: "delivered",
               timestamp,
             });
 
+            io.to(targetSocketId).emit(
+              `receive_private_message_${senderPhoneNumber}`,
+              {
+                recipientPhoneNumber,
+                senderPhoneNumber,
+                message,
+                timestamp,
+              }
+            );
+
+            io.to(targetSocketId).emit("new_message", { newMessage: true });
+
             if (recipient?.fcmToken) {
-              await messaging.send({
-                token: recipient.fcmToken,
-                data: {
-                  title: `New message from ${sender?.firstName}`,
-                  body: message,
-                  profilePicture: sender?.profilePicture || "",
-                  senderPhoneNumber,
-                  recipientPhoneNumber,
-                  timestamp: timestamp.toString(),
-                  type: "private_message",
-                },
+              if (chattingWith !== senderPhoneNumber) {
+                await messaging.send({
+                  token: recipient.fcmToken,
+                  data: {
+                    title: `New message from ${sender?.firstName}`,
+                    body: message,
+                    profilePicture: sender?.profilePicture || "",
+                    senderPhoneNumber,
+                    recipientPhoneNumber,
+                    timestamp: timestamp.toString(),
+                    type: "private_message",
+                  },
+                });
+              }
+            }
+          } else {
+            if (!result) {
+              await storeMessage({
+                recipientPhoneNumber,
+                senderPhoneNumber,
+                message,
+                status: "sent",
+                timestamp,
               });
+
+              if (recipient?.fcmToken) {
+                await messaging.send({
+                  token: recipient.fcmToken,
+                  data: {
+                    title: `New message from ${sender?.firstName}`,
+                    body: message,
+                    profilePicture: sender?.profilePicture || "",
+                    senderPhoneNumber,
+                    recipientPhoneNumber,
+                    timestamp: timestamp.toString(),
+                    type: "private_message",
+                  },
+                });
+              }
             }
           }
+        } catch (error) {
+          console.error(
+            `Failed to store or send message: ${(error as Error).message}`
+          );
         }
-      } catch (error) {
-        console.error(`Failed to store or send message: ${(error as Error).message}`);
       }
-    });
+    );
 
     socket.on("offline_with", async (withChattingPhoneNumber: string) => {
       try {
         const targetSocketId = await findUserSocketId(withChattingPhoneNumber);
         if (targetSocketId) {
-          io.to(targetSocketId).emit(`offline_with_${withChattingPhoneNumber}`, {
-            isOnline: false,
-          });
+          io.to(targetSocketId).emit(
+            `offline_with_${withChattingPhoneNumber}`,
+            {
+              isOnline: false,
+            }
+          );
         }
       } catch (error) {
-        console.error(`Error while fetching the user: ${(error as Error).message}`);
+        console.error(
+          `Error while fetching the user: ${(error as Error).message}`
+        );
       }
     });
 
     socket.on("online_with", async (withChattingPhoneNumber: string) => {
+      chattingWithMap.set(socket.id, withChattingPhoneNumber);
       try {
         const targetSocketId = await findUserSocketId(withChattingPhoneNumber);
         if (targetSocketId) {
-          io.to(targetSocketId).emit(`isOnline_with_${withChattingPhoneNumber}`, {
-            isOnline: true,
-          });
+          io.to(targetSocketId).emit(
+            `isOnline_with_${withChattingPhoneNumber}`,
+            {
+              isOnline: true,
+            }
+          );
         }
       } catch (error) {
-      console.error(
+        console.error(
           `Error while fetching the user: ${(error as Error).message}`
         );
       }
@@ -189,12 +217,9 @@ export const setupSocket = (io: Server) => {
       try {
         const targetSocketId = await findUserSocketId(phoneNumber);
         if (targetSocketId) {
-          io.to(targetSocketId).emit(
-            `isOnline_${phoneNumber}`,
-            {
-              isOnline: true,
-            }
-          );
+          io.to(targetSocketId).emit(`isOnline_${phoneNumber}`, {
+            isOnline: true,
+          });
         }
       } catch (error) {
         throw new Error(
@@ -206,12 +231,9 @@ export const setupSocket = (io: Server) => {
       try {
         const targetSocketId = await findUserSocketId(phoneNumber);
         if (targetSocketId) {
-          io.to(targetSocketId).emit(
-            `isOffline_${phoneNumber}`,
-            {
-              isOnline: false,
-            }
-          );
+          io.to(targetSocketId).emit(`isOffline_${phoneNumber}`, {
+            isOnline: false,
+          });
         }
       } catch (error) {
         throw new Error(
@@ -226,6 +248,13 @@ export const setupSocket = (io: Server) => {
     socket.on("disconnect", async () => {
       chattingWithMap.delete(socket.id);
       const user = await User.findOne({ where: { socketId: socket.id } });
+      const phoneNumber = await user?.dataValues.phoneNumber;
+      if (phoneNumber) {
+        const exceptSocketIds = await getBlockedSocketIds(phoneNumber);
+        socket.broadcast.except(exceptSocketIds).emit("I-deleted", {
+          phoneNumber: phoneNumber,
+        });
+      }
       if (user) {
         await updateUserSocketId(user.phoneNumber, null);
         await disconnectUser(socket.id);

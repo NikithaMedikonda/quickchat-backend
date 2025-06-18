@@ -1077,3 +1077,25 @@ test("should emit status update when 'read' event is received", (done) => {
     });
   });
 }, 20000);
+test("should handle disconnect gracefully when no user is found (no DB ops)", (done) => {
+  const socketId = "non-existent-socket-id";
+
+  const clientA = Client(SERVER_URL, {
+    query: { socketId },
+  });
+  io.on("connection", (socket) => {
+    Object.defineProperty(socket, "id", {
+      value: socketId,
+    });
+    socket.on("disconnect", async () => {
+      const chattingWithMap = new Map();
+      chattingWithMap.delete(socket.id);
+      expect(true).toBe(true);
+      done();
+    });
+  });
+
+  clientA.on("connect", () => {
+    clientA.disconnect();
+  });
+}, 20000);

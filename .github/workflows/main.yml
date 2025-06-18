@@ -4,8 +4,7 @@ on:
   push:
     branches:
       - main
-      -  offline-profile-image-render
-
+      
 jobs:
   QuickChat-backend:
     name: Testing and Building app

@@ -521,7 +521,8 @@ export async function getProfileUrlsForPhoneNumbers(
 
     if (!phoneNumbersList || !Array.isArray(phoneNumbersList)) {
       response.status(400).json({
-        message: "Invalid request. 'phoneNumbers' array is required in the body.",
+        message:
+          "Invalid request. 'phoneNumbers' array is required in the body.",
       });
       return;
     }
@@ -531,12 +532,13 @@ export async function getProfileUrlsForPhoneNumbers(
           [Op.in]: phoneNumbersList,
         },
       },
-      attributes: ["phoneNumber", "profilePicture"],
+      attributes: ["phoneNumber", "profilePicture", "publicKey"],
     });
 
     const result = users.map((user) => ({
       phoneNumber: user.phoneNumber,
       profilePicture: user.profilePicture,
+      publicKey: user.publicKey,
     }));
     response.status(200).json({ data: result });
   } catch (error) {

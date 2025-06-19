@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { Op } from "sequelize";
+import { Op, Sequelize } from "sequelize";
 import { Chat } from "../chat/chat.model";
 import { Conversation } from "../conversation/conversation.model";
 import { Message, MessageStatus } from "../message/message.model";
@@ -252,5 +252,83 @@ export const getMessagesForSync = async (req: Request, res: Response) => {
       error: `Failed to fetch messages for sync: ${(error as Error).message}`,
     });
   }
+};
 
+export const getDataOfuser = async (req: Request, res: Response) => {
+  try {
+    const phoneNumber = req.body.phoneNumber;
+
+    const user = await User.findOne({ where: { phoneNumber } });
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+
+    const chats = await Chat.findAll({
+      where: {
+        [Op.or]: [{ userAId: user.id }, { userBId: user.id }],
+      },
+      include: [
+        {
+          model: Message,
+          include: [
+            { model: User, as: "sender", attributes: ["phoneNumber"] },
+            { model: User, as: "receiver", attributes: ["phoneNumber"] },
+          ],
+        },
+        {
+          model: User,
+          as: "userA",
+          attributes: [
+            "id",
+            "phoneNumber",
+            "firstName",
+            "lastName",
+            "profilePicture",
+            "publicKey",
+          ],
+        },
+        {
+          model: User,
+          as: "userB",
+          attributes: [
+            "id",
+            "phoneNumber",
+            "firstName",
+            "lastName",
+            "profilePicture",
+            "publicKey",
+          ],
+        },
+        {
+          model: Conversation,
+          where: {
+            userId: user.id,
+          },
+          required: false,
+          attributes: ["isDeleted", "lastClearedAt", "userId", "chatId"],
+        },
+      ],
+      attributes: {
+        include: [
+          [
+            Sequelize.literal(`(
+              SELECT COUNT(*)
+              FROM messages AS m
+              WHERE 
+                m."chat_id" = "Chat"."id"
+                AND m."receiver_id" = '${user.id}'
+                AND m."status" != 'read'
+            )`),
+            "unreadCount",
+          ],
+        ],
+      },
+    });
+    res.json({ user, chats });
+  } catch (error) {
+    res.status(500).json({
+      error: `Error getting chats of user ${(error as Error).message}`,
+    });
+  }
 };

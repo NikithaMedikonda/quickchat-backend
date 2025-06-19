@@ -10,7 +10,7 @@ import { userConversationRouter } from "./src/conversation/conversation.route";
 import { messageRouter } from "./src/message/message.router";
 import { setupSocket } from "./src/socket/socket";
 import { userRouter } from "./src/user/user.route";
-import { userRestrictionRouter } from "./src/userRestriction/userRestriction.router"; 
+import { userRestrictionRouter } from "./src/userRestriction/userRestriction.router";
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` });
 

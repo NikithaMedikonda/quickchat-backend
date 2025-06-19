@@ -3,7 +3,7 @@ import { Sequelize } from "sequelize";
 import request from "supertest";
 import { app } from "../../server";
 import { SequelizeConnection } from "../connection/dbconnection";
-import { base64 } from "../constants/example.base64";
+import { base64, base64_1 } from "../constants/example.base64";
 import { defaultProfileImage } from "../constants/example.defaultProfile";
 import { validateEmail } from "./user.middleware";
 import { User } from "./user.model";
@@ -627,7 +627,7 @@ describe("User Account Deletion", () => {
 
   afterEach(() => {
     process.env = originalEnv;
-     jest.restoreAllMocks();
+    jest.restoreAllMocks();
   });
 
   beforeAll(async () => {
@@ -1011,9 +1011,9 @@ describe("Contacts Display Test Suite", () => {
   });
 
   it("should handle error when the database query fails", async () => {
-    User.findAll = jest
-      .fn()
-      .mockRejectedValue(new Error("Database query failed"));
+   const mock = jest
+    .spyOn(User, "findAll")
+    .mockRejectedValue(new Error("Database query failed"));
 
     const phoneNumbersListToTest = [
       "8522041688",
@@ -1030,5 +1030,89 @@ describe("Contacts Display Test Suite", () => {
     expect(response.status).toBe(500);
 
     expect(response.body.message).toBe("Database query failed");
+    mock.mockRestore();
+  });
+});
+
+describe("Get Profile URLs For Phone Numbers", () => {
+  let testInstance: Sequelize;
+  const originalEnv = process.env;
+
+  beforeEach(async () => {
+    process.env = { ...originalEnv };
+    await User.truncate({ cascade: true });
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+    jest.restoreAllMocks();
+  });
+
+  beforeAll(async () => {
+    testInstance = SequelizeConnection()!;
+    await User.truncate({ cascade: true });
+  });
+
+  afterAll(async () => {
+    await User.truncate({ cascade: true });
+    await testInstance?.close();
+  });
+
+  test("should return 400 when phoneNumbers array is missing", async () => {
+    const response = await request(app)
+      .post("/api/getProfileUrls")
+      .send({})
+      .expect(400);
+
+    expect(response.body.message).toBe(
+      "Invalid request. 'phoneNumbers' array is required in the body."
+    );
+  });
+
+  test("should return empty data array when no users are found", async () => {
+    const response = await request(app)
+      .post("/api/getProfileUrls")
+      .send({ phoneNumbers: ["9876543210"] })
+      .expect(200);
+
+    expect(response.body.data).toEqual([]);
+  });
+
+  test("should return profile URLs for valid phone numbers", async () => {
+    const newUser = {
+      phoneNumber: "9876543210",
+      firstName: "Test",
+      lastName: "User",
+      password: "Test@1234",
+      email: "testuser@test.com",
+      deviceId: "device123",
+      profilePicture: base64_1,
+    };
+    const response = await request(app)
+      .post("/api/users")
+      .send(newUser)
+      .expect(200);
+    const accessToken = response.body.accessToken;
+    const urlResponse = await request(app)
+      .post("/api/getProfileUrls")
+      .set({ Authorization: `Bearer ${accessToken}` })
+      .send({ phoneNumbers: [newUser.phoneNumber] })
+      .expect(200);
+    expect(urlResponse.body.data[0].phoneNumber).toBe(newUser.phoneNumber);
+    expect(typeof urlResponse.body.data[0].profilePicture).toBe("string");
+    expect(urlResponse.body.data[0].profilePicture.startsWith("http")).toBe(
+      true
+    );
+  });
+  test("should return 500 when an unexpected error occurs", async () => {
+    jest
+      .spyOn(User, "findAll")
+      .mockImplementation(() => Promise.reject(new Error("DB Error")));
+    const response = await request(app)
+      .post("/api/getProfileUrls")
+      .send({ phoneNumbers: ["1234567890"] })
+      .expect(500);
+
+    expect(response.body.message).toBe("DB Error");
   });
 });

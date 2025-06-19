@@ -2,10 +2,10 @@
   "name": "quickchat-backend",
   "version": "1.0.0",
   "scripts": {
-    "start": "NODE_ENV=development nodemon server.ts",
+    "start": "nodemon --exec ts-node -r dotenv/config server.ts",
     "test": "NODE_ENV=test jest --runInBand --coverage",
     "build": "tsc",
-    "testing": "NODE_ENV=test nodemon server.ts",
+    "testing": "nodemon --exec ts-node -r dotenv/config server.ts",
     "lint": "eslint --ext ts"
   },
   "keywords": [],

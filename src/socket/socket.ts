@@ -115,17 +115,13 @@ export const setupSocket = (io: Server) => {
               timestamp,
             });
 
-            io.to(targetSocketId).emit(
-              `receive_private_message_${senderPhoneNumber}`,
-              {
-                recipientPhoneNumber,
-                senderPhoneNumber,
-                message,
-                timestamp,
-              }
-            );
-
-            io.to(targetSocketId).emit("new_message", { newMessage: true });
+            io.emit("new_message", { newMessage: true });
+            io.emit(`receive_private_message_${senderPhoneNumber}`, {
+              recipientPhoneNumber,
+              senderPhoneNumber,
+              message,
+              timestamp,
+            });
 
             if (recipient?.fcmToken) {
               if (chattingWith !== senderPhoneNumber) {
@@ -178,6 +174,7 @@ export const setupSocket = (io: Server) => {
     );
 
     socket.on("offline_with", async (withChattingPhoneNumber: string) => {
+      chattingWithMap.delete(socket.id);
       try {
         const targetSocketId = await findUserSocketId(withChattingPhoneNumber);
         if (targetSocketId) {

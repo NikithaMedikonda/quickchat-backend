@@ -1017,6 +1017,7 @@ describe("Socket online/offline test", () => {
     });
   }, 10000);
 });
+
 test("should emit status update when 'read' event is received", (done) => {
   const senderPhoneNumber = "+919440058816";
   const recipientPhoneNumber = "+919440058818";
@@ -1058,25 +1059,26 @@ test("should emit status update when 'read' event is received", (done) => {
     clientB = Client(SERVER_URL);
     clientB.on("connect", () => {
       clientB.emit("join", recipientPhoneNumber);
-
-      clientB.on(`status_${recipientPhoneNumber}`, (data) => {
+      const statusEvent = `status_${recipientPhoneNumber}_${senderPhoneNumber}`;
+      clientB.once(statusEvent, (data) => {
         expect(data).toEqual(mockMessages);
-        done();
+        done(); 
       });
       clientA = Client(SERVER_URL);
       clientA.on("connect", () => {
         clientA.emit("join", senderPhoneNumber);
-
         setTimeout(() => {
           clientA.emit("read", {
             receiverPhoneNumber: recipientPhoneNumber,
+            senderPhoneNumber: senderPhoneNumber,
             messages: mockMessages,
           });
-        }, 2000);
+        }, 2000); 
       });
     });
   });
-}, 20000);
+}, 20000); 
+
 test("should handle disconnect gracefully when no user is found (no DB ops)", (done) => {
   const socketId = "non-existent-socket-id";
 

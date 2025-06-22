@@ -153,14 +153,15 @@ export const setupSocket = (io: Server) => {
               if (recipient?.fcmToken) {
                 await messaging.send({
                   token: recipient.fcmToken,
-                  data: {
-                    title: `New message from ${sender?.firstName}`,
-                    body: message,
-                    profilePicture: sender?.profilePicture || "",
-                    senderPhoneNumber,
-                    recipientPhoneNumber,
-                    timestamp: timestamp.toString(),
-                    type: "private_message",
+                  notification: {
+                    title: "QuickChat",
+                    body: "New Message",
+                  },
+                  android: {
+                    notification: {
+                      sound: "custom_notification",
+                      channelId: "quickchat",
+                    },
                   },
                 });
               }

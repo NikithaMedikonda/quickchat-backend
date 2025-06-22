@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - disconnect-socket-fix
 
 jobs:
   QuickChat-backend:

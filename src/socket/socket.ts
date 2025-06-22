@@ -240,7 +240,8 @@ export const setupSocket = (io: Server) => {
     });
     socket.on("read", async (data: updateMessageDetails) => {
       const receiverPhoneNumber = data.receiverPhoneNumber;
-      io.emit(`status_${receiverPhoneNumber}`, data.messages);
+      const senderPhoneNumber=data.senderPhoneNumber;
+      io.emit(`status_${receiverPhoneNumber}_${senderPhoneNumber}`, data.messages);
     });
     socket.on("disconnect", async () => {
       chattingWithMap.delete(socket.id);

@@ -11,6 +11,7 @@ import {
   storeMessage,
   updateUserSocketId,
 } from "./socket.service";
+import { updateStatus } from "../message/message.controller";
 
 export const setupSocket = (io: Server) => {
   const chattingWithMap = new Map<string, string>();
@@ -195,6 +196,23 @@ export const setupSocket = (io: Server) => {
     socket.on("online_with", async (withChattingPhoneNumber: string) => {
       chattingWithMap.set(socket.id, withChattingPhoneNumber);
       try {
+        const senderPhoneNumber = withChattingPhoneNumber;
+        const user = await User.findOne({ where: { socketId: socket.id } });
+        const receiverPhoneNumber = await user?.dataValues.phoneNumber;
+        if (receiverPhoneNumber) {
+          const updated = await updateStatus(
+            senderPhoneNumber,
+            receiverPhoneNumber,
+            "delivered",
+            "read"
+          );
+          if (updated.length > 0) {
+            io.emit(
+              `read_${senderPhoneNumber}_${receiverPhoneNumber}`,
+              updated
+            );
+          }
+        }
         const targetSocketId = await findUserSocketId(withChattingPhoneNumber);
         if (targetSocketId) {
           io.to(targetSocketId).emit(
@@ -240,8 +258,11 @@ export const setupSocket = (io: Server) => {
     });
     socket.on("read", async (data: updateMessageDetails) => {
       const receiverPhoneNumber = data.receiverPhoneNumber;
-      const senderPhoneNumber=data.senderPhoneNumber;
-      io.emit(`status_${receiverPhoneNumber}_${senderPhoneNumber}`, data.messages);
+      const senderPhoneNumber = data.senderPhoneNumber;
+      io.emit(
+        `status_${receiverPhoneNumber}_${senderPhoneNumber}`,
+        data.messages
+      );
     });
     socket.on("disconnect", async () => {
       chattingWithMap.delete(socket.id);

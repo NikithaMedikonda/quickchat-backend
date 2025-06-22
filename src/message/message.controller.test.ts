@@ -10,6 +10,8 @@ import { createConversation } from "../conversation/conversation.service";
 import { createUser } from "../user/user.controller";
 import { User } from "../user/user.model";
 import { Message } from "./message.model";
+import { findByPhoneNumber } from "../utils/findByPhoneNumber";
+import { updateStatus } from "./message.controller";
 
 describe("Testing the functionality of storing message in data base", () => {
   let testInstance: Sequelize;
@@ -402,5 +404,211 @@ describe("Testing the functionality of updating the status of the message", () =
       .set({ Authorization: `Bearer ${userAaccessToken}` })
       .send(payload)
       .expect(500);
+  });
+});
+describe("Testing the functionality of storing message in database", () => {
+  let testInstance: Sequelize;
+  const originalEnv = process.env;
+  const senderPhoneNumber = "+919440058809";
+  const receiverPhoneNumber = "+916303522765";
+  let accessToken: string = "anu";
+
+  beforeEach(() => {
+    process.env = { ...originalEnv };
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
+  beforeAll(async () => {
+    testInstance = SequelizeConnection()!;
+
+    const sender = await createUser({
+      phoneNumber: senderPhoneNumber,
+      firstName: "test",
+      lastName: "sender",
+      password: "Send@1234",
+      email: "sender@gmail.com",
+      isDeleted: false,
+      publicKey: "",
+      privateKey: "",
+      socketId: "",
+      isLogin: false,
+      deviceId: "qwertyuiop",
+    });
+
+    await createUser({
+      phoneNumber: receiverPhoneNumber,
+      firstName: "test",
+      lastName: "receiver",
+      password: "Receiver@1234",
+      email: "receiver@gmail.com",
+      isDeleted: false,
+      publicKey: "",
+      privateKey: "",
+      socketId: "",
+      isLogin: false,
+      deviceId: "gasdfggs",
+    });
+
+    const secret_key = process.env.JSON_WEB_SECRET || "quick_chat_secret";
+    accessToken = jwt.sign(
+      { phoneNumber: sender.phoneNumber },
+      secret_key.toString(),
+      {
+        expiresIn: "7d",
+      }
+    );
+  });
+
+  afterAll(async () => {
+    await Message.truncate({ cascade: true });
+    await Conversation.truncate({ cascade: true });
+    await Chat.truncate({ cascade: true });
+    await User.truncate({ cascade: true });
+    await testInstance.close();
+  });
+
+  test("Should throw error if necessary fields are not passed", async () => {
+    const resource = {
+      content: "Hi",
+      status: "sent",
+      senderPhoneNumber: "+919876543210",
+    };
+    await request(app)
+      .post("/api/message")
+      .send(resource)
+      .set({ Authorization: `Bearer ${accessToken}` })
+      .expect(400);
+  });
+
+  test("Should send the message successfully", async () => {
+    const messagePayload = {
+      senderPhoneNumber: senderPhoneNumber,
+      receiverPhoneNumber: receiverPhoneNumber,
+      timeStamp: "2024-01-01T10:00:00Z",
+      status: "sent",
+      content: "Hello!",
+    };
+
+    const messageResponse = await request(app)
+      .post("/api/message")
+      .set({ Authorization: `Bearer ${accessToken}` })
+      .send(messagePayload)
+      .expect(200);
+
+    expect(messageResponse.body.messageDetails.senderId).toBeDefined();
+    expect(messageResponse.body.messageDetails.content).toBe("Hello!");
+
+    const chatId = messageResponse.body.messageDetails.chatId;
+    const chat = await Chat.findOne({ where: { id: chatId } });
+
+    expect(chat).not.toBeNull();
+    expect(chat!.userAId).toBeDefined();
+    expect(chat!.userBId).toBeDefined();
+
+    const conversations = await Conversation.findAll({ where: { chatId } });
+    expect(conversations.length).toBe(2);
+  });
+
+  test("Should throw error if user is not there with provided phone number", async () => {
+    const messagePayload = {
+      senderPhoneNumber: "+914567891234",
+      receiverPhoneNumber: receiverPhoneNumber,
+      content: "Hello!",
+      timeStamp: "2024-01-01T10:00:00Z",
+      status: "sent",
+    };
+
+    await request(app)
+      .post("/api/message")
+      .set({ Authorization: `Bearer ${accessToken}` })
+      .send(messagePayload)
+      .expect(500);
+  });
+
+  test("Should throw error if message is not in appropriate format", async () => {
+    const messagePayload = {
+      senderPhoneNumber: senderPhoneNumber,
+      receiverPhoneNumber: receiverPhoneNumber,
+      content: ["Hello!"],
+      timeStamp: "2024-01-01T10:00:00Z",
+      status: "sent",
+    };
+
+    await request(app)
+      .post("/api/message")
+      .set({ Authorization: `Bearer ${accessToken}` })
+      .send(messagePayload)
+      .expect(500);
+  });
+
+  test("Should throw error if content is invalid type", async () => {
+    const messagePayload = {
+      senderPhoneNumber: senderPhoneNumber,
+      receiverPhoneNumber: receiverPhoneNumber,
+      content: ["Hello!"],
+      timeStamp: "2024-01-01T10:00:00Z",
+      status: "sent",
+    };
+
+    await request(app)
+      .post("/api/message")
+      .set({ Authorization: `Bearer ${accessToken}` })
+      .send(messagePayload)
+      .expect(500);
+  });
+
+  test("should throw error if invalid senderId and receiverId are sent", async () => {
+    await expect(findByPhoneNumber("invalid_sender")).rejects.toThrow();
+  });
+
+  test("should update message status and return updated message contents", async () => {
+    const messages = [
+      {
+        senderPhoneNumber: senderPhoneNumber,
+        receiverPhoneNumber: receiverPhoneNumber,
+        timeStamp: "2024-01-01T12:00:00Z",
+        status: "sent",
+        content: "Test message 1",
+      },
+      {
+        senderPhoneNumber: senderPhoneNumber,
+        receiverPhoneNumber: receiverPhoneNumber,
+        timeStamp: "2024-01-01T12:01:00Z",
+        status: "sent",
+        content: "Test message 2",
+      },
+    ];
+
+    for (const msg of messages) {
+      await request(app)
+        .post("/api/message")
+        .set({ Authorization: `Bearer ${accessToken}` })
+        .send(msg)
+        .expect(200);
+    }
+
+    const updatedContents = await updateStatus(
+      senderPhoneNumber,
+      receiverPhoneNumber,
+      "sent",
+      "delivered"
+    );
+
+    expect(updatedContents).toEqual(
+      expect.arrayContaining(["Test message 1", "Test message 2"])
+    );
+
+    const senderId = await findByPhoneNumber(senderPhoneNumber);
+    const receiverId = await findByPhoneNumber(receiverPhoneNumber);
+    const updatedMessages = await Message.findAll({
+      where: { senderId, receiverId },
+    });
+
+    updatedMessages.forEach((msg) => {
+      expect(msg.status).toBe("delivered");
+    });
   });
 });

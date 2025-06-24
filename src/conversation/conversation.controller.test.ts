@@ -47,6 +47,7 @@ describe("Testing the delete chat functionality", () => {
       privateKey: "privKey",
       isLogin: false,
       deviceId: "fdhgshgdva",
+      email: "senderuser@gmail.com"
     });
 
     const receiver = await createUser({
@@ -59,6 +60,7 @@ describe("Testing the delete chat functionality", () => {
       privateKey: "privKey",
       isLogin: false,
       deviceId: "qwertyuiop",
+      email: "receiveruser@gmail.com"
     });
 
     accessToken = jwt.sign({ phoneNumber: senderPhoneNumber }, secret_key, {

@@ -789,6 +789,7 @@ describe("Check Authentication Test Suite", () => {
       socketId: "",
       isLogin: false,
       deviceId: "qwertyuiop",
+      email:'test@gmail.com'
     });
 
     const token = jwt.sign(

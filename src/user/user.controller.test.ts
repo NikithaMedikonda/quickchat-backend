@@ -48,6 +48,7 @@ describe("User controller Registration", () => {
       profilePicture: "somePicture",
       phoneNumber: "8522041688",
       deviceId: "qwertyuiop",
+      email: "test@gmail.com",
     };
     await request(app).post("/api/users").send(newResource).expect(500);
   });

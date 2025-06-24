@@ -17,3 +17,6 @@ export type DeliveredMessageDetails = {
   senderId: string;
   message: string[];
 };
+export type ReadMessageDetails={
+  messages:string[]
+}

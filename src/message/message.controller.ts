@@ -44,7 +44,36 @@ export const postMessage = async (req: Request, res: Response) => {
       .json({ error: `Creating message failed. ${(error as Error).message}` });
   }
 };
-
+export async function updateStatus(
+  senderPhoneNumber: string,
+  receiverPhoneNumber: string,
+  previousStatus: string,
+  currentStatus: string
+) {
+  const senderId = await findByPhoneNumber(senderPhoneNumber);
+  const receiverId = await findByPhoneNumber(receiverPhoneNumber);
+  const goingToUpdate = await Message.findAll({
+    where: {
+      senderId: senderId,
+      receiverId: receiverId,
+      status: previousStatus,
+    },
+  });
+  await Message.update(
+    { status: currentStatus as MessageStatus },
+    {
+      where: {
+        senderId: senderId,
+        receiverId: receiverId,
+        status: previousStatus as MessageStatus,
+      },
+    }
+  );
+ 
+const finalMessages:string[]=[];
+goingToUpdate.forEach((msg)=>finalMessages.push(msg.dataValues.content))
+  return finalMessages;
+}
 export const updateMessageStatus = async (req: Request, res: Response) => {
   try {
     const {

@@ -21,8 +21,8 @@ jobs:
       SERVICE_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2Z3ZzamxhaWJnZm5qaXpqenlpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0ODUxMjM5MSwiZXhwIjoyMDY0MDg4MzkxfQ.RgLASpMIr5C1aSuiV19cm4HYVH63gknrprxBanEn8fs"
       BUCKET_NAME: "quick-chat"
       FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
-      EMAIL: ${{ secrets.EMAIL }}
-      PASSWORD: ${{ secrets.PASSWORD }}
+      EMAIL: 'quickChat.verify@gmail.com'
+      PASSWORD: 'wywb pyvn daaq hjyc'
       
     steps:
       - name: Checkout code

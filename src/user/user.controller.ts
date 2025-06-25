@@ -290,6 +290,7 @@ export async function deleteAccount(
       await User.update(
         {
           isDeleted: true,
+          email:`deletedEmail_${existingUser.id}`,
         },
         { where: { phoneNumber } }
       );

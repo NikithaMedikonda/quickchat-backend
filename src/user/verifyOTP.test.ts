@@ -1,8 +1,7 @@
-import request  from "supertest";
-import bcrypt from 'bcrypt'
-
-import { Otp } from "../otp/otp.model";
+import bcrypt from 'bcrypt';
+import request from "supertest";
 import { app } from "../../server";
+import { Otp } from "../otp/otp.model";
 
 describe("Test for OTP verification", () => {
   const testEmail = "verifytest@gmail.com";

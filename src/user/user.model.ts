@@ -16,7 +16,7 @@ export class User extends Model<
   declare firstName: string;
   declare lastName: string;
   declare profilePicture: string | null;
-  declare email: string | null;
+  declare email: string;
   declare password: string;
   declare isDeleted: boolean;
   declare publicKey: string;
@@ -58,7 +58,7 @@ User.init(
     email: {
       type: DataTypes.STRING,
       unique: true,
-      allowNull: true,
+      allowNull: false,
     },
     password: {
       type: DataTypes.STRING,

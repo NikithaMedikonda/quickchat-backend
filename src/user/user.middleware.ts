@@ -46,12 +46,13 @@ export async function validateInputFields(
     !request.body.phoneNumber ||
     !request.body.firstName ||
     !request.body.lastName ||
-    !request.body.password
+    !request.body.password ||
+    !request.body.email
   ) {
     response.sendStatus(400);
   } else if (!request.body.phoneNumber.match(phonePattern)) {
     response.sendStatus(401);
-  } else if (request.body.email && !validateEmail(request.body.email)) {
+  } else if (!validateEmail(request.body.email)) {
     response.sendStatus(400);
   } else if (!validatePassword(request.body.password)) {
     response.sendStatus(406);

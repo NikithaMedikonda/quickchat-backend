@@ -36,6 +36,7 @@ describe("User controller Registration", () => {
     const newResource = {
       firstName: "Test Resource",
       lastName: "A test resource",
+      email: "test@gmail.com",
       password: "Anu@1234",
       deviceId: "qwertyuiop",
     };
@@ -50,6 +51,7 @@ describe("User controller Registration", () => {
       profilePicture: "somePicture",
       phoneNumber: "8522041688",
       deviceId: "qwertyuiop",
+      email: "test@gmail.com",
     };
     await request(app).post("/api/users").send(newResource).expect(500);
   });
@@ -61,6 +63,7 @@ describe("User controller Registration", () => {
       lastName: "A test resource2",
       password: "anu@1234",
       deviceId: "qwertyuiop",
+      email:'anu@gmail.com'
     };
     await request(app).post("/api/users").send(newResource).expect(406);
   });
@@ -71,7 +74,7 @@ describe("User controller Registration", () => {
       firstName: "Test Resource2",
       lastName: "A test resource2",
       password: "anu@1234",
-      email: "anu@du",
+      email: "anu",
       deviceId: "qwertyuiop",
     };
     await request(app).post("/api/users").send(newResource).expect(400);
@@ -84,6 +87,7 @@ describe("User controller Registration", () => {
       lastName: "A test resource2",
       password: "anu@1234",
       deviceId: "qwertyuiop",
+      email: "test@gmail.com",
     };
     await request(app).post("/api/users").send(newResource).expect(401);
   });
@@ -788,6 +792,7 @@ describe("Check Authentication Test Suite", () => {
       socketId: "",
       isLogin: false,
       deviceId: "qwertyuiop",
+      email:'test@gmail.com'
     });
 
     const token = jwt.sign(

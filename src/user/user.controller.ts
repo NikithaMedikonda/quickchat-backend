@@ -22,7 +22,7 @@ export async function createUser(user: UserInfo) {
     firstName: user.firstName,
     lastName: user.lastName,
     profilePicture: user.profilePicture ? user.profilePicture : null,
-    email: user.email ? user.email : null,
+    email: user.email,
     password: hashPassword,
     isDeleted: false,
     publicKey: user.publicKey,
@@ -291,6 +291,7 @@ export async function deleteAccount(
       await User.update(
         {
           isDeleted: true,
+          email:`deletedEmail_${existingUser.id}`,
         },
         { where: { phoneNumber } }
       );

@@ -52,6 +52,7 @@ describe("Testing the functionality of retrieving the messages of two users", ()
       privateKey: "privateKey",
       isLogin: false,
       deviceId: "qwertyuiop",
+      email: "mammu@gmail.com"
     });
     const receiver = await createUser({
       firstName: "Varun",
@@ -63,6 +64,7 @@ describe("Testing the functionality of retrieving the messages of two users", ()
       privateKey: "privateKey",
       isLogin: false,
       deviceId: "asghdv",
+      email: "varun@gmail.com"
     });
     await createUser({
       firstName: "Test",
@@ -74,6 +76,7 @@ describe("Testing the functionality of retrieving the messages of two users", ()
       privateKey: "privateKey",
       isLogin: false,
       deviceId: "jhUSGYGUYDF",
+      email: "test@gmail.com"
     });
     accessToken = jwt.sign(
       { phoneNumber: senderPhoneNumber },
@@ -265,6 +268,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
       privateKey: "privateKey",
       isLogin: false,
       deviceId: "abcd",
+      email: "sender@gmail.com"
     });
     const receiverA = await createUser({
       firstName: "receiver",
@@ -276,6 +280,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
       privateKey: "privateKey",
       isLogin: false,
       deviceId: "efgh",
+      email: "receiver@gmail.com"
     });
     const receiverB = await createUser({
       firstName: "receiver",
@@ -287,6 +292,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
       privateKey: "privateKey",
       isLogin: false,
       deviceId: "ijkl",
+      email: "receiverb@gmail.com"
     });
     const receiverC = await createUser({
       firstName: "receiver",
@@ -298,6 +304,7 @@ describe("Testing the functionality of retrieving all the messages of a user", (
       privateKey: "privateKey",
       isLogin: false,
       deviceId: "mnop",
+      email: "receiverc@gmail.com"
     });
     accessToken = jwt.sign(
       { phoneNumber: senderPhoneNumber },

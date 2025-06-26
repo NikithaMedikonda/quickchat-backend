@@ -3,6 +3,7 @@ import { Chat } from "../chat/chat.model";
 import { Conversation } from "../conversation/conversation.model";
 import { Message } from "../message/message.model";
 import { User } from "../user/user.model";
+import { UserContacts } from "../user_contacts/user_contacts.model";
 
 export const syncAssociations = () => {
   User.hasMany(Chat, { as: "chatInitiated", foreignKey: "userAId" });
@@ -44,4 +45,25 @@ export const syncAssociations = () => {
 
   User.hasMany(Conversation, { foreignKey: "userId" });
   Conversation.belongsTo(User, { foreignKey: "userId" });
+
+  User.hasMany(UserContacts, {
+    as: "contactsSaved",
+    foreignKey: "ownerPhoneNumber",
+    sourceKey: "phoneNumber",
+  });
+  User.hasMany(UserContacts, {
+    as: "savedInContactsOf",
+    foreignKey: "contactPhoneNumber",
+    sourceKey: "phoneNumber",
+  });
+  UserContacts.belongsTo(User, {
+    as: "owner",
+    foreignKey: "ownerPhoneNumber",
+    targetKey: "phoneNumber",
+  });
+  UserContacts.belongsTo(User, {
+    as: "contact",
+    foreignKey: "contactPhoneNumber",
+    targetKey: "phoneNumber",
+  });
 };

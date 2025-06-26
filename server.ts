@@ -11,6 +11,7 @@ import { messageRouter } from "./src/message/message.router";
 import { setupSocket } from "./src/socket/socket";
 import { userRouter } from "./src/user/user.route";
 import { userRestrictionRouter } from "./src/userRestriction/userRestriction.router";
+import { userContactsRouter } from "./src/user_contacts/user_contacts.routes";
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` });
 
@@ -24,6 +25,7 @@ app.use(userRouter);
 app.use(messageRouter);
 app.use(userRestrictionRouter);
 app.use(userConversationRouter);
+app.use(userContactsRouter);
 const server = http.createServer(app);
 const io = new Server(server);
 setupSocket(io);
@@ -35,6 +37,7 @@ const startServer = async () => {
     }
     await sequelizeInstance.authenticate();
     syncAssociations();
+
     if(process.env.NODE_ENV!=="test"){
     server.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);

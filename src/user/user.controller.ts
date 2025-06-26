@@ -5,10 +5,11 @@ import jwt from "jsonwebtoken";
 import { Op } from "sequelize";
 import { v4 as uuidv4 } from "uuid";
 import { defaultProfileImage } from "../constants/example.defaultProfile";
+import { Otp } from "../otp/otp.model";
 import { DbUser, UserInfo } from "../types/user";
+import { getBlockStatus } from "../userRestriction/userRestriction.controller";
 import { getProfileImageLink } from "../utils/uploadImage";
 import { User } from "./user.model";
-import { getBlockStatus } from "../userRestriction/userRestriction.controller";
 
 dotenv.config();
 
@@ -546,3 +547,35 @@ export async function getProfileUrlsForPhoneNumbers(
     response.status(500).json({ message: `${(error as Error).message}` });
   }
 }
+
+export const verifyOtp = async (request: Request, response: Response) => {
+  try {
+    const otpDetails = await Otp.findOne({
+      where: { email: request.body.email },
+    });
+    if (!otpDetails) {
+      response
+        .status(404)
+        .json({
+          message: "No OTP found for this email. Please request a new one.",
+        });
+      return;
+    }
+    const otp = otpDetails.dataValues.otp;
+    const expiresAt = otpDetails.dataValues.expiresAt;
+    if (new Date() > new Date(expiresAt)) {
+      response
+        .status(410)
+        .json({ message: "OTP has expired. Please request a new one." });
+      return;
+    }
+    const isVerified = await bcrypt.compare(String(request.body.otp), otp!);
+    if (!isVerified) {
+      response.status(401).json({ message: "Invalid OTP" });
+      return;
+    }
+    response.status(200).json({ isverified: true });
+  } catch (error) {
+    response.status(500).json({ message: `${(error as Error).message}` });
+  }
+};

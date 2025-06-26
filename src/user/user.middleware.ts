@@ -1,7 +1,11 @@
+import bcrypt from "bcrypt";
 import * as dotenv from "dotenv";
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import passwordValidator from "password-validator";
+import { Op } from "sequelize";
+import { User } from "./user.model";
+
 dotenv.config();
 
 export function validateEmail(inputEmail: string) {
@@ -109,4 +113,62 @@ export async function authenticateToken(
       }
     });
   }
+}
+
+export async function validateAndCheck(
+  request: Request,
+  response: Response,
+  next: NextFunction
+) {
+  if (!request.body.phoneNumber || !request.body.email || !request.body.name) {
+    response.sendStatus(400);
+  } else {
+    const existingUser = await User.findOne({
+      where: {
+        [Op.or]: [
+          { phoneNumber: request.body.phoneNumber },
+          { email: request.body.email },
+        ],
+      },
+    });
+    if (existingUser && existingUser.isDeleted === true) {
+      response.sendStatus(404);
+    } else if (existingUser) {
+      response.sendStatus(409);
+    } else {
+      next();
+    }
+  }
+}
+
+export async function verifyUserDetails(request: Request, response: Response) {
+  if (!request.body.phoneNumber) {
+    response.status(400).json({ message: "Please provide phone number." });
+    return;
+  }
+  const existingUser = await User.findOne({
+    where: { phoneNumber: request.body.phoneNumber },
+  });
+  if (existingUser && existingUser.isDeleted === true) {
+    response.status(410).json({ message: "Sorry, this account is deleted" });
+    return;
+  } else if (!existingUser) {
+    response
+      .status(404)
+      .json({ message: "User doesn't exist with this phone number" });
+    return;
+  }
+  const validPassword = await bcrypt.compare(
+    request.body.password,
+    existingUser.password
+  );
+  if (!validPassword) {
+    response.status(401).json({ message: "Password is invalid" });
+    return;
+  }
+  response.status(200).json({
+    isLogin: existingUser.isLogin,
+    name: `${existingUser.firstName} ${existingUser.lastName}`,
+    email: existingUser.email,
+  });
 }

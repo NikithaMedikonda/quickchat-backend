@@ -3,7 +3,7 @@ name: QuickChat-backend
 on:
   push:
     branches:
-      - user-contacts
+      - main 
 
 jobs:
   QuickChat-backend:

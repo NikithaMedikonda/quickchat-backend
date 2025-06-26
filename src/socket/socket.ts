@@ -12,6 +12,7 @@ import {
   updateUserSocketId,
 } from "./socket.service";
 import { updateStatus } from "../message/message.controller";
+import { getSavedName } from "../user_contacts/user_contacts.controller";
 
 export const setupSocket = (io: Server) => {
   const chattingWithMap = new Map<string, string>();
@@ -142,6 +143,10 @@ export const setupSocket = (io: Server) => {
             }
           } else {
             if (!result) {
+              const savedName = await getSavedName(
+                recipientPhoneNumber,
+                senderPhoneNumber
+              );
               await storeMessage({
                 recipientPhoneNumber,
                 senderPhoneNumber,
@@ -153,15 +158,14 @@ export const setupSocket = (io: Server) => {
               if (recipient?.fcmToken) {
                 await messaging.send({
                   token: recipient.fcmToken,
-                  notification: {
-                    title: "QuickChat",
-                    body: "New Message",
-                  },
-                  android: {
-                    notification: {
-                      sound: "custom_notification",
-                      channelId: "quickchat",
-                    },
+                  data: {
+                    title: `New message from ${savedName || senderPhoneNumber}`,
+                    body: message,
+                    profilePicture: sender?.profilePicture || "",
+                    senderPhoneNumber,
+                    recipientPhoneNumber,
+                    timestamp: timestamp.toString(),
+                    type: "private_message",
                   },
                 });
               }

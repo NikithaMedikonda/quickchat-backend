@@ -8,7 +8,7 @@ on:
 jobs:
   QuickChat-backend:
     name: Testing and Building app
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     env:
       NODE_ENV: test
       DB_HOST: localhost
